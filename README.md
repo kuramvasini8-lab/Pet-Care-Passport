@@ -1,278 +1,221 @@
 # 🐾 PetCare Passport
 
-> A comprehensive, full-stack digital pet healthcare management and adoption platform featuring **three strictly separated user experiences**: **Pet Owner Dashboard**, **Adopter / Visitor Experience**, and **Administrator Dashboard**. Built with a real MySQL relational database, Node.js Express 5 backend, Vanilla ES6+ frontend, and zero frontend framework dependencies.
+PetCare Passport is a full-stack digital pet healthcare and emergency identification platform. It features **two dedicated portals**—the **Pet Owner Dashboard** and the **Administrator Console**—complemented by a public **Lost & Found Community Hub** and **Smart Emergency QR Passports**.
+
+Built with MySQL 8.0, Node.js Express 5.3 backend, and Vanilla HTML5/CSS3/ES6+ JavaScript with zero frontend build dependencies.
 
 ---
 
-## 🌟 Architecture Overview: Three Distinct Experiences
+## 📑 Table of Contents
+- [Features](#-features)
+- [Architecture & Tech Stack](#-architecture--tech-stack)
+- [Local Setup & Getting Started](#-local-setup--getting-started)
+- [Environment Variables](#-environment-variables)
+- [Digital Passports & QR Code Resolution](#-digital-passports--qr-code-resolution)
+- [Production Deployment & Demo Cleanup](#-production-deployment--demo-cleanup)
+- [Automated Testing](#-automated-testing)
+- [Security, Limitations & License](#-security-limitations--license)
 
-PetCare Passport is architected to address three distinct user workflows, each with dedicated interfaces, custom navigation, role-based access control (RBAC), and database-driven data isolation:
+---
 
+## ✨ Features
+
+### 🐶 Pet Owner Dashboard (`/owner/*`)
+* **Pet Profiles (`/owner/pets.html`)**: Register, view, edit, and archive pets (species, breed, DOB/age, sex, microchip, weight, blood type, sterilization, markings, allergies, medical notes).
+* **Digital Passports & QR Tags (`/owner/passports.html`)**: Generates unique public passport IDs with high-res QR codes. Granular privacy toggles for photo, name, breed, emergency phone, medical alerts, allergies, and vaccines.
+* **Health Records (`/owner/health.html`)**: Chronological veterinary visits, surgeries, lab results, and document attachments (differentiates owner-entered from clinic-attributed entries).
+* **Vaccination Tracker (`/owner/vaccinations.html`)**: Vaccine logs, clinics, and next-due dates with dynamic status badges (`Up to Date`, `Due Soon`, `Overdue`, `Unknown`).
+* **Daily Care (`/owner/daily-care.html`)**: Recurring medications, feeding routines, grooming, and exercise checklists with completion persistence.
+* **AI Assistant (`/owner/ai-assistant.html`)**: Wellness advice and triage guidance via Google Gemini or OpenRouter, with an internal evidence-based fallback engine and veterinary disclaimers.
+* **Notifications & Settings (`/owner/notifications.html`, `/owner/profile.html`)**: In-app alerts, profile updates, and pattern-enforced password security.
+
+### 🌍 Public Community & Emergency Hub
+* **Public QR Passport (`/passport-view.html?id=[public_id]` & `/passport-view`)**: Mobile view accessible by scanning a pet's collar tag. Strips internal IDs, passwords, and private user data server-side. Refreshing does not 404.
+* **Lost & Found Hub (`/lost-found.html`)**: Missing/found pet alert feeds with city filters, report submission with photos, and community sighting reports with geolocation.
+* **Care Guides (`/care-guides.html`)**: Evidence-based preventative wellness information and emergency advice.
+
+### 🛡️ Administrator Console (`/admin/*`)
+* **Operations Dashboard (`/admin/dashboard.html`)**: Platform counts for users, pets, clinics, reports, and reminder engine telemetry.
+* **User Governance (`/admin/users.html`)**: Inspect, suspend, or reactivate user accounts with mandatory documented reasons. Admins cannot suspend themselves.
+* **Moderation & Reports (`/admin/lost-found.html`, `/admin/reports.html`)**: Moderate lost & found notices and triage community complaints with internal notes.
+* **Clinic Directory (`/admin/clinics.html`)**: Manage vetted veterinary clinics and licensing badges.
+* **Reminders & Audit Trail (`/admin/reminders.html`, `/admin/audit-logs.html`, `/admin/system-health.html`)**: Telemetry logs with manual retry, append-only admin audit logs, and live latency diagnostics.
+
+---
+
+## 🏗️ Architecture & Tech Stack
+
+```text
+Clients (Owner / Public / Admin) ──> Express 5 REST API (Node.js 18+) ──> MySQL 8.0 Database
+  [Helmet, CORS, Rate-Limit, Sessions]     [AI / Resend Email Fallbacks]    [15 Relational Tables, Pools]
 ```
-                                  ┌───────────────────────────────┐
-                                  │      PetCare Passport App     │
-                                  └───────────────┬───────────────┘
-                                                  │
-                 ┌────────────────────────────────┼────────────────────────────────┐
-                 │                                │                                │
-                 ▼                                ▼                                ▼
-  ┌─────────────────────────────┐  ┌─────────────────────────────┐  ┌─────────────────────────────┐
-  │ 1. ADOPTER / VISITOR UI     │  │ 2. PET OWNER DASHBOARD      │  │ 3. ADMINISTRATOR CONSOLE    │
-  │ Public & Adopter Experience │  │ Authenticated Pet Owners    │  │ Privileged Platform Admins  │
-  ├─────────────────────────────┤  ├─────────────────────────────┤  ├─────────────────────────────┤
-  │ • Public Home & Featured    │  │ • Personalized Overview     │  │ • Real-time DB Analytics    │
-  │ • Adoption Filter & Search  │  │ • "My Pets" Profile CRUD    │  │ • User Account Governance   │
-  │ • Sanitized Pet Details     │  │ • Digital Passports & QR    │  │ • Adoption Moderation Queue │
-  │ • Adoption Enquiries        │  │ • Chronological Health Recs │  │ • Lost & Found Moderation   │
-  │ • Formal Applications       │  │ • Vaccine Due Calculator    │  │ • Reports & Complaints Desk │
-  │ • Favourite Pets Stash      │  │ • Daily Recurring Care      │  │ • Appointment Oversight     │
-  │ • Lost & Found Sightings    │  │ • Owner Appointment Records │  │ • Clinic Directory CRUD     │
-  │ • Care Guides Library       │  │ • Rehoming Submissions      │  │ • Reminder & Email Telemetry│
-  │                             │  │ • AI Pet-Care Assistant     │  │ • Immutable Audit Logs      │
-  │                             │  │ • In-App Notifications      │  │ • Live System Health Check  │
-  └─────────────────────────────┘  └─────────────────────────────┘  └─────────────────────────────┘
-                 │                                │                                │
-                 └────────────────────────────────┼────────────────────────────────┘
-                                                  │
-                                                  ▼
-                                 ┌─────────────────────────────────┐
-                                 │ Express 5 REST API & Middleware │
-                                 │  • RBAC & HttpOnly Sessions     │
-                                 │  • Helmet & CSRF Headers        │
-                                 │  • Rate Limiting & Multer       │
-                                 │  • AI & Resend Email Services   │
-                                 └────────────────┬────────────────┘
-                                                  │
-                                                  ▼
-                                 ┌─────────────────────────────────┐
-                                 │      MySQL 8.0 Relational DB    │
-                                 │   18 Tables, Foreign Keys,      │
-                                 │   Transactions, Indices         │
-                                 └─────────────────────────────────┘
-```
+
+* **Frontend**: Semantic HTML5, Vanilla CSS3 (Golden Fur design tokens), Vanilla ES6+ JS, Chart.js, QRCode.js.
+* **Backend**: Node.js, Express 5.3.0, `express-session`, `express-mysql-session`, `bcryptjs`, `helmet`, `express-rate-limit`, `multer`, `qrcode`.
+* **Database**: MySQL 8.0+ via `mysql2/promise` connection pools with foreign keys and ACID transactions.
 
 ---
 
-## 🚀 Key Modules & Capabilities
-
-### 1. 🐕 Pet Owner Dashboard (`/owner/*`)
-Designed exclusively for registered pet owners to manage their pets' complete health and care lifecycle:
-* **Personalized Dashboard Overview (`/owner/dashboard.html`)**: Real-time calculated counts for registered pets, upcoming appointments, vaccinations due soon, overdue vaccinations, active daily care tasks, recent health records, and pending adoption listings.
-* **Pet Profile Management (`/owner/pets.html`)**: Add, view, edit, and archive pets. Store name, species, breed, estimated age or DOB, sex, markings, microchip number, weight, blood type, sterilization status, allergies, known conditions, medication notes, and dietary schedules.
-* **Digital Pet Passports & QR Codes (`/owner/passports.html`)**: Unique, non-guessable public passport IDs with auto-generated high-resolution QR codes linking to `/passport-view.html?id=[public_id]`. Granular owner visibility controls (toggle photo, emergency contact, allergies, medical alerts, and vaccines publicly or make passport completely private).
-* **Health Records (`/owner/health.html`)**: Chronological veterinary visits, surgeries, lab tests, and procedures. Supports document uploads and explicitly differentiates owner-entered information from verified records.
-* **Vaccination Management (`/owner/vaccinations.html`)**: Record vaccine name, clinic, administration date, and next due date. Real-time dynamic calculation of status badges: `Up to Date`, `Due Soon` (within 30 days), `Overdue`, and `Unknown`. Clear disclaimer that calculated statuses do not replace veterinary consultations.
-* **Medications & Daily Care (`/owner/daily-care.html`)**: Recurring medication routines, feeding regimens, grooming sessions, and walking schedules with daily completion checkboxes and progress tracking.
-* **Appointment Management (`/owner/appointments.html`)**: Owner-managed clinic visit planner with pet selector, clinic name, appointment date/time, purpose, and reminders. Explicitly communicates that records are owner-managed unless an official veterinary API integration confirms them.
-* **Rehoming & Adoption Submissions (`/owner/rehoming.html`)**: Submit a pet for adoption. Listings remain unpublished under `pending_approval` status until approved by an administrator. Owners can respond to administrator requests for changes and manage adopter enquiries.
-* **AI Pet-Care Assistant (`/owner/ai-assistant.html`)**: Evidence-based routine care guidance, visit preparation checklists, and nutrition advice powered by Google Gemini or OpenRouter with fallback clinical knowledge engine and strict non-veterinary disclaimer.
-* **Notifications & Profile Settings (`/owner/notifications.html`, `/owner/profile.html`)**: Real-time alerts for vaccines, appointments, and enquiries; password update and profile management.
-
----
-
-### 2. 🐱 Adopter / Visitor Experience (`/index.html`, `/adopt.html`, `/lost-found.html`, `/adopter/*`)
-A dedicated discovery experience allowing visitors to browse and interact without being forced to register:
-* **Public Home Page (`/index.html`)**: Welcoming introduction, search shortcuts, responsible pet ownership guides, and live database highlights of approved adoption listings.
-* **"Adopt a Pet" Directory (`/adopt.html`)**: Comprehensive search and multi-parameter filtering by species, breed, age group, sex, and location. Displays real approved database listings only.
-* **Sanitized Pet Adoption Profile (`/pet-details.html`)**: Rich photo display, temperament details, and adoption requirements. **Privacy Guarantee:** Automatically redacts owner passwords, private veterinary records, and home addresses server-side.
-* **Adoption Enquiries & Direct Applications**: Safe enquiry submission form with validation and rate limiting. Registered adopters can submit formal multi-question adoption applications and track approval statuses (`Submitted`, `Under Review`, `Changes Requested`, `Accepted`, `Declined`, `Withdrawn`) at `/adopter/applications.html`.
-* **Saved Favourites (`/adopter/favourites.html`)**: Registered users can bookmark pets to revisit their profiles anytime.
-* **Lost & Found Community Hub (`/lost-found.html`)**: Browse published lost and found pets, submit lost/found reports with photos, submit sighting reports with geolocation, and celebrate reunited pets.
-* **Universal Account Model**: An adopter account can easily add a pet to immediately access Pet Owner features without creating a duplicate account.
-
----
-
-### 3. 🛡️ Administrator Dashboard (`/admin/*`)
-A protected, dedicated administrative operations console with standalone navigation, server-side RBAC, and zero trust of client-supplied roles:
-* **Platform Management Overview (`/admin/dashboard.html`)**: Real database counts for total users, registered pets, active listings, pending approvals, rejected/suspended listings, open reports, pending lost-and-found items, appointment volume, and failed reminder attempts.
-* **User Governance (`/admin/users.html`)**: Search and inspect accounts. Suspend or reactivate accounts with a mandatory documented administrative reason. Prevents administrators from suspending their own accounts.
-* **Adoption Listing Moderation (`/admin/moderation.html`)**: Review pending listings. Approve, reject with reason, request changes, or suspend. **Platform Integrity Rule:** Administrators are strictly prohibited from approving their own listings.
-* **Lost & Found Moderation (`/admin/lost-found.html`)**: Review, publish, suspend, or close lost-and-found reports and community sightings.
-* **Reports & Complaints Desk (`/admin/reports.html`)**: Triage platform complaints regarding suspected scams, inappropriate listings, or appointment disputes. Record private administrative notes and resolve complaints.
-* **Appointment Oversight (`/admin/appointments.html`)**: Platform-wide visibility of all appointment records. Audited administrative updates with mandatory documented justification and pet owner notifications.
-* **Veterinary Clinic Directory (`/admin/clinics.html`)**: Manage vetted veterinary clinics, verify licensing badges, and maintain service directories.
-* **Reminder & Notification Telemetry (`/admin/reminders.html`)**: Inspect queued, accepted, and failed reminder dispatches. View safe error messages and click `🔁 Retry` to re-dispatch failed notifications.
-* **System Audit Logs (`/admin/audit-logs.html`)**: Immutable audit trail recording administrator name, action type, target entity, target ID, documented reason, and metadata delta.
-* **Platform Health Diagnostics (`/admin/system-health.html`)**: Real-time database round-trip latency, Node.js memory footprint, server uptime, and provider readiness flags with zero secret leakage.
-
----
-
-## 🛠️ Technology Stack
-
-| Layer | Technologies Used |
-| :--- | :--- |
-| **Frontend** | HTML5, Vanilla CSS3 (Custom Design System, Glassmorphic Cards, Responsive Layouts), Vanilla JavaScript (ES6+), Fetch API, Chart.js, QRCode.js |
-| **Backend** | Node.js, Express.js 5.x, express-session, express-mysql-session, bcryptjs, Helmet, express-rate-limit, Multer |
-| **Database** | MySQL 8.0+ relational database via `mysql2` connection pooling with 18 relational tables, foreign key constraints, and parameterized queries |
-| **AI Integration** | Backend service supporting Google Gemini API (`gemini-1.5-flash`), OpenRouter API (`meta-llama/llama-3-8b-instruct`), and domain-specific evidence-based clinical fallback engine |
-| **Email Service** | Transactional email processing using Resend HTTP API with developer simulation logging fallback |
-| **Testing** | Node.js native test runner (`node --test`), `supertest`, and `node:assert` |
-
----
-
-## 📋 Database Schema
-
-The system uses 18 normalized relational tables:
-1. `users` — Authentication, roles (`user`, `admin`), profile, status (`active`, `suspended`).
-2. `pets` — Pet profiles, microchips, markings, allergies, medical notes, unique public identifiers.
-3. `passports` — Digital passport visibility toggles, emergency contacts, high-res QR data URLs.
-4. `health_records` — Chronological veterinary visits, surgeries, lab results, file uploads, entry sources.
-5. `vaccinations` — Administered vaccines, due dates, clinics, proof documents.
-6. `daily_care_tasks` — Medication, feeding, grooming, walking recurring schedules.
-7. `appointments` — Clinic visit records, dates, times, notes, administrative audit markers.
-8. `adoption_listings` — Rehoming listings, requirements, moderation states (`pending_approval`, `approved`, `rejected`, `changes_requested`, `suspended`).
-9. `adoption_enquiries` — Public and guest inquiries sent to pet owners.
-10. `adoption_applications` — Formal adopter applications with multi-step review workflows.
-11. `favourites` — Bookmarked adoption listings for registered adopters.
-12. `lost_found_reports` — Lost and found pet notices, locations, and contact info.
-13. `lost_found_sightings` — Community sightings with date, location, and photos.
-14. `reports_and_complaints` — User reports on suspicious listings, scams, or abuse.
-15. `clinics` — Directory of veterinary clinics with licensing verification status.
-16. `notifications` — Persistent in-app user notifications.
-17. `reminders_log` — Telemetry queue for reminders and emails (`queued`, `processing`, `accepted_by_provider`, `delivered`, `failed`).
-18. `audit_logs` — Immutable administrative operations log.
-
----
-
-## ⚙️ Installation & Local Setup
+## 🚀 Local Setup & Getting Started
 
 ### Prerequisites
-* **Node.js** (v18.0.0 or higher)
-* **MySQL Server** (v8.0 or higher) running locally or remotely
+* Node.js v18.0.0+ and npm v9.0.0+
+* MySQL Server v8.0+ running locally or remotely
 
-### 1. Clone & Install Dependencies
+### 1. Installation
 ```bash
-cd d:/Pet-Care-Passport
+git clone <YOUR_REPOSITORY_URL> pet-care-passport
+cd pet-care-passport
 npm install
 ```
 
-### 2. Configure Environment Variables
-Copy `.env.example` to `.env` and fill in your database credentials:
+### 2. Configure Environment (`.env`)
 ```bash
 cp .env.example .env
 ```
-
-Key variables in `.env`:
-```env
+Set your local credentials in `.env`:
+```dotenv
 PORT=3000
 NODE_ENV=development
-
-# MySQL Database Configuration
 MYSQL_HOST=localhost
-MYSQL_PORT=3306         # Adjust to your MySQL port (e.g., 3366)
+MYSQL_PORT=3306
 MYSQL_USER=root
-MYSQL_PASSWORD=your_password
+MYSQL_PASSWORD=<YOUR_LOCAL_MYSQL_PASSWORD>
 MYSQL_DATABASE=petcare_passport
-
-# Session Secret (cryptographic key)
-SESSION_SECRET=petcare_super_secure_secret_key_2026_xyz
-
-# AI Integration (Optional: works with fallback if not provided)
-AI_PROVIDER=gemini
-GEMINI_API_KEY=
-GEMINI_MODEL=gemini-1.5-flash
-
-# Transactional Email (Optional: simulated in console if not provided)
-EMAIL_PROVIDER=resend
-RESEND_API_KEY=
-EMAIL_FROM=PetCare Passport <notifications@petcarepassport.com>
-
-# Initial Administrator Bootstrap
-ADMIN_BOOTSTRAP_EMAIL=admin@petcarepassport.com
-ADMIN_BOOTSTRAP_PASSWORD=AdminPass123!
-ADMIN_BOOTSTRAP_NAME=System Administrator
+SESSION_SECRET=<YOUR_RANDOM_SESSION_SECRET>
+PUBLIC_BASE_URL=http://localhost:3000
 ```
+*(Generate secret: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`)*
 
-### 3. Run Database Migrations & Rich Seed Data
-Run the migration script to create all 18 tables and populate them with realistic demo data:
+### 3. Initialize Database & Verified Clinics
 ```bash
-node database/migrate.js
+npm run migrate
 ```
+Applies schema DDL non-destructively (`CREATE TABLE IF NOT EXISTS`) and seeds verified clinics if empty. **Never inserts demo accounts.**
 
-### 4. Start the Application
+### 4. Bootstrap Initial Administrator
+Public registration (`/register.html`) hardcodes `role: 'user'`, preventing privilege escalation. Create your admin account via CLI:
 ```bash
-node server.js
+npm run bootstrap-admin -- --email "admin@yourdomain.com" --password "<STRONG_PASSWORD>" --name "Platform Administrator"
 ```
-The server will start on `http://localhost:3000`.
+*Enforces 8+ chars, upper, lower, digit, and symbol. Idempotent: never overwrites existing passwords or duplicates accounts on re-run.*
+
+### 5. Start Application
+```bash
+npm start
+```
+Accessible at `http://localhost:3000` (Login: `/login.html`, Health: `/api/health-check`).
 
 ---
 
-## 🔑 Pre-Seeded Demo Accounts
+## 🌐 Environment Variables
 
-The login page (`/login.html`) includes **1-Click Demo Login** buttons for instant role testing:
+| Variable | Required | Default | Description | Example / Placeholder |
+| :--- | :---: | :--- | :--- | :--- |
+| `NODE_ENV` | **Yes** | `development` | Enforces secure cookies and HTTPS QR validation in `production`. | `production` |
+| `PORT` | Optional | `3000` | Port for Express server. | `3000` |
+| `PUBLIC_BASE_URL` | **Yes** | `http://localhost:3000` | Base URL for QR codes. **Must use HTTPS in production.** (Accepts `APP_URL`). | `https://passport.yourdomain.com` |
+| `MYSQL_HOST` / `MYSQL_PORT` | **Yes** | `localhost:3306` | MySQL host and port. | `localhost` / `3306` |
+| `MYSQL_USER` / `MYSQL_PASSWORD` | **Yes** | `root` / `""` | MySQL credentials. | `petcare_user` / `<STRONG_PASSWORD>` |
+| `MYSQL_DATABASE` | **Yes** | `petcare_passport` | Database name. | `petcare_passport` |
+| `SESSION_SECRET` | **Yes** | Default key | Secret for signing session cookies. | `<STRONG_SESSION_SECRET>` |
+| `AI_PROVIDER` | Optional | `gemini` | `gemini` or `openrouter` (uses clinical fallback engine if unset). | `gemini` |
+| `GEMINI_API_KEY` / `OPENROUTER_API_KEY` | Optional | `""` | API keys for third-party AI assistants. | `<YOUR_AI_API_KEY>` |
+| `EMAIL_PROVIDER` / `RESEND_API_KEY` | Optional | `resend` / `""` | Transactional email provider (simulated in console if unset). | `<YOUR_RESEND_KEY>` |
+| `ADMIN_BOOTSTRAP_EMAIL` / `_PASSWORD` | Optional | `""` | Default credentials for `npm run bootstrap-admin`. | `admin@domain.com` / `<PWD>` |
 
-| Experience / Role | Email Address | Password | Seeded Data & Scope |
-| :--- | :--- | :--- | :--- |
-| **🛡️ Administrator** | `admin@petcarepassport.com` | `AdminPass123!` | Full access to `/admin/*`, moderation queues, appointment oversight, user suspensions, audit logs, and diagnostics. |
-| **🐾 Pet Owner** | `sarah@example.com` | `Owner123!` | Owner of **Luna** (Golden Retriever) and **Milo** (British Shorthair Cat). Has active QR passports, overdue vaccines, upcoming clinic appointments, and daily care tasks. |
-| **🏡 Registered Adopter** | `mark@example.com` | `Adopter123!` | Has saved favourites (Barnaby & Cleo), submitted adoption applications, and sent enquiries. |
-| **🌐 Public Visitor** | *No login required* | *N/A* | Browse `/index.html`, `/adopt.html`, `/lost-found.html`, `/passport-view.html`, and submit enquiries. |
+---
+
+## 🔗 Digital Passports & QR Code Resolution
+
+QR codes containing `localhost` URLs will fail when scanned by mobile phones in the real world because `localhost` resolves to the phone itself.
+
+* **Code Implementation (`src/utils/urlHelper.js`)**:
+  * **In Production (`NODE_ENV=production`)**: `PUBLIC_BASE_URL` is mandatory, must be a valid URL, must use `https:`, and cannot be `localhost`. If missing or invalid, QR generation throws an explicit error rather than silently embedding localhost.
+  * **In Development**: Falls back to `http://localhost:${PORT || 3000}` if unset.
+  * **QR Encoding**: Generates high-resolution PNG data URLs with error correction level `H` (~30% error recovery for worn collar tags).
+  * **Direct Routes**: Both `/passport-view.html?id=[public_id]` and `/passport-view?id=[public_id]` serve directly without 404 on refresh. Accepts both `?id=` and `?code=`.
+* **Privacy Guarantee**: `GET /api/passports/public/:publicId` returns only owner-authorized fields. Internal database IDs, user IDs, passwords, emails, and medical documents are stripped server-side. Uses non-guessable IDs (`${name}-${randomBytes(8)}`).
+* **Updating Existing QR Codes**:
+  * *Option A (Owner UI)*: In `/owner/passports.html`, click **🔄 Revoke & Regenerate QR** to invalidate the old ID and encode `PUBLIC_BASE_URL`.
+  * *Option B (Bulk CLI Tool)*: Update all existing stored QR codes without altering pet data:
+    ```bash
+    npm run refresh-qr -- --dry-run   # Preview
+    npm run refresh-qr               # Execute safe update
+    ```
+
+---
+
+## 🛡️ Production Deployment & Demo Cleanup
+
+### 1. Safe Demo Data Cleanup
+If deploying or migrating from staging, remove legacy demo accounts (`admin@petcarepassport.com`, `sarah@example.com`, `mark@example.com`):
+```bash
+mysqldump -h <HOST> -P <PORT> -u <USER> -p <DB> > backup_before_cleanup.sql # Step 1: Backup
+npm run cleanup-demo -- --dry-run                                           # Step 2: Preview
+npm run cleanup-demo                                                        # Step 3: Transactional cleanup
+```
+* **Safety Guarantees**: Never runs blind deletes. Preserves all legitimate user accounts and real pets. Demo accounts receive `401 Unauthorized` post-cleanup. For managed remote databases (AWS RDS, Cloud SQL), run `database/cleanup_demo_data.sql`.
+* **Zero Startup Seeding**: `server.js` and `npm run migrate` never re-seed demo data on startup. Development seeds (`npm run seed:dev`) halt if `NODE_ENV === 'production'`.
+
+### 2. Deployment Steps
+1. Provision MySQL 8.0+ instance and configure hosting environment variables (`NODE_ENV=production`, `PUBLIC_BASE_URL=https://...`).
+2. Run migrations: `npm run migrate`. Clean legacy demos if needed: `npm run cleanup-demo`.
+3. Provision administrator: `npm run bootstrap-admin -- --email <email> --password <pwd> --name <name>`.
+4. Run app via PM2 (`pm2 start server.js --name petcare --env production`) or Docker.
+5. Terminate HTTPS via Nginx/Caddy. **HTTPS is required because `server.js` sets `cookie.secure = true` in production.**
+
+```nginx
+server {
+    listen 80; server_name passport.yourdomain.com;
+    return 301 https://$host$request_uri;
+}
+server {
+    listen 443 ssl http2; server_name passport.yourdomain.com;
+    ssl_certificate /etc/letsencrypt/live/passport.yourdomain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/passport.yourdomain.com/privkey.pem;
+    client_max_body_size 15M;
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
 
 ---
 
 ## 🧪 Automated Testing
 
-PetCare Passport includes a comprehensive automated integration test suite covering:
-1. Database connection pool health check (`/api/health-check`).
-2. Public adoption search filtering for approved listings only.
-3. Public passport endpoint privacy sanitization (zero password/address leakage).
-4. Public Lost & Found accessibility without authentication.
-5. Server-side RBAC: 401 Unauthorized on protected routes.
-6. Server-side RBAC: 403 Forbidden when a regular user attempts admin actions.
-7. Authentication failure handling on invalid passwords.
-8. Pet Owner session operations and pet data isolation.
-9. Administrator session operations and privileged audit logging.
-10. AI Assistant response validation with mandatory veterinary clinical disclaimers.
+Automated integration test suite using the Node.js native test runner (`node --test`), `supertest`, and `node:assert`:
 
-Run the test suite anytime:
 ```bash
 npm test
 ```
 
-Expected result:
+### Verified Test Scope (24 Scenarios, All Passing)
+1. **Health & DB**: System health check returns 200 and active database pool.
+2. **Privacy**: Public passport strips passwords, user IDs, and private medical documents.
+3. **Public Hub**: Lost & found reports browseable without login; direct passport route loads without 404.
+4. **RBAC**: Unauthenticated `/api/owner/overview` and `/api/admin/overview` return 401.
+5. **Auth**: Invalid password rejected; owner and administrator dashboards authenticate and load data.
+6. **Safety & Triage**: AI assistant enforces clinical veterinary disclaimers; unread notifications return integer counts.
+7. **Reporting**: Pet owner missing pet report automatically publishes community alert.
+8. **Data Integrity**: Vaccination dates match without timezone drift.
+9. **Password Rules**: Complexity enforced; confirmation match required; forgot password token and reset verified.
+10. **Role Escalation Guard**: Public registration ignores `role` parameter and hardcodes `'user'`.
+11. **Production Hardening**: Demo accounts cannot authenticate (401); admin bootstrap rerun preserves existing password.
+12. **QR & Base URL**: Local/production URL resolution verified; production mode rejects missing/insecure/localhost URLs; QR encodes level H data URL; non-existent passport returns 404 (`PASSPORT_NOT_FOUND`); QR regeneration invalidates old ID.
+
+```text
+▶ PetCare Passport Integration Test Suite (24 passed, 0 failed, 6468ms)
 ```
-✔ 1. System Health Check returns 200 and active database pool
-✔ 2. Public Adoption Search returns only approved listings
-✔ 3. Public Passport endpoint protects private information and strips passwords/private data
-✔ 4. Public Lost & Found endpoint returns published reports without requiring login
-✔ 5. Unauthenticated request to /api/owner/overview returns 401
-✔ 6. Unauthenticated request to /api/admin/overview returns 401
-✔ 7. Login fails with invalid password
-✔ 8. Pet Owner login and dashboard access
-✔ 9. Administrator login and management operations
-✔ 10. AI Assistant returns response with mandatory clinical disclaimer
-✔ PetCare Passport Test Suite (10 passed, 0 failed)
-```
 
 ---
 
-## 🔒 Security & Privacy Architecture
+## 🔒 Security, Limitations & License
 
-* **Zero Trust Client Roles**: Role authorization is validated on the backend via session middleware (`requireAuth`, `requireAdmin`). Frontend form fields or requests specifying roles are rejected.
-* **Anti-Self-Approval Enforcement**: In `src/routes/adminRoutes.js`, administrators are strictly prohibited from approving their own adoption listings to preserve platform moderation integrity.
-* **Public Passport Redaction**: The public passport API (`/api/passports/public/:publicId`) only returns fields explicitly toggled on by the owner. Passwords, user IDs, private medical records, and residential addresses are omitted.
-* **Session Protection**: Managed via `express-session` with `express-mysql-session` persistent storage, `httpOnly: true`, `sameSite: 'lax'`, and configurable HTTPS in production.
-* **Rate Limiting**: `express-rate-limit` protects authentication endpoints against brute-force attacks.
-* **Audit Trail**: Every significant administrative action (user suspension, listing approval/rejection, appointment correction, clinic deletion) is logged in the `audit_logs` table with timestamp, IP address, and documented rationale.
-
----
-
-## 🚀 Production Deployment Guide (Render / Railway / AWS)
-
-### 1. Deploying to Render
-1. Push the repository to GitHub.
-2. In Render, create a **Managed MySQL** service. Note the connection URL and port.
-3. Create a **Web Service** pointing to your repository with:
-   * **Environment**: `Node`
-   * **Build Command**: `npm install`
-   * **Start Command**: `node server.js`
-4. Add the environment variables from `.env.example` in the Render Dashboard (`NODE_ENV=production`, `MYSQL_HOST`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`, `SESSION_SECRET`, etc.).
-5. Ensure `NODE_ENV=production` is set so secure cookie flags and Helmet security policies are enforced.
-6. Connect a persistent disk to the `/uploads` directory to preserve user-uploaded pet photographs and documents across container redeployments.
-7. Run `node database/migrate.js` in the Render shell or as a pre-deploy command to initialize the production schema.
-
----
-
-## 📄 License & Attribution
-
-Developed for **PetCare Passport**. Built with clean, accessible semantic HTML5, Vanilla CSS3, Vanilla ES6+ JavaScript, Node.js Express 5, and MySQL 8.
+* **Security Controls**: Server-side RBAC session authorization, parameterized queries, `bcryptjs` hashing, `express-rate-limit`, append-only `audit_logs` table, and `cookie.secure = true` in production.
+* **Limitations**: AI assistant responses and vaccine calculators are informational and do not replace professional veterinary advice. Collar QR tags require mobile internet connectivity to load public passports.
+* **License**: ISC License (see `package.json`).

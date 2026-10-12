@@ -4,6 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "node server.js",
+    "migrate": "node database/migrate.js",
+    "bootstrap-admin": "node scripts/bootstrap_admin.js",
+    "cleanup-demo": "node scripts/cleanup_demo_data.js",
+    "refresh-qr": "node scripts/refresh_passport_qr.js",
+    "seed:dev": "node database/seed_demo.js",
     "test": "node --test tests/api.test.js"
   },
   "keywords": [],

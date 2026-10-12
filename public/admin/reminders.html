@@ -47,16 +47,10 @@
             <a href="/admin/users.html" id="admin-nav-users"><span class="admin-menu-icon">👥</span> User Management</a>
           </li>
           <li class="admin-menu-item">
-            <a href="/admin/moderation.html" id="admin-nav-moderation"><span class="admin-menu-icon">🏡</span> Adoption Moderation</a>
-          </li>
-          <li class="admin-menu-item">
             <a href="/admin/lost-found.html" id="admin-nav-lost-found"><span class="admin-menu-icon">🔍</span> Lost & Found Queue</a>
           </li>
           <li class="admin-menu-item">
             <a href="/admin/reports.html" id="admin-nav-reports"><span class="admin-menu-icon">🚨</span> Reports & Complaints</a>
-          </li>
-          <li class="admin-menu-item">
-            <a href="/admin/appointments.html" id="admin-nav-appointments"><span class="admin-menu-icon">📅</span> Appointment Oversight</a>
           </li>
           <li class="admin-menu-item">
             <a href="/admin/clinics.html" id="admin-nav-clinics"><span class="admin-menu-icon">🏥</span> Clinic Directory</a>
@@ -249,7 +243,7 @@
       tbody.innerHTML = logs.map(log => {
         const statusBadge = getStatusBadge(log.status);
         const recipientSafe = maskEmail(log.recipient_email || 'n/a');
-        const formattedDate = new Date(log.created_at).toLocaleString();
+        const formattedDate = formatDateTime(log.created_at);
         const safeError = log.error_message ? escapeHtml(log.error_message) : '<span class="text-muted">None</span>';
 
         return `

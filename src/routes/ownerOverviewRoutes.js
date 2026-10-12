@@ -24,17 +24,7 @@ router.get('/overview', requireAuth, async (req, res) => {
 
     const totalPets = pets.length;
 
-    // 2. Upcoming appointments
-    const [upcomingApts] = await query(
-      `SELECT a.*, p.name as pet_name
-       FROM appointments a
-       JOIN pets p ON a.pet_id = p.id
-       WHERE a.user_id = ? AND a.status = 'upcoming' AND a.appointment_date >= NOW()
-       ORDER BY a.appointment_date ASC LIMIT 5`,
-      [userId]
-    );
-
-    // 3. Vaccinations Due Soon and Overdue (Calculated dynamically from entered dates!)
+    // 2. Vaccinations Due Soon and Overdue (Calculated dynamically from entered dates!)
     const [vaccRows] = await query(
       `SELECT v.*, p.name as pet_name
        FROM vaccinations v
@@ -72,7 +62,7 @@ router.get('/overview', requireAuth, async (req, res) => {
       }
     });
 
-    // 4. Active daily care tasks
+    // 3. Active daily care tasks
     const [activeTasks] = await query(
       `SELECT t.*, p.name as pet_name
        FROM daily_care_tasks t
@@ -82,7 +72,7 @@ router.get('/overview', requireAuth, async (req, res) => {
       [userId]
     );
 
-    // 5. Recent health records
+    // 4. Recent health records
     const [recentHealth] = await query(
       `SELECT hr.*, p.name as pet_name
        FROM health_records hr
@@ -92,7 +82,7 @@ router.get('/overview', requireAuth, async (req, res) => {
       [userId]
     );
 
-    // 6. Recent notifications
+    // 5. Recent notifications
     const [recentNotifs] = await query(
       `SELECT * FROM notifications
        WHERE user_id = ?
@@ -100,21 +90,11 @@ router.get('/overview', requireAuth, async (req, res) => {
       [userId]
     );
 
-    // 7. Adoption listings status (if owner has submitted any)
-    const [ownerListings] = await query(
-      `SELECT l.*, p.name as pet_name
-       FROM adoption_listings l
-       JOIN pets p ON l.pet_id = p.id
-       WHERE l.user_id = ?
-       ORDER BY l.created_at DESC`,
-      [userId]
-    );
-
     const payload = {
       total_pets: totalPets,
       pets,
-      upcoming_appointments_count: upcomingApts.length,
-      upcoming_appointments: upcomingApts,
+      upcoming_appointments_count: 0,
+      upcoming_appointments: [],
       vaccinations_overdue_count: overdueVaccinations,
       vaccinations_due_soon_count: dueSoonVaccinations,
       urgent_vaccinations: urgentVaccines,
@@ -122,7 +102,7 @@ router.get('/overview', requireAuth, async (req, res) => {
       active_care_tasks: activeTasks,
       recent_health_records: recentHealth,
       recent_notifications: recentNotifs,
-      adoption_listings: ownerListings
+      adoption_listings: []
     };
 
     res.json({

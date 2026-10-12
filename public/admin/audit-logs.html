@@ -47,16 +47,10 @@
             <a href="/admin/users.html" id="admin-nav-users"><span class="admin-menu-icon">👥</span> User Management</a>
           </li>
           <li class="admin-menu-item">
-            <a href="/admin/moderation.html" id="admin-nav-moderation"><span class="admin-menu-icon">🏡</span> Adoption Moderation</a>
-          </li>
-          <li class="admin-menu-item">
             <a href="/admin/lost-found.html" id="admin-nav-lost-found"><span class="admin-menu-icon">🔍</span> Lost & Found Queue</a>
           </li>
           <li class="admin-menu-item">
             <a href="/admin/reports.html" id="admin-nav-reports"><span class="admin-menu-icon">🚨</span> Reports & Complaints</a>
-          </li>
-          <li class="admin-menu-item">
-            <a href="/admin/appointments.html" id="admin-nav-appointments"><span class="admin-menu-icon">📅</span> Appointment Oversight</a>
           </li>
           <li class="admin-menu-item">
             <a href="/admin/clinics.html" id="admin-nav-clinics"><span class="admin-menu-icon">🏥</span> Clinic Directory</a>
@@ -236,7 +230,7 @@
       }
 
       tbody.innerHTML = logs.map(log => {
-        const dateStr = new Date(log.created_at).toLocaleString();
+        const dateStr = formatDateTime(log.created_at);
         const actionBadge = getActionBadge(log.action_type);
 
         return `
@@ -275,7 +269,7 @@
       if (!log) return;
 
       document.getElementById('modal-log-id').textContent = `#${log.id}`;
-      document.getElementById('modal-timestamp').textContent = new Date(log.created_at).toLocaleString();
+      document.getElementById('modal-timestamp').textContent = formatDateTime(log.created_at);
       document.getElementById('modal-admin').textContent = `${log.admin_name || 'Admin'} (ID: ${log.admin_id})`;
       document.getElementById('modal-ip').textContent = log.ip_address || 'Internal';
       document.getElementById('modal-action').textContent = log.action_type;

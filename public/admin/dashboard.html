@@ -51,16 +51,10 @@
             <a href="/admin/users.html" id="admin-nav-users"><span class="admin-menu-icon">👥</span> User Management</a>
           </li>
           <li class="admin-menu-item">
-            <a href="/admin/moderation.html" id="admin-nav-moderation"><span class="admin-menu-icon">🏡</span> Adoption Moderation</a>
-          </li>
-          <li class="admin-menu-item">
             <a href="/admin/lost-found.html" id="admin-nav-lost-found"><span class="admin-menu-icon">🔍</span> Lost & Found Queue</a>
           </li>
           <li class="admin-menu-item">
             <a href="/admin/reports.html" id="admin-nav-reports"><span class="admin-menu-icon">🚨</span> Reports & Complaints</a>
-          </li>
-          <li class="admin-menu-item">
-            <a href="/admin/appointments.html" id="admin-nav-appointments"><span class="admin-menu-icon">📅</span> Appointment Oversight</a>
           </li>
           <li class="admin-menu-item">
             <a href="/admin/clinics.html" id="admin-nav-clinics"><span class="admin-menu-icon">🏥</span> Clinic Directory</a>
@@ -116,12 +110,12 @@
           <div class="stat-icon" style="background:#f0fdf4;color:#16a34a;">🐕</div>
         </div>
 
-        <div class="stat-card stat-warning">
+        <div class="stat-card stat-accent">
           <div>
-            <div class="stat-label">Pending Adoption Reviews</div>
-            <div class="stat-value" id="adm-pending-listings" style="color:var(--warning-600);">0</div>
+            <div class="stat-label">Verified Clinics</div>
+            <div class="stat-value" id="adm-clinics" style="color:var(--accent-600);">0</div>
           </div>
-          <div class="stat-icon" style="background:#fef3c7;color:#b45309;">⏳</div>
+          <div class="stat-icon" style="background:#eff6ff;color:#2563eb;">🏥</div>
         </div>
 
         <div class="stat-card stat-danger">
@@ -133,30 +127,27 @@
         </div>
       </div>
 
-      <!-- Secondary Metrics: Active Listings, Lost-Found, Appointments, Failed Reminders -->
-      <div class="grid grid-cols-4 gap-6" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin-bottom: 32px;">
+      <!-- Secondary Metrics: Reminders, Lost & Found Community Alerts, Security Monitoring -->
+      <div class="grid grid-cols-3 gap-6" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-bottom: 32px;">
         <div class="card" style="padding:16px;">
-          <div class="text-muted text-xs font-bold uppercase">Active Adoption Listings</div>
-          <div style="font-size:1.8rem;font-weight:800;color:var(--primary-700);margin-top:4px;" id="adm-active-listings">0</div>
-          <a href="/admin/moderation.html" class="text-xs" style="color:var(--primary-600);font-weight:600;">Open queue →</a>
+          <div class="text-muted text-xs font-bold uppercase">Reminder Engine Health</div>
+          <div style="font-size:1.8rem;font-weight:800;color:var(--primary-700);margin-top:4px;" id="adm-failed-reminders">0</div>
+          <div class="text-xs text-muted" style="margin-top:2px;">Failed automated attempts</div>
+          <a href="/admin/reminders.html" class="text-xs" style="color:var(--primary-600);font-weight:600;display:inline-block;margin-top:4px;">Reminder Monitor →</a>
         </div>
 
         <div class="card" style="padding:16px;">
-          <div class="text-muted text-xs font-bold uppercase">Platform Appointments</div>
-          <div style="font-size:1.8rem;font-weight:800;color:var(--slate-800);margin-top:4px;" id="adm-total-apts">0</div>
-          <div class="text-xs text-muted" id="adm-apt-subtext">0 upcoming</div>
+          <div class="text-muted text-xs font-bold uppercase">Lost & Found Review Queue</div>
+          <div style="font-size:1.8rem;font-weight:800;color:var(--warning-600);margin-top:4px;" id="adm-active-lost">0</div>
+          <div class="text-xs text-muted" style="margin-top:2px;">Pending incident reports</div>
+          <a href="/admin/lost-found.html" class="text-xs" style="color:var(--warning-600);font-weight:600;display:inline-block;margin-top:4px;">Manage Queue →</a>
         </div>
 
         <div class="card" style="padding:16px;">
-          <div class="text-muted text-xs font-bold uppercase">Failed Reminder Attempts</div>
-          <div style="font-size:1.8rem;font-weight:800;color:var(--danger-600);margin-top:4px;" id="adm-failed-reminders">0</div>
-          <a href="/admin/reminders.html" class="text-xs" style="color:var(--danger-600);font-weight:600;">Inspect logs →</a>
-        </div>
-
-        <div class="card" style="padding:16px;">
-          <div class="text-muted text-xs font-bold uppercase">Suspended / Rejected Listings</div>
-          <div style="font-size:1.8rem;font-weight:800;color:var(--slate-600);margin-top:4px;" id="adm-rejected-listings">0</div>
-          <a href="/admin/moderation.html?status=rejected" class="text-xs" style="color:var(--slate-600);font-weight:600;">View records →</a>
+          <div class="text-muted text-xs font-bold uppercase">Security & Audit Status</div>
+          <div style="font-size:1.8rem;font-weight:800;color:var(--slate-800);margin-top:4px;">Active</div>
+          <div class="text-xs text-muted" style="margin-top:2px;">Audit trail logging enabled</div>
+          <a href="/admin/audit-logs.html" class="text-xs" style="color:var(--slate-600);font-weight:600;display:inline-block;margin-top:4px;">View Audit Logs →</a>
         </div>
       </div>
 
@@ -197,22 +188,19 @@
 
         document.getElementById('adm-users').textContent = s.total_users;
         document.getElementById('adm-pets').textContent = s.total_pets;
-        document.getElementById('adm-pending-listings').textContent = s.pending_listings;
+        document.getElementById('adm-clinics').textContent = s.total_clinics || 0;
         document.getElementById('adm-open-reports').textContent = s.open_reports;
-        document.getElementById('adm-active-listings').textContent = s.active_listings;
-        document.getElementById('adm-total-apts').textContent = s.appointments.total;
-        document.getElementById('adm-apt-subtext').textContent = `${s.appointments.upcoming} upcoming &bull; ${s.appointments.completed} completed`;
         document.getElementById('adm-failed-reminders').textContent = s.failed_reminders;
-        document.getElementById('adm-rejected-listings').textContent = s.rejected_suspended_listings;
+        document.getElementById('adm-active-lost').textContent = s.lost_found_pending || 0;
 
         // Action Highlights
         const highlights = document.getElementById('admin-action-highlights');
         let highlightHtml = '';
 
-        if (s.pending_listings > 0) {
+        if (s.lost_found_pending > 0) {
           highlightHtml += `
-            <a href="/admin/moderation.html?status=pending_approval" class="alert-banner alert-warning" style="margin-bottom:0;text-decoration:none;">
-              ⏳ <strong>${s.pending_listings} adoption listing(s)</strong> awaiting moderation decision. Review queue →
+            <a href="/admin/lost-found.html" class="alert-banner alert-warning" style="margin-bottom:0;text-decoration:none;">
+              🔍 <strong>${s.lost_found_pending} lost & found community report(s)</strong> awaiting moderation review. Manage queue →
             </a>
           `;
         }

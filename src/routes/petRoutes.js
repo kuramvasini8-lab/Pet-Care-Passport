@@ -5,6 +5,7 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 const QRCode = require('qrcode');
+const { generatePassportQr } = require('../utils/urlHelper');
 const { query } = require('../config/db');
 const { requireAuth } = require('../middleware/auth');
 const upload = require('../middleware/upload');
@@ -90,13 +91,8 @@ router.post('/', requireAuth, upload.single('photo'), async (req, res) => {
 
     const petId = petResult.insertId;
 
-    // Generate QR Code linking to public passport page
-    const passportUrl = `http://localhost:${process.env.PORT || 3000}/passport-view.html?id=${publicId}`;
-    const qrDataUrl = await QRCode.toDataURL(passportUrl, {
-      errorCorrectionLevel: 'H',
-      margin: 2,
-      width: 320
-    });
+    // Generate QR Code linking to public passport page using validated PUBLIC_BASE_URL
+    const { qrDataUrl } = await generatePassportQr(publicId);
 
     // Create Digital Passport
     await query(

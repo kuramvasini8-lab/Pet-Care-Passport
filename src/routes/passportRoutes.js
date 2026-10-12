@@ -3,8 +3,9 @@
  */
 const express = require('express');
 const router = express.Router();
-const QRCode = require('qrcode');
 const crypto = require('crypto');
+const QRCode = require('qrcode');
+const { generatePassportQr, buildPassportPublicUrl } = require('../utils/urlHelper');
 const { query } = require('../config/db');
 const { requireAuth } = require('../middleware/auth');
 
@@ -120,8 +121,7 @@ router.get('/:petId', requireAuth, async (req, res) => {
 
     // If passport doesn't exist yet, create one
     if (passports.length === 0) {
-      const passportUrl = `http://localhost:${process.env.PORT || 3000}/passport-view.html?id=${pet.public_id}`;
-      const qrDataUrl = await QRCode.toDataURL(passportUrl, { errorCorrectionLevel: 'H', margin: 2, width: 320 });
+      const { qrDataUrl } = await generatePassportQr(pet.public_id);
       await query(
         `INSERT INTO passports (
           pet_id, is_public_enabled, show_photo, show_name, show_breed,
@@ -151,7 +151,7 @@ router.get('/:petId', requireAuth, async (req, res) => {
         microchip_number: pet.microchip_number
       },
       passport: passports[0],
-      public_url: `http://localhost:${process.env.PORT || 3000}/passport-view.html?id=${pet.public_id}`
+      public_url: buildPassportPublicUrl(pet.public_id)
     });
   } catch (error) {
     console.error('[PassportRoutes] Get passport error:', error);
@@ -235,18 +235,17 @@ router.post('/:petId/regenerate-qr', requireAuth, async (req, res) => {
     }
 
     const newPublicId = `${pets[0].name.toLowerCase().replace(/[^a-z0-9]/g, '')}-${crypto.randomBytes(8).toString('hex')}`;
-    const newUrl = `http://localhost:${process.env.PORT || 3000}/passport-view.html?id=${newPublicId}`;
-    const newQr = await QRCode.toDataURL(newUrl, { errorCorrectionLevel: 'H', margin: 2, width: 320 });
+    const { passportUrl, qrDataUrl } = await generatePassportQr(newPublicId);
 
     await query('UPDATE pets SET public_id = ? WHERE id = ?', [newPublicId, petId]);
-    await query('UPDATE passports SET qr_code_url = ? WHERE pet_id = ?', [newQr, petId]);
+    await query('UPDATE passports SET qr_code_url = ? WHERE pet_id = ?', [qrDataUrl, petId]);
 
     res.json({
       success: true,
       message: 'Passport identifier and QR code regenerated! Old links are now invalidated.',
       public_id: newPublicId,
-      qr_code_url: newQr,
-      public_url: newUrl
+      qr_code_url: qrDataUrl,
+      public_url: passportUrl
     });
   } catch (error) {
     console.error('[PassportRoutes] Regenerate QR error:', error);

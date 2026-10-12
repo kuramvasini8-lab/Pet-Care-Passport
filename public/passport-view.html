@@ -40,7 +40,7 @@
 
     async function loadPassport() {
       const urlParams = new URLSearchParams(window.location.search);
-      const publicId = urlParams.get('id');
+      const publicId = urlParams.get('id') || urlParams.get('code');
       const target = document.getElementById('passport-render-target');
 
       if (!publicId) {

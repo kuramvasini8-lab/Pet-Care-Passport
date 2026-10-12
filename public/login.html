@@ -23,31 +23,14 @@
   </nav>
 
   <main class="container" style="display:flex;align-items:center;justify-content:center;flex:1;padding:40px 16px;">
-    <div class="card" style="max-width:460px;width:100%;box-shadow:var(--shadow-xl);padding:36px;">
+    <div class="card" style="max-width:480px;width:100%;box-shadow:var(--shadow-xl);padding:36px;">
       
       <div style="text-align:center;margin-bottom:28px;">
         <span style="font-size:2.5rem;">🔐</span>
         <h1 style="font-size:1.8rem;margin-top:8px;">Sign In to PetCare Passport</h1>
-        <p class="text-muted" style="font-size:0.9rem;margin-top:4px;">Access your pets, adoption applications, or moderation portal</p>
+        <p class="text-muted" style="font-size:0.9rem;margin-top:4px;">Access your registered companion pets and health passport console</p>
       </div>
 
-      <!-- Quick Demo Role Switcher (For Pair Programming / Testing) -->
-      <div style="background:var(--slate-50);border:1px dashed var(--slate-300);border-radius:var(--radius-md);padding:14px;margin-bottom:24px;">
-        <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--slate-500);margin-bottom:8px;">
-          ⚡ Quick Demo Login (One-Click)
-        </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button type="button" onclick="fillCredentials('sarah@example.com', 'Owner123!')" class="btn btn-outline btn-sm" style="flex:1;" id="btn-demo-owner">
-            🐾 Pet Owner
-          </button>
-          <button type="button" onclick="fillCredentials('mark@example.com', 'Adopter123!')" class="btn btn-outline btn-sm" style="flex:1;" id="btn-demo-adopter">
-            🏡 Adopter
-          </button>
-          <button type="button" onclick="fillCredentials('admin@petcarepassport.com', 'AdminPass123!')" class="btn btn-outline btn-sm" style="flex:1;border-color:#fca5a5;color:#991b1b;" id="btn-demo-admin">
-            🛡️ Admin
-          </button>
-        </div>
-      </div>
 
       <form id="login-form" onsubmit="handleLogin(event)">
         <div class="form-group">
@@ -56,11 +39,19 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="login-password">Password</label>
-          <input type="password" id="login-password" class="form-control" required placeholder="Enter password">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <label class="form-label" for="login-password" style="margin-bottom:0;">Password</label>
+            <a href="/forgot-password.html" style="font-size:0.825rem;color:var(--primary-600);font-weight:700;text-decoration:underline;" id="btn-forgot-password">
+              Forgot password?
+            </a>
+          </div>
+          <div style="position:relative;">
+            <input type="password" id="login-password" class="form-control" required placeholder="Enter password" style="padding-right:42px;">
+            <button type="button" onclick="togglePasswordVisibility('login-password', this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--slate-400);font-size:1.1rem;padding:4px;" title="Show/Hide Password" aria-label="Toggle password visibility">👁️</button>
+          </div>
         </div>
 
-        <button type="submit" class="btn btn-primary" style="width:100%;height:46px;margin-top:8px;" id="btn-submit-login">
+        <button type="submit" class="btn btn-primary" style="width:100%;height:46px;margin-top:10px;" id="btn-submit-login">
           Sign In →
         </button>
       </form>
@@ -71,12 +62,93 @@
     </div>
   </main>
 
+  <!-- Modal: Forgot Password & Account Recovery -->
+  <div class="modal-backdrop" id="modal-forgot-password">
+    <div class="modal-dialog" style="max-width:480px;">
+      <div class="modal-header">
+        <h3>🔑 Reset Account Password</h3>
+        <button class="modal-close" onclick="closeForgotPasswordModal()">&times;</button>
+      </div>
+
+      <!-- Step 1: Request Reset Link -->
+      <div id="forgot-step-request">
+        <form id="forgot-req-form" onsubmit="handleForgotPasswordRequest(event)">
+          <div class="modal-body">
+            <p class="text-muted text-xs" style="margin-bottom:16px;line-height:1.5;">
+              Enter your registered email address below. We'll generate a secure password reset authorization token to restore access to your account.
+            </p>
+
+            <div class="form-group">
+              <label class="form-label" for="forgot-email">Account Email Address *</label>
+              <input type="email" id="forgot-email" class="form-control" required placeholder="name@example.com">
+            </div>
+
+            <div id="forgot-status-msg" style="display:none;margin-top:12px;padding:12px;border-radius:6px;font-size:0.875rem;"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeForgotPasswordModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btn-submit-forgot">Generate Reset Link 📧</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Step 2: Set New Password (In-Modal) -->
+      <div id="forgot-step-reset" style="display:none;">
+        <form id="forgot-reset-form" onsubmit="handleResetPasswordSubmit(event)">
+          <input type="hidden" id="reset-token-input">
+          <div class="modal-body">
+            <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:12px;margin-bottom:16px;font-size:0.85rem;color:#166534;">
+              ✅ Token authorized for <strong id="reset-user-email">your account</strong>. Enter your new password below according to the required security pattern.
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="modal-new-pwd">New Password *</label>
+              <div style="position:relative;">
+                <input type="password" id="modal-new-pwd" class="form-control" required placeholder="New secure password" style="padding-right:42px;" oninput="onModalPasswordInput()">
+                <button type="button" onclick="togglePasswordVisibility('modal-new-pwd', this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--slate-400);font-size:1.1rem;padding:4px;">👁️</button>
+              </div>
+
+              <!-- Real-Time Password Pattern Rule Checklist -->
+              <div style="background:#fffdf7;border:1px solid #faeac0;border-radius:6px;padding:10px 12px;margin-top:8px;font-size:0.775rem;line-height:1.5;">
+                <div style="font-weight:700;color:#78350f;margin-bottom:3px;">Password Pattern Requirements:</div>
+                <div id="mrule-len" style="color:#64748b;"><span class="mrule-icon">○</span> At least 8 characters</div>
+                <div id="mrule-upper" style="color:#64748b;"><span class="mrule-icon">○</span> At least 1 uppercase letter (A-Z)</div>
+                <div id="mrule-lower" style="color:#64748b;"><span class="mrule-icon">○</span> At least 1 lowercase letter (a-z)</div>
+                <div id="mrule-num" style="color:#64748b;"><span class="mrule-icon">○</span> At least 1 numeric digit (0-9)</div>
+                <div id="mrule-special" style="color:#64748b;"><span class="mrule-icon">○</span> At least 1 special character (!@#$%^&*...)</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="modal-confirm-pwd">Confirm New Password *</label>
+              <div style="position:relative;">
+                <input type="password" id="modal-confirm-pwd" class="form-control" required placeholder="Confirm new password" style="padding-right:42px;" oninput="onModalConfirmInput()">
+                <button type="button" onclick="togglePasswordVisibility('modal-confirm-pwd', this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--slate-400);font-size:1.1rem;padding:4px;">👁️</button>
+              </div>
+              <div id="modal-pwd-match" style="font-size:0.8rem;font-weight:600;margin-top:4px;display:none;"></div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeForgotPasswordModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btn-save-new-pwd">Save New Password 🔒</button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
   <script src="/js/api.js"></script>
   <script>
-    function fillCredentials(email, password) {
-      document.getElementById('login-email').value = email;
-      document.getElementById('login-password').value = password;
-      showToast(`Credentials filled for ${email}`, 'info');
+    function togglePasswordVisibility(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+      }
     }
 
     async function handleLogin(e) {
@@ -92,7 +164,6 @@
         const res = await API.post('/api/auth/login', { email, password });
         showToast('Login successful! Welcome back.', 'success');
 
-        // Check if there's a returnUrl in query parameters
         const urlParams = new URLSearchParams(window.location.search);
         const returnUrl = urlParams.get('returnUrl');
 
@@ -109,6 +180,145 @@
         showToast(err.message, 'error');
         btn.disabled = false;
         btn.textContent = 'Sign In →';
+      }
+    }
+
+    // Modal & Forgot Password Handling
+    function openForgotPasswordModal(e) {
+      if (e) e.preventDefault();
+      const currentEmail = document.getElementById('login-email').value;
+      if (currentEmail) {
+        document.getElementById('forgot-email').value = currentEmail;
+      }
+      document.getElementById('forgot-step-request').style.display = 'block';
+      document.getElementById('forgot-step-reset').style.display = 'none';
+      const modal = document.getElementById('modal-forgot-password');
+      modal.classList.add('active');
+      setTimeout(() => document.getElementById('forgot-email').focus(), 100);
+    }
+
+    function closeForgotPasswordModal() {
+      const modal = document.getElementById('modal-forgot-password');
+      modal.classList.remove('active');
+    }
+
+    async function handleForgotPasswordRequest(e) {
+      e.preventDefault();
+      const email = document.getElementById('forgot-email').value.trim();
+      const btn = document.getElementById('btn-submit-forgot');
+      btn.disabled = true;
+      btn.textContent = 'Generating Token...';
+
+      try {
+        const res = await API.post('/api/auth/forgot-password', { email });
+        showToast(res.message, 'success');
+
+        // Transition to in-modal Reset Step with prefilled token
+        document.getElementById('reset-token-input').value = res.reset_token;
+        document.getElementById('reset-user-email').textContent = res.email || email;
+
+        document.getElementById('forgot-step-request').style.display = 'none';
+        document.getElementById('forgot-step-reset').style.display = 'block';
+        setTimeout(() => document.getElementById('modal-new-pwd').focus(), 100);
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Generate Reset Link 📧';
+      }
+    }
+
+    function checkPasswordPattern(password) {
+      return {
+        len: password.length >= 8,
+        upper: /[A-Z]/.test(password),
+        lower: /[a-z]/.test(password),
+        num: /\d/.test(password),
+        special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+      };
+    }
+
+    function updateModalRule(elementId, passed) {
+      const el = document.getElementById(elementId);
+      const icon = el.querySelector('.mrule-icon');
+      if (passed) {
+        el.style.color = '#15803d';
+        el.style.fontWeight = '600';
+        icon.textContent = '✓';
+      } else {
+        el.style.color = '#64748b';
+        el.style.fontWeight = 'normal';
+        icon.textContent = '○';
+      }
+    }
+
+    function onModalPasswordInput() {
+      const pwd = document.getElementById('modal-new-pwd').value;
+      const r = checkPasswordPattern(pwd);
+      updateModalRule('mrule-len', r.len);
+      updateModalRule('mrule-upper', r.upper);
+      updateModalRule('mrule-lower', r.lower);
+      updateModalRule('mrule-num', r.num);
+      updateModalRule('mrule-special', r.special);
+      onModalConfirmInput();
+    }
+
+    function onModalConfirmInput() {
+      const pwd = document.getElementById('modal-new-pwd').value;
+      const confirmPwd = document.getElementById('modal-confirm-pwd').value;
+      const matchEl = document.getElementById('modal-pwd-match');
+      if (!confirmPwd) {
+        matchEl.style.display = 'none';
+        return;
+      }
+      matchEl.style.display = 'block';
+      if (pwd === confirmPwd) {
+        matchEl.textContent = '✓ Passwords match';
+        matchEl.style.color = '#15803d';
+      } else {
+        matchEl.textContent = '✗ Passwords do not match';
+        matchEl.style.color = '#dc2626';
+      }
+    }
+
+    async function handleResetPasswordSubmit(e) {
+      e.preventDefault();
+      const token = document.getElementById('reset-token-input').value;
+      const new_password = document.getElementById('modal-new-pwd').value;
+      const confirm_password = document.getElementById('modal-confirm-pwd').value;
+      const btn = document.getElementById('btn-save-new-pwd');
+
+      const r = checkPasswordPattern(new_password);
+      if (!r.len || !r.upper || !r.lower || !r.num || !r.special) {
+        showToast('Password does not meet required security pattern.', 'error');
+        return;
+      }
+
+      if (new_password !== confirm_password) {
+        showToast('Passwords do not match.', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Saving Password...';
+
+      try {
+        const res = await API.post('/api/auth/reset-password', {
+          token,
+          new_password,
+          confirm_password
+        });
+        showToast(res.message, 'success');
+        closeForgotPasswordModal();
+
+        // Prefill login form with the updated password
+        document.getElementById('login-password').value = new_password;
+        showToast('New password set! Click Sign In to enter.', 'info');
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save New Password 🔒';
       }
     }
   </script>

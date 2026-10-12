@@ -37,8 +37,6 @@
           <li class="owner-menu-item"><a href="/owner/health.html"><span class="owner-menu-icon">🩺</span> Health Records</a></li>
           <li class="owner-menu-item"><a href="/owner/vaccinations.html"><span class="owner-menu-icon">💉</span> Vaccinations</a></li>
           <li class="owner-menu-item active"><a href="/owner/daily-care.html"><span class="owner-menu-icon">💊</span> Daily Care & Tasks</a></li>
-          <li class="owner-menu-item"><a href="/owner/appointments.html"><span class="owner-menu-icon">📅</span> Appointments</a></li>
-          <li class="owner-menu-item"><a href="/owner/rehoming.html"><span class="owner-menu-icon">🏡</span> Adoption & Rehoming</a></li>
           <li class="owner-menu-item"><a href="/owner/ai-assistant.html"><span class="owner-menu-icon">🤖</span> AI Pet Assistant</a></li>
         </ul>
       </div>
@@ -232,7 +230,7 @@
 
     function openAddTaskModal() {
       document.getElementById('care-form').reset();
-      document.getElementById('task-due-date').valueAsDate = new Date();
+      document.getElementById('task-due-date').value = getLocalDateInputString();
       openModal('modal-care');
     }
 

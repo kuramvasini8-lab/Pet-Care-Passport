@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
   <link rel="stylesheet" href="/css/components.css">
   <link rel="stylesheet" href="/css/admin.css">
 </head>
+
 <body>
 
   <!-- Admin Top Navbar -->
@@ -47,28 +49,28 @@
             <a href="/admin/users.html" id="admin-nav-users"><span class="admin-menu-icon">👥</span> User Management</a>
           </li>
           <li class="admin-menu-item">
-            <a href="/admin/moderation.html" id="admin-nav-moderation"><span class="admin-menu-icon">🏡</span> Adoption Moderation</a>
+            <a href="/admin/lost-found.html" id="admin-nav-lost-found"><span class="admin-menu-icon">🔍</span> Lost &
+              Found Queue</a>
           </li>
           <li class="admin-menu-item">
-            <a href="/admin/lost-found.html" id="admin-nav-lost-found"><span class="admin-menu-icon">🔍</span> Lost & Found Queue</a>
+            <a href="/admin/reports.html" id="admin-nav-reports"><span class="admin-menu-icon">🚨</span> Reports &
+              Complaints</a>
           </li>
           <li class="admin-menu-item">
-            <a href="/admin/reports.html" id="admin-nav-reports"><span class="admin-menu-icon">🚨</span> Reports & Complaints</a>
+            <a href="/admin/clinics.html" id="admin-nav-clinics"><span class="admin-menu-icon">🏥</span> Clinic
+              Directory</a>
           </li>
           <li class="admin-menu-item">
-            <a href="/admin/appointments.html" id="admin-nav-appointments"><span class="admin-menu-icon">📅</span> Appointment Oversight</a>
+            <a href="/admin/reminders.html" id="admin-nav-reminders"><span class="admin-menu-icon">📬</span> Reminder
+              Monitoring</a>
           </li>
           <li class="admin-menu-item">
-            <a href="/admin/clinics.html" id="admin-nav-clinics"><span class="admin-menu-icon">🏥</span> Clinic Directory</a>
-          </li>
-          <li class="admin-menu-item">
-            <a href="/admin/reminders.html" id="admin-nav-reminders"><span class="admin-menu-icon">📬</span> Reminder Monitoring</a>
-          </li>
-          <li class="admin-menu-item">
-            <a href="/admin/audit-logs.html" id="admin-nav-audit"><span class="admin-menu-icon">📜</span> System Audit Logs</a>
+            <a href="/admin/audit-logs.html" id="admin-nav-audit"><span class="admin-menu-icon">📜</span> System Audit
+              Logs</a>
           </li>
           <li class="admin-menu-item active">
-            <a href="/admin/system-health.html" id="admin-nav-health"><span class="admin-menu-icon">⚡</span> System Health</a>
+            <a href="/admin/system-health.html" id="admin-nav-health"><span class="admin-menu-icon">⚡</span> System
+              Health</a>
           </li>
         </ul>
       </div>
@@ -76,7 +78,8 @@
       <div style="border-top:1px solid var(--slate-800);padding-top:16px;">
         <ul class="admin-menu">
           <li class="admin-menu-item">
-            <a href="javascript:void(0)" onclick="Auth.logout()"><span class="admin-menu-icon">🚪</span> Sign Out Admin</a>
+            <a href="javascript:void(0)" onclick="Auth.logout()"><span class="admin-menu-icon">🚪</span> Sign Out
+              Admin</a>
           </li>
         </ul>
       </div>
@@ -87,7 +90,8 @@
       <div class="admin-header">
         <div>
           <h1 style="font-size:2rem;margin-bottom:4px;">Platform Health & Diagnostics</h1>
-          <p class="text-muted">Real-time status of database connection pooling, third-party AI and Email service configurations, and runtime resources.</p>
+          <p class="text-muted">Real-time status of database connection pooling, third-party AI and Email service
+            configurations, and runtime resources.</p>
         </div>
         <div>
           <button class="btn btn-outline" onclick="loadHealth()">🔄 Ping Diagnostics</button>
@@ -100,7 +104,9 @@
           <div style="display:flex;gap:12px;align-items:flex-start;">
             <span style="font-size:1.4rem;">🔒</span>
             <div style="font-size:0.875rem;color:#0369a1;">
-              <strong>Zero Secret Leakage Guarantee:</strong> Passwords, database credentials, AI API keys, and session secrets are strictly isolated on the backend. This telemetry console reflects operational readiness flags only.
+              <strong>Zero Secret Leakage Guarantee:</strong> Passwords, database credentials, AI API keys, and session
+              secrets are strictly isolated on the backend. This telemetry console reflects operational readiness flags
+              only.
             </div>
           </div>
         </div>
@@ -108,7 +114,7 @@
 
       <!-- Diagnostics Grid -->
       <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:24px;margin-bottom:24px;">
-        
+
         <!-- MySQL Database Status -->
         <div class="card">
           <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
@@ -231,28 +237,32 @@
         <div class="card-body">
           <p class="text-muted text-sm mb-4">Required environment settings validated upon bootstrap:</p>
           <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:12px;">
-            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--slate-50);border-radius:var(--radius-sm);">
+            <div
+              style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--slate-50);border-radius:var(--radius-sm);">
               <span style="color:#10b981;">✓</span>
               <div>
                 <div style="font-weight:600;font-size:0.85rem;">PORT / NODE_ENV</div>
                 <div class="text-xs text-muted">Listening on 3000 (development)</div>
               </div>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--slate-50);border-radius:var(--radius-sm);">
+            <div
+              style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--slate-50);border-radius:var(--radius-sm);">
               <span style="color:#10b981;">✓</span>
               <div>
                 <div style="font-weight:600;font-size:0.85rem;">MYSQL_* CONFIG</div>
                 <div class="text-xs text-muted">Connected to petcare_passport</div>
               </div>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--slate-50);border-radius:var(--radius-sm);">
+            <div
+              style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--slate-50);border-radius:var(--radius-sm);">
               <span style="color:#10b981;">✓</span>
               <div>
                 <div style="font-weight:600;font-size:0.85rem;">SESSION_SECRET</div>
                 <div class="text-xs text-muted">Cryptographic session signing</div>
               </div>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--slate-50);border-radius:var(--radius-sm);">
+            <div
+              style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--slate-50);border-radius:var(--radius-sm);">
               <span style="color:#10b981;">✓</span>
               <div>
                 <div style="font-weight:600;font-size:0.85rem;">ADMIN_BOOTSTRAP</div>
@@ -277,7 +287,7 @@
     async function loadHealth() {
       try {
         const res = await Api.get('/api/admin/system-health');
-        
+
         // 1. Database
         const dbBadge = document.getElementById('db-badge');
         if (res.database.status === 'healthy') {
@@ -296,7 +306,7 @@
         // 2. AI
         const aiBadge = document.getElementById('ai-badge');
         document.getElementById('ai-provider').textContent = (res.ai_service.provider || 'gemini').toUpperCase();
-        
+
         if (res.ai_service.geminiConfigured || res.ai_service.openRouterConfigured) {
           aiBadge.className = 'badge badge-success';
           aiBadge.textContent = 'API Connected';
@@ -342,4 +352,5 @@
     }
   </script>
 </body>
+
 </html>

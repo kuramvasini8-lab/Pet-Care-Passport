@@ -2,41 +2,13 @@
 -- PetCare Passport - Comprehensive Database Schema (MySQL 8.0+)
 -- ============================================================================
 
-CREATE DATABASE IF NOT EXISTS `petcare_passport`
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-
-USE `petcare_passport`;
-
-SET FOREIGN_KEY_CHECKS = 0;
-
--- Drop all existing tables cleanly
-DROP TABLE IF EXISTS `audit_logs`;
-DROP TABLE IF EXISTS `reminders_log`;
-DROP TABLE IF EXISTS `notifications`;
-DROP TABLE IF EXISTS `clinics`;
-DROP TABLE IF EXISTS `reports_and_complaints`;
-DROP TABLE IF EXISTS `lost_found_sightings`;
-DROP TABLE IF EXISTS `lost_found_reports`;
-DROP TABLE IF EXISTS `favourites`;
-DROP TABLE IF EXISTS `adoption_applications`;
-DROP TABLE IF EXISTS `adoption_enquiries`;
-DROP TABLE IF EXISTS `adoption_listings`;
-DROP TABLE IF EXISTS `appointments`;
-DROP TABLE IF EXISTS `daily_care_tasks`;
-DROP TABLE IF EXISTS `vaccinations`;
-DROP TABLE IF EXISTS `health_records`;
-DROP TABLE IF EXISTS `passports`;
-DROP TABLE IF EXISTS `pets`;
-DROP TABLE IF EXISTS `users`;
-DROP TABLE IF EXISTS `sessions`;
-
-SET FOREIGN_KEY_CHECKS = 1;
+USE `defaultdb`;
+-- Tables are created safely with IF NOT EXISTS to prevent accidental data loss in production.
 
 -- ----------------------------------------------------------------------------
 -- 1. USERS TABLE
 -- ----------------------------------------------------------------------------
-CREATE TABLE `users` (
+CREATE TABLE IF NOT EXISTS `users` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `full_name` VARCHAR(150) NOT NULL,
   `email` VARCHAR(191) NOT NULL UNIQUE,
@@ -52,9 +24,25 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
+-- 1.1 PASSWORD RESETS TABLE
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `password_resets` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `user_id` INT NOT NULL,
+  `email` VARCHAR(191) NOT NULL,
+  `token` VARCHAR(255) NOT NULL UNIQUE,
+  `expires_at` DATETIME NOT NULL,
+  `used` TINYINT(1) DEFAULT 0,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_pw_resets_token` (`token`),
+  INDEX `idx_pw_resets_user` (`user_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ----------------------------------------------------------------------------
 -- 2. PETS TABLE
 -- ----------------------------------------------------------------------------
-CREATE TABLE `pets` (
+CREATE TABLE IF NOT EXISTS `pets` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `user_id` INT NOT NULL,
   `public_id` VARCHAR(64) NOT NULL UNIQUE,
@@ -90,7 +78,7 @@ CREATE TABLE `pets` (
 -- ----------------------------------------------------------------------------
 -- 3. PASSPORTS TABLE (Digital Passport Privacy & Controls)
 -- ----------------------------------------------------------------------------
-CREATE TABLE `passports` (
+CREATE TABLE IF NOT EXISTS `passports` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `pet_id` INT NOT NULL UNIQUE,
   `is_public_enabled` BOOLEAN DEFAULT TRUE,
@@ -114,7 +102,7 @@ CREATE TABLE `passports` (
 -- ----------------------------------------------------------------------------
 -- 4. HEALTH RECORDS TABLE
 -- ----------------------------------------------------------------------------
-CREATE TABLE `health_records` (
+CREATE TABLE IF NOT EXISTS `health_records` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `pet_id` INT NOT NULL,
   `record_type` ENUM('vet_visit', 'treatment', 'surgery', 'condition', 'allergy', 'lab_result', 'other') NOT NULL,
@@ -138,7 +126,7 @@ CREATE TABLE `health_records` (
 -- ----------------------------------------------------------------------------
 -- 5. VACCINATIONS TABLE
 -- ----------------------------------------------------------------------------
-CREATE TABLE `vaccinations` (
+CREATE TABLE IF NOT EXISTS `vaccinations` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `pet_id` INT NOT NULL,
   `vaccine_name` VARCHAR(150) NOT NULL,
@@ -159,7 +147,7 @@ CREATE TABLE `vaccinations` (
 -- ----------------------------------------------------------------------------
 -- 6. DAILY CARE TASKS TABLE
 -- ----------------------------------------------------------------------------
-CREATE TABLE `daily_care_tasks` (
+CREATE TABLE IF NOT EXISTS `daily_care_tasks` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `pet_id` INT NOT NULL,
   `task_type` ENUM('medication', 'feeding', 'grooming', 'walking', 'recurring_care', 'follow_up', 'other') NOT NULL,
@@ -181,7 +169,7 @@ CREATE TABLE `daily_care_tasks` (
 -- ----------------------------------------------------------------------------
 -- 7. APPOINTMENTS TABLE
 -- ----------------------------------------------------------------------------
-CREATE TABLE `appointments` (
+CREATE TABLE IF NOT EXISTS `appointments` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `pet_id` INT NOT NULL,
   `user_id` INT NOT NULL,
@@ -206,16 +194,24 @@ CREATE TABLE `appointments` (
 -- ----------------------------------------------------------------------------
 -- 8. ADOPTION LISTINGS TABLE
 -- ----------------------------------------------------------------------------
-CREATE TABLE `adoption_listings` (
+CREATE TABLE IF NOT EXISTS `adoption_listings` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `pet_id` INT NOT NULL,
   `user_id` INT NOT NULL,
   `title` VARCHAR(200) NOT NULL,
   `description` TEXT NOT NULL,
+  `reason_for_rehoming` TEXT NULL,
   `temperament` TEXT NULL,
   `health_summary` TEXT NULL,
   `adoption_requirements` TEXT NULL,
   `general_location` VARCHAR(150) NOT NULL,
+  `owner_full_name` VARCHAR(150) NULL,
+  `owner_phone` VARCHAR(50) NULL,
+  `owner_email` VARCHAR(191) NULL,
+  `safe_pickup_location` VARCHAR(255) NULL,
+  `compatibility_kids` VARCHAR(50) NULL,
+  `compatibility_pets` VARCHAR(50) NULL,
+  `adoption_fee` VARCHAR(100) NULL,
   `status` ENUM('pending_approval', 'approved', 'changes_requested', 'rejected', 'suspended', 'adopted', 'closed') DEFAULT 'pending_approval',
   `moderation_notes` TEXT NULL,
   `moderated_by` INT NULL,
@@ -238,7 +234,7 @@ CREATE TABLE `adoption_listings` (
 -- ----------------------------------------------------------------------------
 -- 9. ADOPTION ENQUIRIES TABLE
 -- ----------------------------------------------------------------------------
-CREATE TABLE `adoption_enquiries` (
+CREATE TABLE IF NOT EXISTS `adoption_enquiries` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `listing_id` INT NOT NULL,
   `user_id` INT NULL,
@@ -258,18 +254,33 @@ CREATE TABLE `adoption_enquiries` (
 -- ----------------------------------------------------------------------------
 -- 10. ADOPTION APPLICATIONS TABLE
 -- ----------------------------------------------------------------------------
-CREATE TABLE `adoption_applications` (
+CREATE TABLE IF NOT EXISTS `adoption_applications` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `listing_id` INT NOT NULL,
   `applicant_id` INT NOT NULL,
+  `applicant_name` VARCHAR(150) NULL,
+  `applicant_phone` VARCHAR(50) NULL,
+  `applicant_email` VARCHAR(191) NULL,
+  `applicant_address` TEXT NULL,
+  `id_proof_type` VARCHAR(100) NULL,
+  `id_proof_number` VARCHAR(100) NULL,
   `household_type` VARCHAR(100) NOT NULL,
+  `housing_ownership` VARCHAR(50) NULL,
   `owns_other_pets` BOOLEAN DEFAULT FALSE,
   `has_yard` BOOLEAN DEFAULT FALSE,
   `experience_description` TEXT NULL,
+  `emergency_vet` VARCHAR(255) NULL,
   `reference_contact` VARCHAR(255) NULL,
   `notes` TEXT NULL,
   `status` ENUM('submitted', 'under_review', 'more_info_requested', 'accepted', 'declined', 'withdrawn') DEFAULT 'submitted',
   `status_reason` TEXT NULL,
+  `giver_name` VARCHAR(150) NULL,
+  `giver_phone` VARCHAR(50) NULL,
+  `giver_email` VARCHAR(191) NULL,
+  `giver_address` TEXT NULL,
+  `admin_handover_notes` TEXT NULL,
+  `contact_shared_at` DATETIME NULL,
+  `contact_shared` BOOLEAN DEFAULT FALSE,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT `fk_applications_listing` FOREIGN KEY (`listing_id`)
@@ -282,7 +293,7 @@ CREATE TABLE `adoption_applications` (
 -- ----------------------------------------------------------------------------
 -- 11. FAVOURITES TABLE
 -- ----------------------------------------------------------------------------
-CREATE TABLE `favourites` (
+CREATE TABLE IF NOT EXISTS `favourites` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `user_id` INT NOT NULL,
   `listing_id` INT NOT NULL,
@@ -297,7 +308,7 @@ CREATE TABLE `favourites` (
 -- ----------------------------------------------------------------------------
 -- 12. LOST & FOUND REPORTS TABLE
 -- ----------------------------------------------------------------------------
-CREATE TABLE `lost_found_reports` (
+CREATE TABLE IF NOT EXISTS `lost_found_reports` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `user_id` INT NULL,
   `report_type` ENUM('lost', 'found') NOT NULL,
@@ -325,7 +336,7 @@ CREATE TABLE `lost_found_reports` (
 -- ----------------------------------------------------------------------------
 -- 13. LOST & FOUND SIGHTINGS TABLE
 -- ----------------------------------------------------------------------------
-CREATE TABLE `lost_found_sightings` (
+CREATE TABLE IF NOT EXISTS `lost_found_sightings` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `report_id` INT NOT NULL,
   `reporter_name` VARCHAR(150) NOT NULL,
@@ -341,7 +352,7 @@ CREATE TABLE `lost_found_sightings` (
 -- ----------------------------------------------------------------------------
 -- 14. REPORTS & COMPLAINTS TABLE
 -- ----------------------------------------------------------------------------
-CREATE TABLE `reports_and_complaints` (
+CREATE TABLE IF NOT EXISTS `reports_and_complaints` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `user_id` INT NULL,
   `category` ENUM('adoption_listing', 'lost_found', 'user_account', 'appointment', 'scam_misleading', 'other') NOT NULL,
@@ -365,7 +376,7 @@ CREATE TABLE `reports_and_complaints` (
 -- ----------------------------------------------------------------------------
 -- 15. CLINICS DIRECTORY TABLE
 -- ----------------------------------------------------------------------------
-CREATE TABLE `clinics` (
+CREATE TABLE IF NOT EXISTS `clinics` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `name` VARCHAR(150) NOT NULL,
   `phone` VARCHAR(50) NOT NULL,
@@ -383,7 +394,7 @@ CREATE TABLE `clinics` (
 -- ----------------------------------------------------------------------------
 -- 16. NOTIFICATIONS TABLE
 -- ----------------------------------------------------------------------------
-CREATE TABLE `notifications` (
+CREATE TABLE IF NOT EXISTS `notifications` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `user_id` INT NOT NULL,
   `title` VARCHAR(150) NOT NULL,
@@ -400,7 +411,7 @@ CREATE TABLE `notifications` (
 -- ----------------------------------------------------------------------------
 -- 17. REMINDERS & NOTIFICATION MONITORING LOG
 -- ----------------------------------------------------------------------------
-CREATE TABLE `reminders_log` (
+CREATE TABLE IF NOT EXISTS `reminders_log` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `type` ENUM('vaccination', 'appointment', 'daily_task', 'email_notification') NOT NULL,
   `reference_id` INT NOT NULL,
@@ -416,7 +427,7 @@ CREATE TABLE `reminders_log` (
 -- ----------------------------------------------------------------------------
 -- 18. AUDIT LOGS TABLE
 -- ----------------------------------------------------------------------------
-CREATE TABLE `audit_logs` (
+CREATE TABLE IF NOT EXISTS `audit_logs` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `admin_id` INT NULL,
   `admin_name` VARCHAR(150) NOT NULL,

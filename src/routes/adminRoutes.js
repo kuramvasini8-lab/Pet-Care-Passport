@@ -22,30 +22,15 @@ router.get('/overview', async (req, res) => {
     const [userCount] = await query('SELECT COUNT(*) as count FROM users');
     // 2. Total registered pets
     const [petCount] = await query('SELECT COUNT(*) as count FROM pets WHERE is_archived = false');
-    // 3. Adoption listings breakdown
-    const [listingStats] = await query(`
-      SELECT 
-        SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as active_listings,
-        SUM(CASE WHEN status = 'pending_approval' THEN 1 ELSE 0 END) as pending_listings,
-        SUM(CASE WHEN status IN ('rejected', 'suspended') THEN 1 ELSE 0 END) as rejected_suspended_listings
-      FROM adoption_listings
-    `);
-    // 4. Open reports & complaints
+    // 3. Open reports & complaints
     const [reportCount] = await query(`SELECT COUNT(*) as count FROM reports_and_complaints WHERE status IN ('open', 'under_review')`);
-    // 5. Lost & found needing review
+    // 4. Lost & found needing review
     const [lfCount] = await query(`SELECT COUNT(*) as count FROM lost_found_reports WHERE status = 'pending_review'`);
-    // 6. Appointments breakdown
-    const [aptStats] = await query(`
-      SELECT 
-        COUNT(*) as total_appointments,
-        SUM(CASE WHEN status = 'upcoming' THEN 1 ELSE 0 END) as upcoming_appointments,
-        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_appointments,
-        SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_appointments
-      FROM appointments
-    `);
-    // 7. Failed reminder processing attempts
+    // 5. Verified active clinics
+    const [clinicCount] = await query(`SELECT COUNT(*) as count FROM clinics WHERE is_verified = true`);
+    // 6. Failed reminder processing attempts
     const [failedReminders] = await query(`SELECT COUNT(*) as count FROM reminders_log WHERE status = 'failed'`);
-    // 8. Recent administrative audit activity
+    // 7. Recent administrative audit activity
     const [recentAudits] = await query(`SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT 6`);
 
     res.json({
@@ -53,16 +38,17 @@ router.get('/overview', async (req, res) => {
       stats: {
         total_users: userCount[0].count,
         total_pets: petCount[0].count,
-        active_listings: listingStats[0].active_listings || 0,
-        pending_listings: listingStats[0].pending_listings || 0,
-        rejected_suspended_listings: listingStats[0].rejected_suspended_listings || 0,
+        total_clinics: clinicCount[0].count,
+        active_listings: 0,
+        pending_listings: 0,
+        rejected_suspended_listings: 0,
         open_reports: reportCount[0].count,
         lost_found_pending: lfCount[0].count,
         appointments: {
-          total: aptStats[0].total_appointments,
-          upcoming: aptStats[0].upcoming_appointments || 0,
-          completed: aptStats[0].completed_appointments || 0,
-          cancelled: aptStats[0].cancelled_appointments || 0
+          total: 0,
+          upcoming: 0,
+          completed: 0,
+          cancelled: 0
         },
         failed_reminders: failedReminders[0].count
       },
@@ -84,7 +70,7 @@ router.get('/users', async (req, res) => {
     let sql = `
       SELECT id, full_name, email, phone, role, status, suspension_reason, created_at,
              (SELECT COUNT(*) FROM pets WHERE user_id = users.id AND is_archived = false) as pet_count,
-             (SELECT COUNT(*) FROM adoption_listings WHERE user_id = users.id) as listing_count
+             0 as listing_count
       FROM users
       WHERE 1=1
     `;
@@ -166,373 +152,9 @@ router.put('/users/:id/status', async (req, res) => {
   }
 });
 
-// ============================================================================
-// 3. ADOPTION LISTING MODERATION
-// ============================================================================
-router.get('/moderation/listings', async (req, res) => {
-  try {
-    const { status } = req.query;
-
-    let sql = `
-      SELECT l.*, p.name as pet_name, p.species, p.breed, p.dob_or_age, p.sex,
-             p.color_marks, p.photo_url, p.is_sterilized, p.allergies, p.medical_conditions,
-             u.full_name as owner_name, u.email as owner_email, u.phone as owner_phone,
-             admin.full_name as moderator_name
-      FROM adoption_listings l
-      JOIN pets p ON l.pet_id = p.id
-      JOIN users u ON l.user_id = u.id
-      LEFT JOIN users admin ON l.moderated_by = admin.id
-      WHERE 1=1
-    `;
-    const params = [];
-
-    if (status && status.trim() !== '') {
-      sql += ' AND l.status = ?';
-      params.push(status.trim());
-    }
-
-    sql += ' ORDER BY l.created_at DESC';
-
-    const [listings] = await query(sql, params);
-
-    res.json({ success: true, listings });
-  } catch (error) {
-    console.error('[AdminRoutes] Moderation listings error:', error);
-    res.status(500).json({ success: false, error: 'Failed to load moderation listings.' });
-  }
-});
-
-// Decision on Adoption Listing (Approve, Reject, Request Changes, Suspend, Restore)
-router.put('/moderation/listings/:id', async (req, res) => {
-  try {
-    const listingId = req.params.id;
-    const { action, reason, moderation_notes } = req.body;
-    const adminUser = req.session.user;
-
-    const validActions = ['approve', 'reject', 'request_changes', 'suspend', 'restore'];
-    if (!validActions.includes(action)) {
-      return res.status(400).json({ success: false, error: 'Invalid moderation action.' });
-    }
-
-    if (['reject', 'request_changes', 'suspend'].includes(action) && (!reason || reason.trim() === '')) {
-      return res.status(400).json({ success: false, error: 'A documented reason is required for rejection, revision requests, or suspension.' });
-    }
-
-    const [existing] = await query(
-      `SELECT l.*, p.name as pet_name, u.id as owner_id, u.email as owner_email
-       FROM adoption_listings l
-       JOIN pets p ON l.pet_id = p.id
-       JOIN users u ON l.user_id = u.id
-       WHERE l.id = ?`,
-      [listingId]
-    );
-
-    if (existing.length === 0) {
-      return res.status(404).json({ success: false, error: 'Listing not found.' });
-    }
-
-    const listing = existing[0];
-
-    // PREVENT USER FROM APPROVING OWN LISTING (Even if admin!)
-    if (listing.owner_id === adminUser.id && action === 'approve') {
-      return res.status(403).json({
-        success: false,
-        error: 'Platform Integrity Violation: Administrators cannot approve their own adoption listings. Another administrator must review this.'
-      });
-    }
-
-    let targetStatus = listing.status;
-    let notifTitle = '';
-    let notifMsg = '';
-
-    switch (action) {
-      case 'approve':
-        targetStatus = 'approved';
-        notifTitle = `Adoption Listing Approved: ${listing.pet_name}`;
-        notifMsg = `Great news! Your adoption listing for ${listing.pet_name} has been approved and is now live in the Adopt a Pet section.`;
-        break;
-      case 'reject':
-        targetStatus = 'rejected';
-        notifTitle = `Adoption Listing Rejected: ${listing.pet_name}`;
-        notifMsg = `Your adoption listing for ${listing.pet_name} was rejected. Reason: ${reason.trim()}`;
-        break;
-      case 'request_changes':
-        targetStatus = 'changes_requested';
-        notifTitle = `Changes Requested: ${listing.pet_name}`;
-        notifMsg = `An administrator requested revisions to your listing for ${listing.pet_name}: "${reason.trim()}". Please update and resubmit.`;
-        break;
-      case 'suspend':
-        targetStatus = 'suspended';
-        notifTitle = `Adoption Listing Suspended: ${listing.pet_name}`;
-        notifMsg = `Your listing for ${listing.pet_name} has been suspended pending review. Reason: ${reason.trim()}`;
-        break;
-      case 'restore':
-        targetStatus = 'approved';
-        notifTitle = `Adoption Listing Restored: ${listing.pet_name}`;
-        notifMsg = `Your listing for ${listing.pet_name} has been restored to active status.`;
-        break;
-    }
-
-    await query(
-      `UPDATE adoption_listings SET
-        status = ?, moderation_notes = ?, moderated_by = ?, moderated_at = NOW()
-       WHERE id = ?`,
-      [targetStatus, reason ? reason.trim() : (moderation_notes || null), adminUser.id, listingId]
-    );
-
-    // Notify listing owner in-app
-    await query(
-      `INSERT INTO notifications (user_id, title, message, type, link)
-       VALUES (?, ?, ?, 'moderation', '/owner/rehoming.html')`,
-      [listing.owner_id, notifTitle, notifMsg]
-    );
-
-    // Send email notification to owner
-    await sendTransactionalEmail({
-      to: listing.owner_email,
-      subject: notifTitle,
-      text: notifMsg,
-      html: `<div style="font-family:sans-serif;padding:16px;">
-        <h2>🐾 ${notifTitle}</h2>
-        <p>${notifMsg}</p>
-        <p><a href="http://localhost:3000/owner/rehoming.html" style="background:#0284c7;color:#fff;padding:8px 16px;text-decoration:none;border-radius:6px;">Open Rehoming Dashboard</a></p>
-      </div>`,
-      referenceType: 'email_notification',
-      referenceId: listingId
-    });
-
-    // Audit log
-    await logAdminAction({
-      adminId: adminUser.id,
-      adminName: adminUser.full_name,
-      actionType: `MODERATE_LISTING_${action.toUpperCase()}`,
-      targetEntity: 'adoption_listings',
-      targetId: listingId,
-      reason: reason ? reason.trim() : `Decision: ${action}`,
-      details: {
-        petName: listing.pet_name,
-        previousStatus: listing.status,
-        newStatus: targetStatus,
-        ownerEmail: listing.owner_email
-      },
-      ipAddress: req.ip
-    });
-
-    res.json({
-      success: true,
-      message: `Listing moderation status updated to: ${targetStatus}.`,
-      status: targetStatus
-    });
-  } catch (error) {
-    console.error('[AdminRoutes] Moderation action error:', error);
-    res.status(500).json({ success: false, error: 'Failed to process moderation action.' });
-  }
-});
-
-// Official Pet Adoption Health & Identity Verification (Admin Portal)
-router.put('/moderation/listings/:id/verify', async (req, res) => {
-  try {
-    const listingId = req.params.id;
-    const { verification_notes, checklist } = req.body;
-    const adminUser = req.session.user;
-
-    const [existing] = await query(
-      `SELECT l.*, p.name as pet_name, p.microchip_number, u.id as owner_id, u.email as owner_email
-       FROM adoption_listings l
-       JOIN pets p ON l.pet_id = p.id
-       JOIN users u ON l.user_id = u.id
-       WHERE l.id = ?`,
-      [listingId]
-    );
-
-    if (existing.length === 0) {
-      return res.status(404).json({ success: false, error: 'Adoption listing not found.' });
-    }
-
-    const listing = existing[0];
-    const notes = verification_notes ? verification_notes.trim() : 'Official identity, health records, and owner verification completed.';
-
-    await query(
-      `UPDATE adoption_listings SET
-        is_verified = true,
-        verified_by = ?,
-        verified_at = NOW(),
-        verification_notes = ?
-       WHERE id = ?`,
-      [adminUser.id, notes, listingId]
-    );
-
-    // Audit log
-    await logAdminAction({
-      adminId: adminUser.id,
-      adminName: adminUser.full_name,
-      actionType: 'VERIFY_PET_ADOPTION',
-      targetEntity: 'adoption_listings',
-      targetId: listingId,
-      reason: notes,
-      details: {
-        petName: listing.pet_name,
-        checklist: checklist || ['identity_verified', 'vaccinations_verified', 'sterilization_verified'],
-        verifiedAt: new Date().toISOString()
-      },
-      ipAddress: req.ip
-    });
-
-    // Notify pet owner in-app
-    await query(
-      `INSERT INTO notifications (user_id, title, message, type, link)
-       VALUES (?, ?, ?, 'moderation', '/owner/rehoming.html')`,
-      [
-        listing.owner_id,
-        `Adoption Verified: ${listing.pet_name}`,
-        `Congratulations! Your adoption listing for ${listing.pet_name} has received the official Platform Verified badge.`
-      ]
-    );
-
-    res.json({
-      success: true,
-      message: `Pet adoption listing for ${listing.pet_name} is now officially verified by Platform Administration.`,
-      is_verified: true
-    });
-  } catch (error) {
-    console.error('[AdminRoutes] Adoption verification error:', error);
-    res.status(500).json({ success: false, error: 'Failed to verify pet adoption listing.' });
-  }
-});
-
-// Revoke Adoption Verification
-router.put('/moderation/listings/:id/unverify', async (req, res) => {
-  try {
-    const listingId = req.params.id;
-    const { reason } = req.body;
-    const adminUser = req.session.user;
-
-    await query(
-      `UPDATE adoption_listings SET
-        is_verified = false,
-        verification_notes = ?
-       WHERE id = ?`,
-      [reason || 'Verification revoked by administrator.', listingId]
-    );
-
-    await logAdminAction({
-      adminId: adminUser.id,
-      adminName: adminUser.full_name,
-      actionType: 'UNVERIFY_PET_ADOPTION',
-      targetEntity: 'adoption_listings',
-      targetId: listingId,
-      reason: reason || 'Verification status revoked',
-      details: null,
-      ipAddress: req.ip
-    });
-
-    res.json({ success: true, message: 'Verification status revoked.' });
-  } catch (error) {
-    console.error('[AdminRoutes] Unverify error:', error);
-    res.status(500).json({ success: false, error: 'Failed to revoke verification.' });
-  }
-});
-
-// Adoption Applications Oversight (Platform-Wide)
-router.get('/moderation/applications', async (req, res) => {
-  try {
-    const { status } = req.query;
-
-    let sql = `
-      SELECT app.*, l.title as listing_title, p.name as pet_name, p.photo_url as pet_photo,
-             owner.full_name as owner_name, owner.email as owner_email,
-             applicant.full_name as applicant_name, applicant.email as applicant_email, applicant.phone as applicant_phone
-      FROM adoption_applications app
-      JOIN adoption_listings l ON app.listing_id = l.id
-      JOIN pets p ON l.pet_id = p.id
-      JOIN users owner ON l.user_id = owner.id
-      JOIN users applicant ON app.applicant_id = applicant.id
-      WHERE 1=1
-    `;
-    const params = [];
-
-    if (status && status.trim() !== '') {
-      sql += ' AND app.status = ?';
-      params.push(status.trim());
-    }
-
-    sql += ' ORDER BY app.created_at DESC';
-
-    const [applications] = await query(sql, params);
-
-    res.json({ success: true, applications });
-  } catch (error) {
-    console.error('[AdminRoutes] List applications error:', error);
-    res.status(500).json({ success: false, error: 'Failed to retrieve adoption applications.' });
-  }
-});
-
-// Adjudicate / Update Adoption Application Status (Admin)
-router.put('/moderation/applications/:id', async (req, res) => {
-  try {
-    const appId = req.params.id;
-    const { status, status_reason } = req.body;
-    const adminUser = req.session.user;
-
-    const validStatuses = ['submitted', 'under_review', 'more_info_requested', 'accepted', 'declined'];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({ success: false, error: 'Invalid application status.' });
-    }
-
-    const [existing] = await query(
-      `SELECT app.*, p.name as pet_name, app.applicant_id, applicant.email as applicant_email
-       FROM adoption_applications app
-       JOIN adoption_listings l ON app.listing_id = l.id
-       JOIN pets p ON l.pet_id = p.id
-       JOIN users applicant ON app.applicant_id = applicant.id
-       WHERE app.id = ?`,
-      [appId]
-    );
-
-    if (existing.length === 0) {
-      return res.status(404).json({ success: false, error: 'Application not found.' });
-    }
-
-    const application = existing[0];
-
-    await query(
-      `UPDATE adoption_applications SET status = ?, status_reason = ? WHERE id = ?`,
-      [status, status_reason ? status_reason.trim() : null, appId]
-    );
-
-    // Notify applicant
-    await query(
-      `INSERT INTO notifications (user_id, title, message, type, link)
-       VALUES (?, ?, ?, 'application', '/adopter/applications.html')`,
-      [
-        application.applicant_id,
-        `Adoption Application Update: ${application.pet_name}`,
-        `Your application for ${application.pet_name} status is now: ${status.replace('_', ' ').toUpperCase()}.${status_reason ? ' Notes: ' + status_reason.trim() : ''}`
-      ]
-    );
-
-    // Audit log
-    await logAdminAction({
-      adminId: adminUser.id,
-      adminName: adminUser.full_name,
-      actionType: 'MODERATE_ADOPTION_APPLICATION',
-      targetEntity: 'adoption_applications',
-      targetId: appId,
-      reason: status_reason ? status_reason.trim() : `Status set to ${status}`,
-      details: { previousStatus: application.status, newStatus: status, petName: application.pet_name },
-      ipAddress: req.ip
-    });
-
-    res.json({ success: true, message: `Application status updated to ${status}.` });
-  } catch (error) {
-    console.error('[AdminRoutes] Update application error:', error);
-    res.status(500).json({ success: false, error: 'Failed to update application.' });
-  }
-});
-
-// ============================================================================
-// 4. LOST & FOUND MODERATION
-// ============================================================================
+/// ============================================================================
+// 3. LOST & FOUND MODERATION
+// ===============================================================================
 router.get('/lost-found', async (req, res) => {
   try {
     const { status, type } = req.query;
@@ -605,7 +227,7 @@ router.put('/lost-found/:id/status', async (req, res) => {
 });
 
 // ============================================================================
-// 5. REPORTS & COMPLAINTS MANAGEMENT
+// 4. REPORTS & COMPLAINTS MANAGEMENT
 // ============================================================================
 router.get('/reports', async (req, res) => {
   try {
@@ -677,126 +299,7 @@ router.put('/reports/:id', async (req, res) => {
 });
 
 // ============================================================================
-// 6. APPOINTMENT OVERSIGHT (Platform-Wide)
-// ============================================================================
-router.get('/appointments', async (req, res) => {
-  try {
-    const { search, status, clinic } = req.query;
-
-    let sql = `
-      SELECT a.*, p.name as pet_name, p.species, u.full_name as owner_name, u.email as owner_email, u.phone as owner_phone
-      FROM appointments a
-      JOIN pets p ON a.pet_id = p.id
-      JOIN users u ON a.user_id = u.id
-      WHERE 1=1
-    `;
-    const params = [];
-
-    if (search && search.trim() !== '') {
-      sql += ' AND (p.name LIKE ? OR a.clinic_name LIKE ? OR u.full_name LIKE ?)';
-      params.push(`%${search.trim()}%`, `%${search.trim()}%`, `%${search.trim()}%`);
-    }
-    if (status && status.trim() !== '') {
-      sql += ' AND a.status = ?';
-      params.push(status.trim());
-    }
-    if (clinic && clinic.trim() !== '') {
-      sql += ' AND a.clinic_name LIKE ?';
-      params.push(`%${clinic.trim()}%`);
-    }
-
-    sql += ' ORDER BY a.appointment_date DESC';
-
-    const [appointments] = await query(sql, params);
-
-    res.json({
-      success: true,
-      appointments,
-      oversight_disclaimer: 'Oversight records are aggregated from user entries. Unless an official clinic API booking integration is established, administrators cannot confirm clinic bookings.'
-    });
-  } catch (error) {
-    console.error('[AdminRoutes] Appointments oversight error:', error);
-    res.status(500).json({ success: false, error: 'Failed to load appointment records.' });
-  }
-});
-
-// Audited Administrative Modification of Appointment Record
-router.put('/appointments/:id', async (req, res) => {
-  try {
-    const appointmentId = req.params.id;
-    const { status, appointment_date, admin_reason, admin_notes } = req.body;
-    const adminUser = req.session.user;
-
-    if (!admin_reason || admin_reason.trim() === '') {
-      return res.status(400).json({
-        success: false,
-        error: 'Mandatory Policy: Any administrative modification of an appointment record requires a documented administrative reason.'
-      });
-    }
-
-    const [existing] = await query(
-      `SELECT a.*, p.name as pet_name, u.id as owner_id, u.email as owner_email
-       FROM appointments a
-       JOIN pets p ON a.pet_id = p.id
-       JOIN users u ON a.user_id = u.id
-       WHERE a.id = ?`,
-      [appointmentId]
-    );
-
-    if (existing.length === 0) {
-      return res.status(404).json({ success: false, error: 'Appointment not found.' });
-    }
-
-    const apt = existing[0];
-
-    await query(
-      `UPDATE appointments SET
-        status = ?, appointment_date = ?, admin_notes = ?, last_modified_by_admin = true
-       WHERE id = ?`,
-      [
-        status || apt.status,
-        appointment_date || apt.appointment_date,
-        admin_notes ? admin_notes.trim() : apt.admin_notes,
-        appointmentId
-      ]
-    );
-
-    // Notify pet owner of administrative correction
-    await query(
-      `INSERT INTO notifications (user_id, title, message, type, link)
-       VALUES (?, 'Administrative Update on Appointment', ?, 'system', '/owner/appointments.html')`,
-      [apt.owner_id, `Your appointment record for ${apt.pet_name} was administratively updated. Reason: ${admin_reason.trim()}`]
-    );
-
-    // Audit log
-    await logAdminAction({
-      adminId: adminUser.id,
-      adminName: adminUser.full_name,
-      actionType: 'ADMIN_MODIFY_APPOINTMENT',
-      targetEntity: 'appointments',
-      targetId: appointmentId,
-      reason: admin_reason.trim(),
-      details: {
-        petName: apt.pet_name,
-        previousStatus: apt.status,
-        newStatus: status || apt.status,
-        ownerEmail: apt.owner_email
-      },
-      ipAddress: req.ip
-    });
-
-    res.json({
-      success: true,
-      message: 'Appointment record administratively updated and recorded in audit log.'
-    });
-  } catch (error) {
-    console.error('[AdminRoutes] Modify appointment error:', error);
-    res.status(500).json({ success: false, error: 'Failed to modify appointment record.' });
-  }
-});
-
-// ============================================================================
-// 7. CLINIC DIRECTORY MANAGEMENT
+// 5. CLINIC DIRECTORY MANAGEMENT
 // ============================================================================
 router.get('/clinics', async (req, res) => {
   try {
@@ -920,7 +423,7 @@ router.delete('/clinics/:id', async (req, res) => {
 });
 
 // ============================================================================
-// 8. NOTIFICATION & REMINDER MONITORING
+// 6. NOTIFICATION & REMINDER MONITORING
 // ============================================================================
 router.get('/reminders', async (req, res) => {
   try {
@@ -1014,7 +517,7 @@ router.post('/reminders/:id/retry', async (req, res) => {
 });
 
 // ============================================================================
-// 9. AUDIT LOGS
+// 7. AUDIT LOGS
 // ============================================================================
 router.get('/audit-logs', async (req, res) => {
   try {
@@ -1044,7 +547,7 @@ router.get('/audit-logs', async (req, res) => {
 });
 
 // ============================================================================
-// 10. SYSTEM HEALTH
+// 8. SYSTEM HEALTH
 // ============================================================================
 router.get('/system-health', async (req, res) => {
   try {

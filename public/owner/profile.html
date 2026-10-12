@@ -37,8 +37,6 @@
           <li class="owner-menu-item"><a href="/owner/health.html"><span class="owner-menu-icon">🩺</span> Health Records</a></li>
           <li class="owner-menu-item"><a href="/owner/vaccinations.html"><span class="owner-menu-icon">💉</span> Vaccinations</a></li>
           <li class="owner-menu-item"><a href="/owner/daily-care.html"><span class="owner-menu-icon">💊</span> Daily Care & Tasks</a></li>
-          <li class="owner-menu-item"><a href="/owner/appointments.html"><span class="owner-menu-icon">📅</span> Appointments</a></li>
-          <li class="owner-menu-item"><a href="/owner/rehoming.html"><span class="owner-menu-icon">🏡</span> Adoption & Rehoming</a></li>
           <li class="owner-menu-item"><a href="/owner/ai-assistant.html"><span class="owner-menu-icon">🤖</span> AI Pet Assistant</a></li>
         </ul>
       </div>
@@ -93,12 +91,37 @@
           <form id="pwd-form" onsubmit="changePassword(event)">
             <div class="form-group">
               <label class="form-label" for="pwd-current">Current Password *</label>
-              <input type="password" id="pwd-current" class="form-control" required>
+              <div style="position:relative;">
+                <input type="password" id="pwd-current" class="form-control" required style="padding-right:42px;">
+                <button type="button" onclick="togglePasswordVisibility('pwd-current', this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--slate-400);font-size:1.1rem;padding:4px;">👁️</button>
+              </div>
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="pwd-new">New Password (Min 6 characters) *</label>
-              <input type="password" id="pwd-new" class="form-control" required minlength="6">
+              <label class="form-label" for="pwd-new">New Password *</label>
+              <div style="position:relative;">
+                <input type="password" id="pwd-new" class="form-control" required style="padding-right:42px;" oninput="onProfilePasswordInput()">
+                <button type="button" onclick="togglePasswordVisibility('pwd-new', this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--slate-400);font-size:1.1rem;padding:4px;">👁️</button>
+              </div>
+
+              <!-- Real-Time Password Pattern Rule Checklist -->
+              <div style="background:#fffdf7;border:1px solid #faeac0;border-radius:6px;padding:10px 12px;margin-top:8px;font-size:0.775rem;line-height:1.5;">
+                <div style="font-weight:700;color:#78350f;margin-bottom:3px;">Security Pattern Requirements:</div>
+                <div id="prule-len" style="color:#64748b;"><span class="prule-icon">○</span> At least 8 characters</div>
+                <div id="prule-upper" style="color:#64748b;"><span class="prule-icon">○</span> At least 1 uppercase letter (A-Z)</div>
+                <div id="prule-lower" style="color:#64748b;"><span class="prule-icon">○</span> At least 1 lowercase letter (a-z)</div>
+                <div id="prule-num" style="color:#64748b;"><span class="prule-icon">○</span> At least 1 numeric digit (0-9)</div>
+                <div id="prule-special" style="color:#64748b;"><span class="prule-icon">○</span> At least 1 special character (!@#$%^&*...)</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="pwd-confirm">Confirm New Password *</label>
+              <div style="position:relative;">
+                <input type="password" id="pwd-confirm" class="form-control" required style="padding-right:42px;" oninput="onProfileConfirmInput()">
+                <button type="button" onclick="togglePasswordVisibility('pwd-confirm', this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--slate-400);font-size:1.1rem;padding:4px;">👁️</button>
+              </div>
+              <div id="profile-pwd-match" style="font-size:0.8rem;font-weight:600;margin-top:4px;display:none;"></div>
             </div>
 
             <button type="submit" class="btn btn-outline" id="btn-change-pwd">
@@ -113,6 +136,70 @@
   <script src="/js/api.js"></script>
   <script src="/js/auth.js"></script>
   <script>
+    function togglePasswordVisibility(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+      }
+    }
+
+    function checkPasswordPattern(password) {
+      return {
+        len: password.length >= 8,
+        upper: /[A-Z]/.test(password),
+        lower: /[a-z]/.test(password),
+        num: /\d/.test(password),
+        special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+      };
+    }
+
+    function updateProfileRule(elementId, passed) {
+      const el = document.getElementById(elementId);
+      const icon = el.querySelector('.prule-icon');
+      if (passed) {
+        el.style.color = '#15803d';
+        el.style.fontWeight = '600';
+        icon.textContent = '✓';
+      } else {
+        el.style.color = '#64748b';
+        el.style.fontWeight = 'normal';
+        icon.textContent = '○';
+      }
+    }
+
+    function onProfilePasswordInput() {
+      const pwd = document.getElementById('pwd-new').value;
+      const r = checkPasswordPattern(pwd);
+      updateProfileRule('prule-len', r.len);
+      updateProfileRule('prule-upper', r.upper);
+      updateProfileRule('prule-lower', r.lower);
+      updateProfileRule('prule-num', r.num);
+      updateProfileRule('prule-special', r.special);
+      onProfileConfirmInput();
+    }
+
+    function onProfileConfirmInput() {
+      const pwd = document.getElementById('pwd-new').value;
+      const confirmPwd = document.getElementById('pwd-confirm').value;
+      const matchEl = document.getElementById('profile-pwd-match');
+      if (!confirmPwd) {
+        matchEl.style.display = 'none';
+        return;
+      }
+      matchEl.style.display = 'block';
+      if (pwd === confirmPwd) {
+        matchEl.textContent = '✓ Passwords match';
+        matchEl.style.color = '#15803d';
+      } else {
+        matchEl.textContent = '✗ Passwords do not match';
+        matchEl.style.color = '#dc2626';
+      }
+    }
+
     async function init() {
       const user = await Auth.requireAuth('/login.html');
       document.getElementById('prof-name').value = user.full_name || '';
@@ -137,15 +224,35 @@
 
     async function changePassword(e) {
       e.preventDefault();
+      const current_password = document.getElementById('pwd-current').value;
+      const new_password = document.getElementById('pwd-new').value;
+      const confirm_password = document.getElementById('pwd-confirm').value;
+
+      const r = checkPasswordPattern(new_password);
+      if (!r.len || !r.upper || !r.lower || !r.num || !r.special) {
+        showToast('New password does not meet required security pattern.', 'error');
+        return;
+      }
+
+      if (new_password !== confirm_password) {
+        showToast('New password and Confirm Password do not match.', 'error');
+        return;
+      }
+
       const payload = {
-        current_password: document.getElementById('pwd-current').value,
-        new_password: document.getElementById('pwd-new').value
+        current_password,
+        new_password,
+        confirm_password
       };
 
       try {
         const res = await API.put('/api/auth/password', payload);
         showToast(res.message, 'success');
         document.getElementById('pwd-form').reset();
+        document.getElementById('profile-pwd-match').style.display = 'none';
+        ['prule-len', 'prule-upper', 'prule-lower', 'prule-num', 'prule-special'].forEach(id => {
+          updateProfileRule(id, false);
+        });
       } catch (err) {
         showToast(err.message, 'error');
       }

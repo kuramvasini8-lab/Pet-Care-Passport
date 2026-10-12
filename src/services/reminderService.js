@@ -31,8 +31,8 @@ async function processSystemReminders() {
       results.vaccinationsDueOrOverdue++;
       const isOverdue = new Date(v.next_due_date) < new Date();
       const statusText = isOverdue ? 'is OVERDUE' : 'is due soon';
-      const title = `Vaccination Reminder: ${v.pet_name}`;
-      const message = `${v.vaccine_name} for ${v.pet_name} ${statusText} (Due Date: ${new Date(v.next_due_date).toISOString().split('T')[0]}). Please schedule a veterinary appointment.`;
+      const dueDateFormatted = typeof v.next_due_date === 'string' ? v.next_due_date.slice(0, 10) : new Date(v.next_due_date).toISOString().split('T')[0];
+      const message = `${v.vaccine_name} for ${v.pet_name} ${statusText} (Due Date: ${dueDateFormatted}). Please schedule a veterinary appointment.`;
 
       // Check if notification already created in last 7 days to avoid spam
       const [existing] = await query(`
@@ -77,7 +77,9 @@ async function processSystemReminders() {
     results.appointmentsChecked = aptRows.length;
 
     for (const a of aptRows) {
-      const aptDateStr = new Date(a.appointment_date).toLocaleString();
+      const aptDateStr = typeof a.appointment_date === 'string'
+        ? new Date(a.appointment_date.replace(' ', 'T')).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })
+        : new Date(a.appointment_date).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
       const title = `Upcoming Appointment: ${a.pet_name}`;
       const message = `Reminder: ${a.pet_name} has an appointment scheduled at ${a.clinic_name} for "${a.purpose}" on ${aptDateStr}.`;
 

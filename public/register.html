@@ -23,13 +23,13 @@
   </nav>
 
   <main class="container" style="display:flex;align-items:center;justify-content:center;flex:1;padding:40px 16px;">
-    <div class="card" style="max-width:500px;width:100%;box-shadow:var(--shadow-xl);padding:36px;">
+    <div class="card" style="max-width:520px;width:100%;box-shadow:var(--shadow-xl);padding:36px;">
       
       <div style="text-align:center;margin-bottom:28px;">
         <span style="font-size:2.5rem;">🐾</span>
         <h1 style="font-size:1.8rem;margin-top:8px;">Create Your Account</h1>
         <p class="text-muted" style="font-size:0.9rem;margin-top:4px;">
-          One unified account to manage pets, track veterinary care, and apply for pet adoptions.
+          One unified account to manage companion pets, track veterinary care, and create smart digital passports.
         </p>
       </div>
 
@@ -49,12 +49,54 @@
           <input type="tel" id="reg-phone" class="form-control" placeholder="+1 (555) 000-0000">
         </div>
 
+        <!-- Password Field with Toggle and Live Pattern Checklist -->
         <div class="form-group">
-          <label class="form-label" for="reg-password">Password (Minimum 6 characters) *</label>
-          <input type="password" id="reg-password" class="form-control" required minlength="6" placeholder="Choose a secure password">
+          <label class="form-label" for="reg-password">Password *</label>
+          <div style="position:relative;">
+            <input type="password" id="reg-password" class="form-control" required placeholder="Choose a secure password" style="padding-right:42px;" oninput="onPasswordInput()">
+            <button type="button" onclick="togglePasswordVisibility('reg-password', this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--slate-400);font-size:1.1rem;padding:4px;" title="Show/Hide Password" aria-label="Toggle password visibility">👁️</button>
+          </div>
+
+          <!-- Password Strength Bar -->
+          <div style="height:5px;background:#e2e8f0;border-radius:3px;margin-top:8px;overflow:hidden;">
+            <div id="pwd-strength-bar" style="height:100%;width:0%;transition:all 0.3s ease;background:#ef4444;"></div>
+          </div>
+          <div id="pwd-strength-label" style="font-size:0.75rem;font-weight:700;margin-top:4px;color:var(--slate-500);">Strength: Not entered</div>
+
+          <!-- Real-Time Password Pattern Rule Checklist -->
+          <div style="background:#fffdf7;border:1px solid #faeac0;border-radius:8px;padding:12px 14px;margin-top:10px;font-size:0.8rem;line-height:1.6;">
+            <div style="font-weight:700;color:#78350f;margin-bottom:4px;display:flex;align-items:center;gap:6px;">
+              <span>🛡️</span> Required Password Security Pattern:
+            </div>
+            <div id="rule-len" style="color:#64748b;display:flex;align-items:center;gap:8px;">
+              <span class="rule-icon" style="font-weight:700;">○</span> At least 8 characters
+            </div>
+            <div id="rule-upper" style="color:#64748b;display:flex;align-items:center;gap:8px;">
+              <span class="rule-icon" style="font-weight:700;">○</span> At least 1 uppercase letter (A-Z)
+            </div>
+            <div id="rule-lower" style="color:#64748b;display:flex;align-items:center;gap:8px;">
+              <span class="rule-icon" style="font-weight:700;">○</span> At least 1 lowercase letter (a-z)
+            </div>
+            <div id="rule-num" style="color:#64748b;display:flex;align-items:center;gap:8px;">
+              <span class="rule-icon" style="font-weight:700;">○</span> At least 1 numeric digit (0-9)
+            </div>
+            <div id="rule-special" style="color:#64748b;display:flex;align-items:center;gap:8px;">
+              <span class="rule-icon" style="font-weight:700;">○</span> At least 1 special character (!@#$%^&*...)
+            </div>
+          </div>
         </div>
 
-        <button type="submit" class="btn btn-primary" style="width:100%;height:46px;margin-top:8px;" id="btn-submit-reg">
+        <!-- Confirm Password Field with Match Indicator -->
+        <div class="form-group">
+          <label class="form-label" for="reg-confirm-password">Confirm Password *</label>
+          <div style="position:relative;">
+            <input type="password" id="reg-confirm-password" class="form-control" required placeholder="Re-enter your password" style="padding-right:42px;" oninput="onConfirmPasswordInput()">
+            <button type="button" onclick="togglePasswordVisibility('reg-confirm-password', this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--slate-400);font-size:1.1rem;padding:4px;" title="Show/Hide Password" aria-label="Toggle confirm password visibility">👁️</button>
+          </div>
+          <div id="pwd-match-indicator" style="font-size:0.8rem;font-weight:600;margin-top:6px;display:none;"></div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%;height:46px;margin-top:12px;" id="btn-submit-reg">
           Create Account & Start 🚀
         </button>
       </form>
@@ -67,19 +109,147 @@
 
   <script src="/js/api.js"></script>
   <script>
+    function togglePasswordVisibility(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+      }
+    }
+
+    function checkPasswordPattern(password) {
+      return {
+        len: password.length >= 8,
+        upper: /[A-Z]/.test(password),
+        lower: /[a-z]/.test(password),
+        num: /\d/.test(password),
+        special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+      };
+    }
+
+    function updateRuleItem(elementId, passed) {
+      const el = document.getElementById(elementId);
+      const icon = el.querySelector('.rule-icon');
+      if (passed) {
+        el.style.color = '#15803d'; // Green
+        el.style.fontWeight = '600';
+        icon.textContent = '✓';
+        icon.style.color = '#15803d';
+      } else {
+        el.style.color = '#64748b'; // Slate muted
+        el.style.fontWeight = 'normal';
+        icon.textContent = '○';
+        icon.style.color = '#64748b';
+      }
+    }
+
+    function onPasswordInput() {
+      const pwd = document.getElementById('reg-password').value;
+      const rules = checkPasswordPattern(pwd);
+
+      updateRuleItem('rule-len', rules.len);
+      updateRuleItem('rule-upper', rules.upper);
+      updateRuleItem('rule-lower', rules.lower);
+      updateRuleItem('rule-num', rules.num);
+      updateRuleItem('rule-special', rules.special);
+
+      // Calculate score
+      let score = 0;
+      if (rules.len) score += 20;
+      if (rules.upper) score += 20;
+      if (rules.lower) score += 20;
+      if (rules.num) score += 20;
+      if (rules.special) score += 20;
+
+      const bar = document.getElementById('pwd-strength-bar');
+      const label = document.getElementById('pwd-strength-label');
+
+      bar.style.width = score + '%';
+
+      if (score === 0) {
+        bar.style.background = '#e2e8f0';
+        label.textContent = 'Strength: Not entered';
+        label.style.color = 'var(--slate-500)';
+      } else if (score <= 40) {
+        bar.style.background = '#ef4444'; // Red
+        label.textContent = 'Strength: Weak (Does not meet security policy)';
+        label.style.color = '#ef4444';
+      } else if (score <= 60) {
+        bar.style.background = '#f97316'; // Orange
+        label.textContent = 'Strength: Moderate (Missing required elements)';
+        label.style.color = '#f97316';
+      } else if (score <= 80) {
+        bar.style.background = '#eab308'; // Amber
+        label.textContent = 'Strength: Good (Almost compliant)';
+        label.style.color = '#b45309';
+      } else {
+        bar.style.background = '#10b981'; // Green
+        label.textContent = 'Strength: Strong (Fully compliant with security policy) ✓';
+        label.style.color = '#15803d';
+      }
+
+      onConfirmPasswordInput();
+    }
+
+    function onConfirmPasswordInput() {
+      const pwd = document.getElementById('reg-password').value;
+      const confirmPwd = document.getElementById('reg-confirm-password').value;
+      const indicator = document.getElementById('pwd-match-indicator');
+
+      if (!confirmPwd) {
+        indicator.style.display = 'none';
+        return;
+      }
+
+      indicator.style.display = 'block';
+      if (pwd === confirmPwd) {
+        indicator.textContent = '✓ Passwords match perfectly';
+        indicator.style.color = '#15803d';
+      } else {
+        indicator.textContent = '✗ Passwords do not match';
+        indicator.style.color = '#dc2626';
+      }
+    }
+
     async function handleRegister(e) {
       e.preventDefault();
-      const full_name = document.getElementById('reg-name').value;
-      const email = document.getElementById('reg-email').value;
-      const phone = document.getElementById('reg-phone').value;
+      const full_name = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const phone = document.getElementById('reg-phone').value.trim();
       const password = document.getElementById('reg-password').value;
+      const confirm_password = document.getElementById('reg-confirm-password').value;
       const btn = document.getElementById('btn-submit-reg');
+
+      // 1. Password pattern validation
+      const rules = checkPasswordPattern(password);
+      if (!rules.len || !rules.upper || !rules.lower || !rules.num || !rules.special) {
+        showToast('Password does not meet required security pattern. Please check the rules checklist.', 'error');
+        document.getElementById('reg-password').focus();
+        return;
+      }
+
+      // 2. Confirm password match validation
+      if (password !== confirm_password) {
+        showToast('Password and Confirm Password do not match. Please re-enter.', 'error');
+        document.getElementById('reg-confirm-password').focus();
+        return;
+      }
 
       btn.disabled = true;
       btn.textContent = 'Creating Account...';
 
       try {
-        const res = await API.post('/api/auth/register', { full_name, email, phone, password });
+        const res = await API.post('/api/auth/register', {
+          full_name,
+          email,
+          phone,
+          password,
+          confirm_password
+        });
+
         showToast('Registration successful! Welcome to PetCare Passport.', 'success');
 
         setTimeout(() => {

@@ -7,7 +7,6 @@
   <meta name="description" content="Community lost and found pet recovery network. Report a lost pet, report a found animal, or submit a sighting.">
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/components.css">
-  <link rel="stylesheet" href="/css/adopter.css">
 </head>
 <body>
 
@@ -21,7 +20,6 @@
 
       <ul class="nav-links">
         <li class="nav-item"><a href="/index.html">Home</a></li>
-        <li class="nav-item"><a href="/adopt.html">Adopt a Pet</a></li>
         <li class="nav-item active"><a href="/lost-found.html">Lost & Found</a></li>
         <li class="nav-item"><a href="/care-guides.html">Care Guides</a></li>
       </ul>
@@ -271,7 +269,7 @@
     function openReportModal(type) {
       document.getElementById('rep-type').value = type;
       document.getElementById('report-modal-title').textContent = type === 'lost' ? 'Report a Missing Pet' : 'Report a Found Animal';
-      document.getElementById('rep-date').valueAsDate = new Date();
+      document.getElementById('rep-date').value = getLocalDateInputString();
       openModal('modal-submit-report');
     }
 

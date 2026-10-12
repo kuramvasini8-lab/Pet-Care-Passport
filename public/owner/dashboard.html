@@ -58,12 +58,6 @@
             <a href="/owner/daily-care.html" id="side-care"><span class="owner-menu-icon">💊</span> Daily Care & Tasks</a>
           </li>
           <li class="owner-menu-item">
-            <a href="/owner/appointments.html" id="side-appointments"><span class="owner-menu-icon">📅</span> Appointments</a>
-          </li>
-          <li class="owner-menu-item">
-            <a href="/owner/rehoming.html" id="side-rehoming"><span class="owner-menu-icon">🏡</span> Adoption & Rehoming</a>
-          </li>
-          <li class="owner-menu-item">
             <a href="/owner/ai-assistant.html" id="side-ai"><span class="owner-menu-icon">🤖</span> AI Pet Assistant</a>
           </li>
         </ul>
@@ -110,9 +104,6 @@
           <a href="/owner/vaccinations.html?action=add" class="btn btn-outline" id="btn-quick-vaccine">
             💉 Record Vaccination
           </a>
-          <a href="/owner/appointments.html?action=add" class="btn btn-outline" id="btn-quick-apt">
-            📅 Schedule Appointment
-          </a>
           <a href="/owner/passports.html" class="btn btn-outline" id="btn-quick-pass">
             🛂 Open Passports
           </a>
@@ -147,10 +138,10 @@
 
         <div class="stat-card stat-accent">
           <div>
-            <div class="stat-label">Upcoming Appointments</div>
-            <div class="stat-value" id="stat-apts" style="color:var(--accent-600);">0</div>
+            <div class="stat-label">Active Passports</div>
+            <div class="stat-value" id="stat-passports" style="color:var(--accent-600);">0</div>
           </div>
-          <div class="stat-icon" style="background:#eff6ff;color:#2563eb;">📅</div>
+          <div class="stat-icon" style="background:#eff6ff;color:#2563eb;">🛂</div>
         </div>
       </div>
 
@@ -184,31 +175,20 @@
 
       </div>
 
-      <!-- Lower Grid: Upcoming Appointments, Recent Health Records & Adoption Status -->
-      <div class="grid grid-cols-2 gap-6" style="grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));">
-        
-        <!-- Appointments -->
+      <!-- Lower Grid: Recent Health Records & Clinical Consultations -->
+      <div style="margin-top: 8px;">
         <div class="card">
           <div class="card-header">
-            <h2 class="card-title">Upcoming Appointments</h2>
-            <a href="/owner/appointments.html" class="btn btn-outline btn-sm">Manage →</a>
-          </div>
-          <div id="dashboard-appointments-container">
-            <div class="text-muted" style="text-align:center;padding:30px;">Loading appointments...</div>
-          </div>
-        </div>
-
-        <!-- Recent Health Records -->
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title">Recent Health Records</h2>
-            <a href="/owner/health.html" class="btn btn-outline btn-sm">Full Timeline →</a>
+            <div>
+              <h2 class="card-title">Recent Health Records & Consultations</h2>
+              <p class="text-muted text-xs" style="margin-top:2px;">Verified veterinary entries, diagnostic notes, exams, and preventative treatments.</p>
+            </div>
+            <a href="/owner/health.html" class="btn btn-outline btn-sm">Full Health Timeline →</a>
           </div>
           <div id="dashboard-health-container">
             <div class="text-muted" style="text-align:center;padding:30px;">Loading records...</div>
           </div>
         </div>
-
       </div>
 
     </main>
@@ -229,7 +209,7 @@
         document.getElementById('stat-pets').textContent = data.total_pets;
         document.getElementById('stat-overdue').textContent = data.vaccinations_overdue_count;
         document.getElementById('stat-due-soon').textContent = data.vaccinations_due_soon_count;
-        document.getElementById('stat-apts').textContent = data.upcoming_appointments_count;
+        document.getElementById('stat-passports').textContent = data.total_pets;
 
         // Urgent alerts
         const alertBox = document.getElementById('urgent-alerts-container');
@@ -305,27 +285,6 @@
               <button onclick="toggleCareTask(${t.id})" class="btn btn-outline btn-sm" title="Mark as Done">
                 ✓ Done
               </button>
-            </div>
-          `).join('');
-        }
-
-        // Render Upcoming Appointments
-        const aptsBox = document.getElementById('dashboard-appointments-container');
-        if (data.upcoming_appointments.length === 0) {
-          aptsBox.innerHTML = `<div class="text-muted" style="text-align:center;padding:24px;">No upcoming appointments scheduled.</div>`;
-        } else {
-          aptsBox.innerHTML = data.upcoming_appointments.map(a => `
-            <div style="padding:14px;border-bottom:1px solid var(--slate-100);display:flex;justify-content:space-between;align-items:center;">
-              <div>
-                <div style="font-weight:700;">${a.purpose}</div>
-                <div class="text-muted" style="font-size:0.825rem;">
-                  🐾 ${a.pet_name} &bull; 🏥 ${a.clinic_name}
-                </div>
-                <div style="font-size:0.825rem;color:var(--primary-700);font-weight:600;margin-top:2px;">
-                  🗓️ ${formatDateTime(a.appointment_date)}
-                </div>
-              </div>
-              <span class="badge badge-due-soon">Upcoming</span>
             </div>
           `).join('');
         }

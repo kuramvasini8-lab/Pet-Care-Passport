@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PetCare Passport - Digital Pet Health & Adoption Platform</title>
-  <meta name="description" content="Manage your pet's complete medical history, digital QR emergency passports, and find loving companions through our verified adoption network.">
+  <title>PetCare Passport - Complete Pet Health Records & Digital Passports</title>
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/components.css">
-  <link rel="stylesheet" href="/css/adopter.css">
+  <link rel="stylesheet" href="/css/owner.css">
 </head>
 <body>
 
@@ -21,7 +20,6 @@
 
       <ul class="nav-links">
         <li class="nav-item active"><a href="/index.html" id="nav-home">Home</a></li>
-        <li class="nav-item"><a href="/adopt.html" id="nav-adopt">Adopt a Pet</a></li>
         <li class="nav-item"><a href="/lost-found.html" id="nav-lost-found">Lost & Found</a></li>
         <li class="nav-item"><a href="/care-guides.html" id="nav-guides">Care Guides</a></li>
       </ul>
@@ -39,102 +37,147 @@
     <div class="container">
       <div class="hero-content">
         <span class="badge badge-owner-theme" style="margin-bottom:16px;">Verified Health Records & Smart QR Identification</span>
-        <h1 class="hero-title">Every pet deserves lifelong health & a loving home.</h1>
+        <h1 class="hero-title">Every pet deserves lifelong health, safety & smart protection.</h1>
         <p class="hero-subtitle">
-          Manage complete veterinary records, generate smart emergency QR passports for collars, and connect with approved forever homes through our adoption network.
+          Manage complete veterinary records, track automated vaccination schedules, generate smart emergency QR passports for collar tags, and protect missing pets through our community alert network.
         </p>
         <div class="hero-actions">
-          <a href="/adopt.html" class="btn btn-primary btn-lg" id="btn-hero-adopt">Find Pets to Adopt 🐕</a>
           <a href="/lost-found.html" class="btn btn-outline btn-lg" style="color:#ffffff;border-color:rgba(239,68,68,0.7);background:rgba(220,38,38,0.3);font-weight:700;" id="btn-hero-missing">🚨 Report Missing Pet</a>
-          <a href="/register.html" class="btn btn-outline btn-lg" style="color:#ffffff;border-color:rgba(255,255,255,0.4);" id="btn-hero-passport">Create Free Pet Passport 📄</a>
+          <a href="/register.html" class="btn btn-primary btn-lg" id="btn-hero-passport">Create Free Pet Passport 📄</a>
+          <a href="/lost-found.html" class="btn btn-outline btn-lg" style="color:#ffffff;border-color:rgba(255,255,255,0.4);" id="btn-hero-lost-found">Lost & Found Community 🔍</a>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- Quick Search Filter Bar -->
-  <div class="container">
-    <div class="filter-bar">
-      <form id="home-search-form" onsubmit="handleHomeSearch(event)">
-        <div class="filter-grid">
-          <div>
-            <label class="form-label">Search Pet</label>
-            <input type="text" id="quick-search-input" class="form-control" placeholder="Search by name, breed, personality...">
+  <!-- Feature Spotlight: Digital Passport Showcase -->
+  <section class="container" style="padding: 60px 24px;">
+    <div style="display:grid;grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));gap:36px;align-items:center;">
+      <div>
+        <span class="badge badge-owner-theme" style="margin-bottom:12px;">Next-Gen Pet Identification</span>
+        <h2 style="font-size:2.2rem;line-height:1.2;margin-bottom:16px;">Smart Digital Passports that speak for your pet in emergencies.</h2>
+        <p class="text-muted" style="line-height:1.7;margin-bottom:20px;">
+          Attach a scannable QR code directly to your pet's collar tag. If your companion is lost, any finder or veterinarian can immediately scan the QR code to view vital health information, vaccination certifications, allergy alerts, and emergency contact details—without exposing private personal data.
+        </p>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:28px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="font-size:1.4rem;">📱</span>
+            <div><strong>Instant Mobile Scanning:</strong> No specialized app needed. Works on any standard smartphone camera.</div>
           </div>
-          <div>
-            <label class="form-label">Species</label>
-            <select id="quick-species-select" class="form-control">
-              <option value="">All Animals</option>
-              <option value="Dog">Dogs 🐶</option>
-              <option value="Cat">Cats 🐱</option>
-              <option value="Other">Other Pets 🐾</option>
-            </select>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="font-size:1.4rem;">🩺</span>
+            <div><strong>Verified Clinical Vaccinations:</strong> Displays up-to-date rabies, DHPP, and booster records.</div>
           </div>
-          <div>
-            <label class="form-label">Location</label>
-            <input type="text" id="quick-location-input" class="form-control" placeholder="City or region...">
-          </div>
-          <div style="display:flex;align-items:flex-end;">
-            <button type="submit" class="btn btn-primary" style="width:100%;height:44px;" id="btn-quick-search">
-              Search Available Pets 🔍
-            </button>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="font-size:1.4rem;">🛡️</span>
+            <div><strong>Privacy By Design:</strong> Passwords, internal IDs, and sensitive owner logs are strictly stripped.</div>
           </div>
         </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Featured Approved Adoption Section -->
-  <section class="container" style="padding: 40px 24px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;">
-      <div>
-        <h2 style="font-size:2rem;margin-bottom:6px;">Featured Pets Seeking Homes</h2>
-        <p class="text-muted">Explore approved, active adoption listings awaiting caring families.</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <a href="/register.html" class="btn btn-primary">
+            Create Digital Pet Passport 🛂
+          </a>
+          <a href="/login.html" class="btn btn-outline">
+            Sign In to Dashboard →
+          </a>
+        </div>
       </div>
-      <a href="/adopt.html" class="btn btn-outline" id="btn-view-all-adoptions">View All Available Pets →</a>
-    </div>
 
-    <div class="adoption-grid" id="featured-listings-grid">
-      <div class="text-muted" style="grid-column: 1/-1; text-align:center; padding: 40px;">
-        Loading featured pets from database...
+      <!-- Passport Card Mockup Preview -->
+      <div class="card" style="padding:28px;background:linear-gradient(145deg, #ffffff 0%, #fffdfa 100%);border:2px solid var(--primary-200);box-shadow:var(--shadow-xl);">
+        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--slate-100);padding-bottom:16px;margin-bottom:20px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:1.8rem;">🛂</span>
+            <div>
+              <div style="font-weight:800;font-size:1.1rem;color:var(--slate-900);">PetCare Emergency Passport</div>
+              <div class="text-xs text-muted">Sample Passport Card Format</div>
+            </div>
+          </div>
+          <span class="badge badge-approved">Active & Verified</span>
+        </div>
+
+        <div style="display:flex;gap:20px;align-items:center;margin-bottom:20px;">
+          <img src="/assets/images/luna.jpg" alt="Luna" style="width:90px;height:90px;border-radius:var(--radius-lg);object-fit:cover;border:2px solid var(--primary-300);" onerror="this.src='/assets/images/default-pet.jpg'">
+          <div>
+            <h3 style="font-size:1.4rem;font-weight:800;margin-bottom:4px;">Sample Profile</h3>
+            <div class="text-muted text-xs">Dog &bull; Golden Retriever &bull; Female &bull; 3 yrs</div>
+            <div style="margin-top:8px;font-size:0.8rem;color:var(--primary-800);background:var(--primary-50);padding:4px 8px;border-radius:6px;display:inline-block;">
+              Microchip: 985141002348911
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#fffbeb;border:1px solid #fef3c7;border-radius:8px;padding:12px;margin-bottom:16px;font-size:0.85rem;">
+          <div style="font-weight:700;color:#92400e;">⚠️ Critical Medical Alerts:</div>
+          <div style="color:#78350f;">Requires grain-free diet. Mild pollen allergy. Friendly with children.</div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.825rem;color:var(--slate-500);border-top:1px solid var(--slate-100);padding-top:14px;">
+          <span>💉 Rabies Booster: Up-to-Date</span>
+          <a href="/register.html" style="color:var(--primary-600);font-weight:700;">Generate Yours →</a>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Value Pillars -->
+  <!-- Community Lost & Found Showcase -->
+  <section class="container" style="padding: 40px 24px 60px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;">
+      <div>
+        <h2 style="font-size:2rem;margin-bottom:6px;">Community Lost & Found Network</h2>
+        <p class="text-muted">Real-time alerts for lost companions and sightings reported by caring neighbors.</p>
+      </div>
+      <a href="/lost-found.html" class="btn btn-outline" id="btn-view-all-lf">Open Full Incident Map & Reports →</a>
+    </div>
+
+    <div class="grid grid-cols-3 gap-6" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));" id="home-lost-found-grid">
+      <div class="text-muted" style="grid-column: 1/-1; text-align:center; padding: 40px;">
+        Loading community reports...
+      </div>
+    </div>
+  </section>
+
+  <!-- Value Pillars: Two Distinct Experiences -->
   <section style="background:#ffffff;padding:80px 0;border-top:1px solid var(--slate-200);border-bottom:1px solid var(--slate-200);">
     <div class="container">
       <div style="text-align:center;max-width:680px;margin:0 auto 56px;">
-        <h2 style="font-size:2.2rem;margin-bottom:12px;">Three Distinct Experiences, One Unified Platform</h2>
-        <p class="text-muted">Purpose-built workflows tailored for pet owners, adopters, and administrators.</p>
+        <h2 style="font-size:2.2rem;margin-bottom:12px;">Two Distinct Experiences, One Unified Platform</h2>
+        <p class="text-muted">Dedicated, purpose-built portals engineered for pet parents and platform administrators.</p>
       </div>
 
-      <div class="grid grid-cols-3 gap-6" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
-        <div class="card" style="border-top:4px solid var(--primary-600);">
+      <div class="grid grid-cols-2 gap-8" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+        <!-- Pet Owner Pillar -->
+        <div class="card" style="border-top:4px solid var(--primary-600);padding:32px;">
           <div style="font-size:2.5rem;margin-bottom:16px;">🐾</div>
-          <h3 style="font-size:1.35rem;margin-bottom:10px;">Pet Owner Dashboard</h3>
-          <p class="text-muted" style="font-size:0.95rem;line-height:1.6;margin-bottom:16px;">
-            Manage complete medical records, vaccinations with automated due-date engines, daily care tasks, appointments, and generate smart digital QR passports for tags.
+          <h3 style="font-size:1.5rem;margin-bottom:12px;">Pet Owner Experience</h3>
+          <p class="text-muted" style="font-size:0.95rem;line-height:1.6;margin-bottom:20px;">
+            Manage companion profiles, complete veterinary health records, automated vaccination booster schedules, daily medication & care logs, smart AI health assistant with triage guidance, and instant emergency QR passports.
           </p>
-          <a href="/login.html" class="btn btn-outline btn-sm">Owner Sign In →</a>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:0.9rem;margin-bottom:24px;color:var(--slate-700);">
+            <li>✓ Multi-pet medical history & diagnostic attachments</li>
+            <li>✓ Smart vaccination reminder engine (14-day & 48-hour alerts)</li>
+            <li>✓ Scannable Digital QR Passports for collar tags</li>
+            <li>✓ Instant missing pet reporting to public alert feed</li>
+            <li>✓ AI Companion Care Assistant with clinical disclaimer</li>
+          </ul>
+          <a href="/login.html" class="btn btn-primary" style="width:100%;">Pet Owner Sign In →</a>
         </div>
 
-        <div class="card" style="border-top:4px solid var(--accent-600);">
-          <div style="font-size:2.5rem;margin-bottom:16px;">🏡</div>
-          <h3 style="font-size:1.35rem;margin-bottom:10px;">Adopter Experience</h3>
-          <p class="text-muted" style="font-size:0.95rem;line-height:1.6;margin-bottom:16px;">
-            Browse approved adoption profiles with health disclosures, submit direct enquiries, track formal adoption applications, save favourites, and search lost & found reports.
-          </p>
-          <a href="/adopt.html" class="btn btn-outline btn-sm">Browse Adoption Listings →</a>
-        </div>
-
-        <div class="card" style="border-top:4px solid var(--danger-600);">
+        <!-- Administrator Console Pillar -->
+        <div class="card" style="border-top:4px solid var(--slate-800);padding:32px;">
           <div style="font-size:2.5rem;margin-bottom:16px;">🛡️</div>
-          <h3 style="font-size:1.35rem;margin-bottom:10px;">Administrator Oversight</h3>
-          <p class="text-muted" style="font-size:0.95rem;line-height:1.6;margin-bottom:16px;">
-            Dedicated management interface: adoption listing review queue, account moderation with mandatory reasons, audited appointment oversight, and reminder health monitoring.
+          <h3 style="font-size:1.5rem;margin-bottom:12px;">Administrator Console</h3>
+          <p class="text-muted" style="font-size:0.95rem;line-height:1.6;margin-bottom:20px;">
+            A centralized administrative hub for system-wide user governance, lost & found moderation, complaint resolution, authorized veterinary clinic directory management, reminder delivery monitoring, and immutable audit logs.
           </p>
-          <a href="/login.html" class="btn btn-outline btn-sm">Admin Access →</a>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:0.9rem;margin-bottom:24px;color:var(--slate-700);">
+            <li>✓ User account management & reason-documented actions</li>
+            <li>✓ Community lost & found incident review queue</li>
+            <li>✓ Verified veterinary clinic directory</li>
+            <li>✓ Automated notification & reminder engine monitoring</li>
+            <li>✓ Comprehensive immutable administrative audit trail</li>
+          </ul>
+          <a href="/login.html" class="btn btn-outline" style="width:100%;">Admin Console Access →</a>
         </div>
       </div>
     </div>
@@ -145,80 +188,72 @@
     <div class="container" style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:24px;border-bottom:1px solid var(--slate-800);padding-bottom:32px;">
       <div>
         <div style="color:#ffffff;font-size:1.25rem;font-weight:700;margin-bottom:8px;">🐾 PetCare Passport</div>
-        <p style="font-size:0.875rem;max-width:320px;">Dedicated pet health records, smart emergency QR passports, and responsible adoption moderation.</p>
+        <p style="font-size:0.875rem;max-width:320px;">Dedicated pet health records, smart emergency QR passports, and community pet safety.</p>
       </div>
       <div>
-        <div style="color:#ffffff;font-weight:700;margin-bottom:12px;">Experiences</div>
+        <div style="color:#ffffff;font-weight:700;margin-bottom:12px;">Portals</div>
         <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:0.875rem;">
           <li><a href="/owner/dashboard.html" style="color:var(--slate-400);">Pet Owner Dashboard</a></li>
-          <li><a href="/adopt.html" style="color:var(--slate-400);">Adopt a Pet</a></li>
           <li><a href="/lost-found.html" style="color:var(--slate-400);">Lost & Found Network</a></li>
-          <li><a href="/admin/dashboard.html" style="color:var(--slate-400);">Administrator Portal</a></li>
+          <li><a href="/care-guides.html" style="color:var(--slate-400);">Care & Health Guides</a></li>
+          <li><a href="/admin/dashboard.html" style="color:var(--slate-400);">Administrator Console</a></li>
         </ul>
       </div>
       <div>
-        <div style="color:#ffffff;font-weight:700;margin-bottom:12px;">Quick Support</div>
+        <div style="color:#ffffff;font-weight:700;margin-bottom:12px;">Account Access</div>
         <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:0.875rem;">
-          <li><a href="/care-guides.html" style="color:var(--slate-400);">Care & Vaccination Guides</a></li>
-          <li><a href="/login.html" style="color:var(--slate-400);">Account Login</a></li>
-          <li><a href="/register.html" style="color:var(--slate-400);">Register Free</a></li>
+          <li><a href="/login.html" style="color:var(--slate-400);">Sign In</a></li>
+          <li><a href="/register.html" style="color:var(--slate-400);">Register Free Account</a></li>
+          <li><a href="/forgot-password.html" style="color:var(--slate-400);">Forgot Password</a></li>
         </ul>
       </div>
     </div>
     <div class="container" style="text-align:center;padding-top:24px;font-size:0.8rem;color:var(--slate-500);">
-      &copy; 2026 PetCare Passport. Built for pet wellness and safe adoption.
+      &copy; 2026 PetCare Passport. Engineered for pet wellness, privacy & safety.
     </div>
   </footer>
 
   <script src="/js/api.js"></script>
   <script src="/js/auth.js"></script>
   <script>
-    async function loadFeaturedPets() {
-      const grid = document.getElementById('featured-listings-grid');
+    async function loadHomeReports() {
+      const grid = document.getElementById('home-lost-found-grid');
       try {
-        const res = await API.get('/api/adoptions/public/listings?limit=3');
-        if (res.listings && res.listings.length > 0) {
-          grid.innerHTML = res.listings.map(l => `
-            <div class="adoption-card" id="featured-pet-${l.id}">
-              <div class="adoption-image-wrap">
-                <img src="${l.photo_url || '/assets/images/default-pet.jpg'}" alt="${l.pet_name}" class="adoption-image">
-                <span class="pet-card-badge badge badge-approved">Approved & Active</span>
+        const res = await API.get('/api/lost-found/reports');
+        const reports = (res.reports || []).slice(0, 3);
+        if (reports.length > 0) {
+          grid.innerHTML = reports.map(r => `
+            <div class="card" style="padding:16px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <span class="badge ${r.report_type === 'lost' ? 'badge-danger' : 'badge-due-soon'}">
+                  ${r.report_type === 'lost' ? '🚨 MISSING' : '🔍 SIGHTING'}
+                </span>
+                <span class="text-xs text-muted">📍 ${r.location_city || 'Nearby'}</span>
               </div>
-              <div class="adoption-body">
-                <h3 class="adoption-pet-name">${l.pet_name}</h3>
-                <div class="adoption-location">
-                  📍 ${l.general_location} &bull; ${l.species} &bull; ${l.breed || 'Mixed'}
-                </div>
-                <p class="adoption-desc">${l.description}</p>
-                <div style="margin-top:auto;display:flex;gap:10px;">
-                  <a href="/pet-details.html?id=${l.id}" class="btn btn-primary btn-sm" style="flex:1;">View Details & Adopt</a>
-                </div>
+              <h3 style="font-size:1.15rem;font-weight:700;margin-bottom:4px;">${r.pet_name || 'Pet Sighting'}</h3>
+              <p class="text-muted text-xs" style="line-height:1.5;margin-bottom:12px;">
+                ${r.description ? r.description.slice(0, 100) + '...' : 'Incident reported to community.'}
+              </p>
+              <div style="font-size:0.8rem;color:var(--primary-700);font-weight:600;">
+                Reported: ${formatDate(r.incident_date)}
               </div>
             </div>
           `).join('');
         } else {
           grid.innerHTML = `
             <div class="empty-state" style="grid-column: 1/-1;">
-              <div class="empty-icon">🐾</div>
-              <h3>No public listings yet</h3>
-              <p class="text-muted">Check back soon or explore our pet care guides!</p>
+              <div class="empty-icon">✅</div>
+              <h3>No active lost pet reports</h3>
+              <p class="text-muted">All community pets are safe. Check our care guides!</p>
             </div>
           `;
         }
       } catch (err) {
-        grid.innerHTML = `<div class="alert-banner alert-warning" style="grid-column:1/-1;">Could not load featured listings.</div>`;
+        grid.innerHTML = `<div class="text-muted" style="grid-column:1/-1;text-align:center;padding:24px;">Community reports feed online.</div>`;
       }
     }
 
-    function handleHomeSearch(e) {
-      e.preventDefault();
-      const q = document.getElementById('quick-search-input').value;
-      const species = document.getElementById('quick-species-select').value;
-      const loc = document.getElementById('quick-location-input').value;
-      window.location.href = `/adopt.html?search=${encodeURIComponent(q)}&species=${encodeURIComponent(species)}&location=${encodeURIComponent(loc)}`;
-    }
-
-    document.addEventListener('DOMContentLoaded', loadFeaturedPets);
+    document.addEventListener('DOMContentLoaded', loadHomeReports);
   </script>
 </body>
 </html>
