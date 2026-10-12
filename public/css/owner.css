@@ -1,0 +1,236 @@
+/* ==========================================================================
+   PetCare Passport - Pet Owner Dashboard Styles
+   ========================================================================== */
+
+.owner-layout {
+  display: flex;
+  min-height: calc(100vh - var(--header-height));
+}
+
+.owner-sidebar {
+  width: var(--sidebar-width);
+  background: #ffffff;
+  border-right: 1px solid var(--slate-200);
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.owner-menu {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.owner-menu-item a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.925rem;
+  font-weight: 600;
+  color: var(--slate-600);
+  transition: all 0.15s ease;
+}
+
+.owner-menu-item a:hover {
+  background: var(--slate-100);
+  color: var(--primary-700);
+}
+
+.owner-menu-item.active a {
+  background: var(--primary-50);
+  color: var(--primary-700);
+  font-weight: 700;
+}
+
+.owner-menu-icon {
+  font-size: 1.15rem;
+  width: 24px;
+  text-align: center;
+}
+
+.owner-main {
+  flex: 1;
+  padding: 32px;
+  background: var(--slate-50);
+  max-width: calc(100vw - var(--sidebar-width));
+}
+
+.owner-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+/* Quick Actions Bar */
+.quick-actions-bar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+/* Pet Card Grid */
+.pets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.pet-card {
+  background: #ffffff;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--slate-200);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.pet-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.pet-card-image-wrap {
+  height: 200px;
+  position: relative;
+  background: var(--slate-100);
+  overflow: hidden;
+}
+
+.pet-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pet-card-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  backdrop-filter: blur(8px);
+}
+
+.pet-card-content {
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.pet-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  color: var(--slate-500);
+  font-size: 0.85rem;
+}
+
+.pet-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.pet-tag {
+  background: var(--slate-100);
+  color: var(--slate-700);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.pet-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+  border-top: 1px solid var(--slate-100);
+  padding-top: 14px;
+}
+
+/* Daily Care Interactive Tasks */
+.care-task-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: #ffffff;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--slate-200);
+  margin-bottom: 10px;
+  transition: all 0.15s ease;
+}
+
+.care-task-item:hover {
+  border-color: var(--primary-300);
+  background: var(--primary-50);
+}
+
+.care-task-item.completed {
+  opacity: 0.65;
+  background: var(--slate-100);
+}
+
+.care-task-item.completed .care-task-title {
+  text-decoration: line-through;
+}
+
+/* Health Timeline */
+.timeline {
+  position: relative;
+  padding-left: 28px;
+  margin-top: 20px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  bottom: 0;
+  left: 10px;
+  width: 2px;
+  background: var(--slate-200);
+}
+
+.timeline-event {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -28px;
+  top: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid var(--primary-600);
+}
+
+.timeline-dot.dot-vaccine { border-color: var(--accent-600); }
+.timeline-dot.dot-treatment { border-color: var(--warning-500); }
+.timeline-dot.dot-surgery { border-color: var(--danger-500); }
+
+@media (max-width: 900px) {
+  .owner-layout { flex-direction: column; }
+  .owner-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--slate-200); }
+  .owner-main { max-width: 100vw; padding: 20px 16px; }
+}

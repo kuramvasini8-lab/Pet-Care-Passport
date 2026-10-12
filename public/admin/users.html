@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Management - PetCare Passport Admin</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+  <!-- Admin Top Navbar -->
+  <nav class="navbar" style="border-bottom: 2px solid #991b1b;">
+    <div class="container nav-inner">
+      <a href="/admin/dashboard.html" class="brand-logo">
+        <span class="logo-icon" style="background:#991b1b;">🛡️</span>
+        <span>PetCare<span style="color:#991b1b;">Admin</span></span>
+        <span class="brand-badge badge-admin-theme">Platform Oversight</span>
+      </a>
+
+      <div style="display:flex;align-items:center;gap:16px;">
+        <a href="/owner/dashboard.html" class="btn btn-outline btn-sm">🐾 Owner View</a>
+        <div class="nav-auth-group" id="nav-auth-container"></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div>
+        <div class="admin-brand">
+          <span style="font-size:1.4rem;">⚙️</span>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;">System Console</div>
+            <div class="text-xs" style="color:var(--slate-400);">Role: Administrator</div>
+          </div>
+        </div>
+        <ul class="admin-menu">
+          <li class="admin-menu-item"><a href="/admin/dashboard.html"><span class="admin-menu-icon">📊</span> Overview</a></li>
+          <li class="admin-menu-item active"><a href="/admin/users.html"><span class="admin-menu-icon">👥</span> User Management</a></li>
+          <li class="admin-menu-item"><a href="/admin/moderation.html"><span class="admin-menu-icon">🏡</span> Adoption Moderation</a></li>
+          <li class="admin-menu-item"><a href="/admin/lost-found.html"><span class="admin-menu-icon">🔍</span> Lost & Found Queue</a></li>
+          <li class="admin-menu-item"><a href="/admin/reports.html"><span class="admin-menu-icon">🚨</span> Reports & Complaints</a></li>
+          <li class="admin-menu-item"><a href="/admin/appointments.html"><span class="admin-menu-icon">📅</span> Appointment Oversight</a></li>
+          <li class="admin-menu-item"><a href="/admin/clinics.html"><span class="admin-menu-icon">🏥</span> Clinic Directory</a></li>
+          <li class="admin-menu-item"><a href="/admin/reminders.html"><span class="admin-menu-icon">📬</span> Reminder Monitoring</a></li>
+          <li class="admin-menu-item"><a href="/admin/audit-logs.html"><span class="admin-menu-icon">📜</span> System Audit Logs</a></li>
+          <li class="admin-menu-item"><a href="/admin/system-health.html"><span class="admin-menu-icon">⚡</span> System Health</a></li>
+        </ul>
+      </div>
+      <div style="border-top:1px solid var(--slate-800);padding-top:16px;">
+        <ul class="admin-menu">
+          <li class="admin-menu-item"><a href="javascript:void(0)" onclick="Auth.logout()"><span class="admin-menu-icon">🚪</span> Sign Out</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <div class="admin-header">
+        <div>
+          <h1 style="font-size:2rem;margin-bottom:4px;">User Account Management</h1>
+          <p class="text-muted">Search registered accounts, inspect pet ownership, and manage security suspensions with documented audit reasons.</p>
+        </div>
+      </div>
+
+      <!-- Filters Bar -->
+      <div class="card" style="margin-bottom:24px;">
+        <div style="display:grid;grid-template-columns: 2fr 1fr 1fr auto;gap:14px;align-items:flex-end;">
+          <div>
+            <label class="form-label" for="usr-search">Search by Name or Email</label>
+            <input type="text" id="usr-search" class="form-control" placeholder="Search accounts..." oninput="loadUsers()">
+          </div>
+          <div>
+            <label class="form-label" for="usr-role">Role</label>
+            <select id="usr-role" class="form-control" onchange="loadUsers()">
+              <option value="">All Roles</option>
+              <option value="user">Standard User</option>
+              <option value="admin">Administrator</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label" for="usr-status">Account Status</label>
+            <select id="usr-status" class="form-control" onchange="loadUsers()">
+              <option value="">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </div>
+          <button onclick="loadUsers()" class="btn btn-outline" style="height:44px;" title="Refresh">
+            🔄 Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Users Table -->
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>User Details</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Pets Registered</th>
+                <th>Adoption Listings</th>
+                <th>Created</th>
+                <th>Administrative Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-tbody">
+              <tr><td colspan="7" class="text-muted" style="text-align:center;padding:30px;">Loading users...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal: Suspend Account with Required Reason -->
+  <div class="modal-backdrop" id="modal-suspend">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="suspend-modal-title">Suspend User Account</h3>
+        <button class="modal-close" onclick="closeModal('modal-suspend')">&times;</button>
+      </div>
+      <form id="suspend-form" onsubmit="handleConfirmSuspend(event)">
+        <input type="hidden" id="suspend-user-id">
+        <input type="hidden" id="suspend-target-action">
+        <div class="modal-body">
+          <div class="alert-banner alert-warning" id="suspend-warning-box">
+            ⚠️ Suspending this account will immediately revoke access to the Pet Owner Dashboard and hide active public listings.
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="suspend-reason">Mandatory Documented Administrative Reason *</label>
+            <textarea id="suspend-reason" class="form-control" required placeholder="State policy violation, fraud investigation ticket #, or reason for action..."></textarea>
+            <div class="form-hint">This justification will be permanently written to the administrative audit log.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-suspend')">Cancel</button>
+          <button type="submit" class="btn btn-danger" id="btn-confirm-suspend">Confirm Action</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    let usersList = [];
+
+    async function loadUsers() {
+      await Auth.requireAdmin('/login.html');
+      const tbody = document.getElementById('users-tbody');
+
+      const search = document.getElementById('usr-search').value;
+      const role = document.getElementById('usr-role').value;
+      const status = document.getElementById('usr-status').value;
+
+      const params = new URLSearchParams({
+        ...(search && { search }),
+        ...(role && { role }),
+        ...(status && { status })
+      });
+
+      try {
+        const res = await API.get(`/api/admin/users?${params.toString()}`);
+        usersList = res.users || [];
+
+        if (usersList.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" class="text-muted" style="text-align:center;padding:30px;">No user accounts found.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = usersList.map(u => `
+          <tr id="user-row-${u.id}">
+            <td>
+              <div style="font-weight:700;">${u.full_name}</div>
+              <div class="text-muted text-xs">${u.email} ${u.phone ? `&bull; ${u.phone}` : ''}</div>
+              ${u.suspension_reason ? `
+                <div style="font-size:0.75rem;color:#b91c1c;margin-top:2px;">
+                  Reason: ${u.suspension_reason}
+                </div>
+              ` : ''}
+            </td>
+            <td>
+              <span class="badge ${u.role === 'admin' ? 'badge-overdue' : 'badge-owner-theme'}">
+                ${u.role.toUpperCase()}
+              </span>
+            </td>
+            <td>
+              <span class="badge ${u.status === 'active' ? 'badge-approved' : 'badge-rejected'}">
+                ${u.status.toUpperCase()}
+              </span>
+            </td>
+            <td style="font-weight:600;">🐾 ${u.pet_count || 0}</td>
+            <td style="font-weight:600;">🏡 ${u.listing_count || 0}</td>
+            <td class="text-xs">${formatDate(u.created_at)}</td>
+            <td>
+              ${u.id === currentUser.id ? `
+                <span class="text-muted text-xs font-bold">(Current Admin Session)</span>
+              ` : (u.status === 'active' ? `
+                <button onclick="promptStatusChange(${u.id}, 'suspended', '${u.full_name}')" class="btn btn-outline btn-sm" style="color:var(--danger-600);border-color:#fca5a5;">
+                  ⛔ Suspend
+                </button>
+              ` : `
+                <button onclick="promptStatusChange(${u.id}, 'active', '${u.full_name}')" class="btn btn-outline btn-sm" style="color:var(--success-600);border-color:#bbf7d0;">
+                  ✓ Reactivate
+                </button>
+              `)}
+            </td>
+          </tr>
+        `).join('');
+
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" class="alert-banner alert-danger">${err.message}</td></tr>`;
+      }
+    }
+
+    function promptStatusChange(userId, targetStatus, name) {
+      document.getElementById('suspend-user-id').value = userId;
+      document.getElementById('suspend-target-action').value = targetStatus;
+      document.getElementById('suspend-reason').value = '';
+
+      if (targetStatus === 'suspended') {
+        document.getElementById('suspend-modal-title').textContent = `Suspend Account: ${name}`;
+        document.getElementById('btn-confirm-suspend').textContent = 'Confirm Suspension ⛔';
+        document.getElementById('btn-confirm-suspend').className = 'btn btn-danger';
+        document.getElementById('suspend-warning-box').style.display = 'block';
+      } else {
+        document.getElementById('suspend-modal-title').textContent = `Reactivate Account: ${name}`;
+        document.getElementById('btn-confirm-suspend').textContent = 'Confirm Reactivation ✓';
+        document.getElementById('btn-confirm-suspend').className = 'btn btn-primary';
+        document.getElementById('suspend-warning-box').style.display = 'none';
+      }
+
+      openModal('modal-suspend');
+    }
+
+    async function handleConfirmSuspend(e) {
+      e.preventDefault();
+      const userId = document.getElementById('suspend-user-id').value;
+      const status = document.getElementById('suspend-target-action').value;
+      const reason = document.getElementById('suspend-reason').value;
+
+      try {
+        const res = await API.put(`/api/admin/users/${userId}/status`, { status, reason });
+        closeModal('modal-suspend');
+        showToast(res.message, 'success');
+        loadUsers();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadUsers);
+  </script>
+</body>
+</html>

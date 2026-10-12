@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pet Owner Dashboard - PetCare Passport</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/owner.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <nav class="navbar">
+    <div class="container nav-inner">
+      <a href="/owner/dashboard.html" class="brand-logo">
+        <span class="logo-icon">🐾</span>
+        <span>PetCare<span style="color:var(--primary-600);">Passport</span></span>
+        <span class="brand-badge badge-owner-theme">Owner Portal</span>
+      </a>
+
+      <div style="display:flex;align-items:center;gap:16px;">
+        <a href="/index.html" class="btn btn-outline btn-sm" title="Explore public adoption & guides">
+          🌐 Public Site
+        </a>
+        <div class="nav-auth-group" id="nav-auth-container">
+          <!-- Injected via auth.js -->
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="owner-layout">
+    <!-- Owner Sidebar -->
+    <aside class="owner-sidebar">
+      <div>
+        <div style="padding:0 12px 16px;font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--slate-400);letter-spacing:0.05em;">
+          Pet Management
+        </div>
+        <ul class="owner-menu">
+          <li class="owner-menu-item active">
+            <a href="/owner/dashboard.html" id="side-dashboard"><span class="owner-menu-icon">📊</span> Overview</a>
+          </li>
+          <li class="owner-menu-item">
+            <a href="/owner/pets.html" id="side-pets"><span class="owner-menu-icon">🐶</span> My Pets</a>
+          </li>
+          <li class="owner-menu-item">
+            <a href="/owner/passports.html" id="side-passports"><span class="owner-menu-icon">🛂</span> Digital Passports</a>
+          </li>
+          <li class="owner-menu-item">
+            <a href="/owner/health.html" id="side-health"><span class="owner-menu-icon">🩺</span> Health Records</a>
+          </li>
+          <li class="owner-menu-item">
+            <a href="/owner/vaccinations.html" id="side-vaccinations"><span class="owner-menu-icon">💉</span> Vaccinations</a>
+          </li>
+          <li class="owner-menu-item">
+            <a href="/owner/daily-care.html" id="side-care"><span class="owner-menu-icon">💊</span> Daily Care & Tasks</a>
+          </li>
+          <li class="owner-menu-item">
+            <a href="/owner/appointments.html" id="side-appointments"><span class="owner-menu-icon">📅</span> Appointments</a>
+          </li>
+          <li class="owner-menu-item">
+            <a href="/owner/rehoming.html" id="side-rehoming"><span class="owner-menu-icon">🏡</span> Adoption & Rehoming</a>
+          </li>
+          <li class="owner-menu-item">
+            <a href="/owner/ai-assistant.html" id="side-ai"><span class="owner-menu-icon">🤖</span> AI Pet Assistant</a>
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <div style="padding:16px 12px 8px;font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--slate-400);letter-spacing:0.05em;border-top:1px solid var(--slate-200);">
+          Personal & Account
+        </div>
+        <ul class="owner-menu">
+          <li class="owner-menu-item">
+            <a href="/owner/notifications.html" id="side-notifications"><span class="owner-menu-icon">🔔</span> Notifications</a>
+          </li>
+          <li class="owner-menu-item">
+            <a href="/owner/profile.html" id="side-profile"><span class="owner-menu-icon">⚙️</span> Profile & Settings</a>
+          </li>
+          <li class="owner-menu-item">
+            <a href="javascript:void(0)" onclick="Auth.logout()"><span class="owner-menu-icon">🚪</span> Sign Out</a>
+          </li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="owner-main">
+      <div class="owner-page-header">
+        <div>
+          <h1 style="font-size:2rem;margin-bottom:4px;" id="welcome-header">Welcome, Pet Parent!</h1>
+          <p class="text-muted" id="welcome-subheader">Real-time health overview and reminders for your registered companions.</p>
+        </div>
+
+        <!-- Quick Action Buttons -->
+        <div class="quick-actions-bar">
+          <a href="/owner/pets.html?action=add" class="btn btn-primary" id="btn-quick-add-pet">
+            ➕ Add Pet
+          </a>
+          <a href="/owner/vaccinations.html?action=add" class="btn btn-outline" id="btn-quick-vaccine">
+            💉 Record Vaccination
+          </a>
+          <a href="/owner/appointments.html?action=add" class="btn btn-outline" id="btn-quick-apt">
+            📅 Schedule Appointment
+          </a>
+          <a href="/owner/passports.html" class="btn btn-outline" id="btn-quick-pass">
+            🛂 Open Passports
+          </a>
+        </div>
+      </div>
+
+      <!-- Real Database Stat Cards -->
+      <div class="grid grid-cols-4 gap-6" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 32px;">
+        <div class="stat-card">
+          <div>
+            <div class="stat-label">Registered Pets</div>
+            <div class="stat-value" id="stat-pets">0</div>
+          </div>
+          <div class="stat-icon">🐕</div>
+        </div>
+
+        <div class="stat-card stat-danger">
+          <div>
+            <div class="stat-label">Overdue Vaccines</div>
+            <div class="stat-value" id="stat-overdue" style="color:var(--danger-600);">0</div>
+          </div>
+          <div class="stat-icon" style="background:#fee2e2;color:#b91c1c;">⚠️</div>
+        </div>
+
+        <div class="stat-card stat-warning">
+          <div>
+            <div class="stat-label">Vaccines Due Soon</div>
+            <div class="stat-value" id="stat-due-soon" style="color:var(--warning-600);">0</div>
+          </div>
+          <div class="stat-icon" style="background:#fef3c7;color:#b45309;">💉</div>
+        </div>
+
+        <div class="stat-card stat-accent">
+          <div>
+            <div class="stat-label">Upcoming Appointments</div>
+            <div class="stat-value" id="stat-apts" style="color:var(--accent-600);">0</div>
+          </div>
+          <div class="stat-icon" style="background:#eff6ff;color:#2563eb;">📅</div>
+        </div>
+      </div>
+
+      <!-- Alerts / Urgent Reminders Banner -->
+      <div id="urgent-alerts-container"></div>
+
+      <!-- Two-Column Grid: Pets Overview & Daily Care -->
+      <div style="display:grid;grid-template-columns: 2fr 1fr;gap:28px;margin-bottom:32px;">
+        
+        <!-- My Registered Pets Cards -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">My Companion Pets</h2>
+            <a href="/owner/pets.html" class="btn btn-outline btn-sm">Manage All →</a>
+          </div>
+          <div class="pets-grid" id="dashboard-pets-grid">
+            <div class="text-muted" style="grid-column:1/-1;text-align:center;padding:30px;">Loading pets...</div>
+          </div>
+        </div>
+
+        <!-- Today's Care Tasks -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Active Care Tasks</h2>
+            <a href="/owner/daily-care.html" class="btn btn-outline btn-sm">View Care Log →</a>
+          </div>
+          <div id="dashboard-tasks-container">
+            <div class="text-muted" style="text-align:center;padding:30px;">Loading tasks...</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Lower Grid: Upcoming Appointments, Recent Health Records & Adoption Status -->
+      <div class="grid grid-cols-2 gap-6" style="grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));">
+        
+        <!-- Appointments -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Upcoming Appointments</h2>
+            <a href="/owner/appointments.html" class="btn btn-outline btn-sm">Manage →</a>
+          </div>
+          <div id="dashboard-appointments-container">
+            <div class="text-muted" style="text-align:center;padding:30px;">Loading appointments...</div>
+          </div>
+        </div>
+
+        <!-- Recent Health Records -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Recent Health Records</h2>
+            <a href="/owner/health.html" class="btn btn-outline btn-sm">Full Timeline →</a>
+          </div>
+          <div id="dashboard-health-container">
+            <div class="text-muted" style="text-align:center;padding:30px;">Loading records...</div>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    async function loadDashboard() {
+      try {
+        const user = await Auth.requireAuth('/login.html');
+        document.getElementById('welcome-header').textContent = `Welcome, ${user.full_name}! 👋`;
+
+        const res = await API.get('/api/owner/overview');
+        const data = res.data;
+
+        // Statistics
+        document.getElementById('stat-pets').textContent = data.total_pets;
+        document.getElementById('stat-overdue').textContent = data.vaccinations_overdue_count;
+        document.getElementById('stat-due-soon').textContent = data.vaccinations_due_soon_count;
+        document.getElementById('stat-apts').textContent = data.upcoming_appointments_count;
+
+        // Urgent alerts
+        const alertBox = document.getElementById('urgent-alerts-container');
+        if (data.vaccinations_overdue_count > 0) {
+          alertBox.innerHTML = `
+            <div class="alert-banner alert-danger" style="margin-bottom:24px;">
+              <span style="font-size:1.4rem;">⚠️</span>
+              <div style="flex:1;">
+                <strong>Urgent Attention:</strong> You have ${data.vaccinations_overdue_count} vaccination(s) marked overdue based on entered dates.
+                <a href="/owner/vaccinations.html" style="margin-left:8px;font-weight:700;text-decoration:underline;">Review Vaccinations</a>
+              </div>
+            </div>
+          `;
+        }
+
+        // Render Pets Grid
+        const petsGrid = document.getElementById('dashboard-pets-grid');
+        if (data.pets.length === 0) {
+          petsGrid.innerHTML = `
+            <div class="empty-state" style="grid-column:1/-1;">
+              <div class="empty-icon">🐾</div>
+              <h3>No pets registered yet</h3>
+              <p class="text-muted">Register your pet to start tracking health and create smart digital passports.</p>
+              <a href="/owner/pets.html?action=add" class="btn btn-primary btn-sm" style="margin-top:12px;">Add Your First Pet</a>
+            </div>
+          `;
+        } else {
+          petsGrid.innerHTML = data.pets.map(p => `
+            <div class="pet-card" id="owner-pet-card-${p.id}">
+              <div class="pet-card-image-wrap">
+                <img src="${p.photo_url || '/assets/images/default-pet.jpg'}" alt="${p.name}" class="pet-card-image">
+                <span class="pet-card-badge badge ${p.is_public_enabled ? 'badge-approved' : 'badge-unknown'}">
+                  ${p.is_public_enabled ? 'Passport Public' : 'Passport Private'}
+                </span>
+              </div>
+              <div class="pet-card-content">
+                <div>
+                  <h3 style="font-size:1.35rem;font-weight:700;">${p.name}</h3>
+                  <div class="pet-meta-row">
+                    <span>${p.species} &bull; ${p.breed || 'Mixed'}</span>
+                  </div>
+                </div>
+                <div class="pet-card-actions">
+                  <a href="/owner/passports.html?petId=${p.id}" class="btn btn-primary btn-sm" style="flex:1;">
+                    🛂 View Passport
+                  </a>
+                  <a href="/owner/pets.html?petId=${p.id}" class="btn btn-outline btn-sm" style="flex:1;">
+                    Profile & Timeline
+                  </a>
+                </div>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        // Render Care Tasks
+        const tasksBox = document.getElementById('dashboard-tasks-container');
+        if (data.active_care_tasks.length === 0) {
+          tasksBox.innerHTML = `
+            <div class="text-muted" style="text-align:center;padding:24px;">
+              ✅ All daily care tasks completed!
+            </div>
+          `;
+        } else {
+          tasksBox.innerHTML = data.active_care_tasks.map(t => `
+            <div class="care-task-item" id="task-${t.id}">
+              <div>
+                <div style="font-weight:700;font-size:0.95rem;">${t.title}</div>
+                <div class="text-muted" style="font-size:0.8rem;">
+                  🐾 ${t.pet_name} &bull; ${t.frequency} &bull; ${t.due_time ? t.due_time.slice(0, 5) : 'Anytime'}
+                </div>
+              </div>
+              <button onclick="toggleCareTask(${t.id})" class="btn btn-outline btn-sm" title="Mark as Done">
+                ✓ Done
+              </button>
+            </div>
+          `).join('');
+        }
+
+        // Render Upcoming Appointments
+        const aptsBox = document.getElementById('dashboard-appointments-container');
+        if (data.upcoming_appointments.length === 0) {
+          aptsBox.innerHTML = `<div class="text-muted" style="text-align:center;padding:24px;">No upcoming appointments scheduled.</div>`;
+        } else {
+          aptsBox.innerHTML = data.upcoming_appointments.map(a => `
+            <div style="padding:14px;border-bottom:1px solid var(--slate-100);display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <div style="font-weight:700;">${a.purpose}</div>
+                <div class="text-muted" style="font-size:0.825rem;">
+                  🐾 ${a.pet_name} &bull; 🏥 ${a.clinic_name}
+                </div>
+                <div style="font-size:0.825rem;color:var(--primary-700);font-weight:600;margin-top:2px;">
+                  🗓️ ${formatDateTime(a.appointment_date)}
+                </div>
+              </div>
+              <span class="badge badge-due-soon">Upcoming</span>
+            </div>
+          `).join('');
+        }
+
+        // Render Health Records
+        const healthBox = document.getElementById('dashboard-health-container');
+        if (data.recent_health_records.length === 0) {
+          healthBox.innerHTML = `<div class="text-muted" style="text-align:center;padding:24px;">No health records logged yet.</div>`;
+        } else {
+          healthBox.innerHTML = data.recent_health_records.map(h => `
+            <div style="padding:12px 0;border-bottom:1px solid var(--slate-100);">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <div style="font-weight:700;font-size:0.925rem;">${h.title}</div>
+                <span class="badge ${h.entry_source === 'clinic_verified' ? 'badge-approved' : 'badge-unknown'}">${h.entry_source === 'clinic_verified' ? 'Verified' : 'Owner Entered'}</span>
+              </div>
+              <div class="text-muted" style="font-size:0.8rem;margin-top:2px;">
+                🐾 ${h.pet_name} &bull; 📅 ${formatDate(h.date)} &bull; 🏥 ${h.clinic_name || 'Clinic'}
+              </div>
+            </div>
+          `).join('');
+        }
+
+      } catch (err) {
+        console.error('Dashboard load failed:', err);
+      }
+    }
+
+    async function toggleCareTask(taskId) {
+      try {
+        const res = await API.put(`/api/care/${taskId}/toggle`);
+        showToast(res.message, 'success');
+        loadDashboard();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadDashboard);
+  </script>
+</body>
+</html>

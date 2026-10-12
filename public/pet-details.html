@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pet Adoption Profile - PetCare Passport</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/adopter.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container nav-inner">
+      <a href="/index.html" class="brand-logo" id="brand-logo-link">
+        <span class="logo-icon">🐾</span>
+        <span>PetCare<span style="color:var(--primary-600);">Passport</span></span>
+      </a>
+
+      <ul class="nav-links">
+        <li class="nav-item"><a href="/index.html">Home</a></li>
+        <li class="nav-item active"><a href="/adopt.html">Adopt a Pet</a></li>
+        <li class="nav-item"><a href="/lost-found.html">Lost & Found</a></li>
+        <li class="nav-item"><a href="/care-guides.html">Care Guides</a></li>
+      </ul>
+
+      <div class="nav-auth-group" id="nav-auth-container">
+        <!-- Injected via auth.js -->
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Profile Container -->
+  <main class="container" style="padding-top: 40px; padding-bottom: 80px;" id="profile-container">
+    <div class="text-muted" style="text-align:center;padding:60px;">Loading pet profile...</div>
+  </main>
+
+  <!-- Modal 1: Submit Adoption Enquiry -->
+  <div class="modal-backdrop" id="modal-enquiry">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="enquiry-modal-title">Ask About Adopting</h3>
+        <button class="modal-close" onclick="closeModal('modal-enquiry')">&times;</button>
+      </div>
+      <form id="form-enquiry" onsubmit="submitEnquiry(event)">
+        <div class="modal-body">
+          <p class="text-muted" style="margin-bottom:16px;font-size:0.9rem;">
+            Your message will be securely transmitted to the pet's listing owner. Your private home address is never requested or shared.
+          </p>
+          <div class="form-group">
+            <label class="form-label" for="enq-name">Your Full Name *</label>
+            <input type="text" id="enq-name" class="form-control" required placeholder="e.g. Jane Doe">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="enq-email">Your Email Address *</label>
+            <input type="email" id="enq-email" class="form-control" required placeholder="e.g. jane@example.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="enq-phone">Contact Phone (Optional)</label>
+            <input type="tel" id="enq-phone" class="form-control" placeholder="+1 (555) 000-0000">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="enq-household">Household Overview</label>
+            <input type="text" id="enq-household" class="form-control" placeholder="e.g. House with yard, no other pets, working from home">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="enq-message">Message to Owner *</label>
+            <textarea id="enq-message" class="form-control" required placeholder="Tell the owner why you are interested in welcoming this pet..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="toggle-label">
+              <input type="checkbox" id="enq-consent" required>
+              <span style="font-size:0.85rem;color:var(--slate-700);">I consent to sharing this enquiry message with the listing owner.</span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-enquiry')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-enquiry">Send Enquiry 🚀</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 2: Submit Formal Adoption Application -->
+  <div class="modal-backdrop" id="modal-application">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="app-modal-title">Formal Adoption Application</h3>
+        <button class="modal-close" onclick="closeModal('modal-application')">&times;</button>
+      </div>
+      <form id="form-application" onsubmit="submitApplication(event)">
+        <div class="modal-body">
+          <div class="alert-banner alert-info" style="margin-bottom:16px;">
+            ℹ️ Submitting an application begins a formal review with the pet's owner. Application acceptance does not automatically transfer private records.
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="app-household">Home / Dwelling Environment *</label>
+            <input type="text" id="app-household" class="form-control" required placeholder="e.g. Single-family house, apartment with dog park nearby">
+          </div>
+          <div class="form-group">
+            <label class="toggle-label">
+              <input type="checkbox" id="app-yard">
+              <span>Do you have a securely fenced yard?</span>
+            </label>
+          </div>
+          <div class="form-group">
+            <label class="toggle-label">
+              <input type="checkbox" id="app-other-pets">
+              <span>Do you currently own other pets in the home?</span>
+            </label>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="app-experience">Pet Care Experience & Daily Schedule</label>
+            <textarea id="app-experience" class="form-control" placeholder="Describe your experience with this species and how daily exercise/feeding will be provided..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="app-reference">Veterinarian or Personal Reference Contact</label>
+            <input type="text" id="app-reference" class="form-control" placeholder="e.g. Dr. Watson (Oakridge Animal Hospital) or family friend phone">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-application')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-app">Submit Application 📝</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 3: Report Listing / Platform Integrity -->
+  <div class="modal-backdrop" id="modal-report">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Report Listing Concern</h3>
+        <button class="modal-close" onclick="closeModal('modal-report')">&times;</button>
+      </div>
+      <form id="form-report" onsubmit="submitReport(event)">
+        <div class="modal-body">
+          <p class="text-muted" style="margin-bottom:16px;font-size:0.9rem;">
+            Help maintain platform trust. All reports are immediately queued for administrator moderation and investigation.
+          </p>
+          <div class="form-group">
+            <label class="form-label" for="rep-subject">Reason for Report *</label>
+            <select id="rep-subject" class="form-control" required>
+              <option value="Suspected fraudulent or copycat listing">Suspected fraudulent or copycat listing</option>
+              <option value="Misleading health or temperament description">Misleading health or temperament description</option>
+              <option value="Owner requesting inappropriate external payments">Owner requesting inappropriate external payments</option>
+              <option value="Inappropriate or copyrighted photos">Inappropriate or copyrighted photos</option>
+              <option value="Other concern">Other concern</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="rep-email">Your Contact Email *</label>
+            <input type="email" id="rep-email" class="form-control" required placeholder="e.g. you@example.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="rep-details">Investigation Details *</label>
+            <textarea id="rep-details" class="form-control" required placeholder="Describe what you observed..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-report')">Cancel</button>
+          <button type="submit" class="btn btn-danger" id="btn-submit-report">Escalate to Admin 🚨</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    let listingId = null;
+    let listingData = null;
+
+    async function loadPetDetails() {
+      const urlParams = new URLSearchParams(window.location.search);
+      listingId = urlParams.get('id');
+
+      if (!listingId) {
+        document.getElementById('profile-container').innerHTML = `
+          <div class="alert-banner alert-warning">
+            No pet listing ID specified. Please return to the <a href="/adopt.html">Adopt a Pet</a> page.
+          </div>
+        `;
+        return;
+      }
+
+      try {
+        const res = await API.get(`/api/adoptions/public/listings/${listingId}`);
+        listingData = res.listing;
+        renderListing(res.listing, res.disclaimer);
+      } catch (err) {
+        document.getElementById('profile-container').innerHTML = `
+          <div class="alert-banner alert-danger">
+            ${err.message || 'Unable to load adoption listing.'}
+          </div>
+        `;
+      }
+    }
+
+    function renderListing(l, disclaimer) {
+      document.title = `${l.pet_name} - Adoption Profile | PetCare Passport`;
+      const container = document.getElementById('profile-container');
+
+      container.innerHTML = `
+        <div style="margin-bottom:20px;">
+          <a href="/adopt.html" class="text-muted" style="font-weight:600;">← Back to Available Pets</a>
+        </div>
+
+        <div style="display:grid;grid-template-columns: 1fr 360px;gap:36px;align-items:flex-start;">
+          <!-- Left Main Column -->
+          <div>
+            <div class="card" style="padding:0;overflow:hidden;margin-bottom:28px;">
+              <img src="${l.photo_url || '/assets/images/default-pet.jpg'}" alt="${l.pet_name}" style="width:100%;max-height:480px;object-fit:cover;">
+              <div style="padding:28px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+                  <div>
+                    <h1 style="font-size:2.5rem;margin-bottom:6px;">${l.pet_name}</h1>
+                    <div style="display:flex;align-items:center;gap:8px;color:var(--slate-600);font-size:1.05rem;">
+                      <span>📍 ${l.general_location}</span> &bull;
+                      <span>${l.species}</span> &bull;
+                      <span>${l.breed || 'Mixed'}</span>
+                    </div>
+                  </div>
+                  <span class="badge badge-approved" style="font-size:0.9rem;padding:6px 14px;">Status: Approved & Active</span>
+                </div>
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:12px;margin:24px 0;background:var(--slate-50);padding:16px;border-radius:var(--radius-md);">
+                  <div>
+                    <div class="passport-field-label">Species</div>
+                    <div class="passport-field-value">${l.species}</div>
+                  </div>
+                  <div>
+                    <div class="passport-field-label">Age / DOB</div>
+                    <div class="passport-field-value">${l.dob_or_age || 'Unknown'}</div>
+                  </div>
+                  <div>
+                    <div class="passport-field-label">Sex</div>
+                    <div class="passport-field-value">${l.sex}</div>
+                  </div>
+                  <div>
+                    <div class="passport-field-label">Spayed / Neutered</div>
+                    <div class="passport-field-value">${l.is_sterilized ? 'Yes ✅' : 'No'}</div>
+                  </div>
+                  <div>
+                    <div class="passport-field-label">Markings</div>
+                    <div class="passport-field-value">${l.color_marks || 'Standard'}</div>
+                  </div>
+                </div>
+
+                <div style="margin-bottom:28px;">
+                  <h3 style="font-size:1.3rem;margin-bottom:12px;">About ${l.pet_name}</h3>
+                  <p style="font-size:1.05rem;line-height:1.7;color:var(--slate-700);white-space:pre-line;">${l.description}</p>
+                </div>
+
+                ${l.temperament ? `
+                  <div style="margin-bottom:28px;">
+                    <h3 style="font-size:1.3rem;margin-bottom:12px;">Personality & Temperament</h3>
+                    <p style="font-size:1rem;line-height:1.6;color:var(--slate-700);">${l.temperament}</p>
+                  </div>
+                ` : ''}
+
+                ${l.health_summary ? `
+                  <div style="margin-bottom:28px;background:var(--primary-50);padding:20px;border-radius:var(--radius-md);border-left:4px solid var(--primary-600);">
+                    <h3 style="font-size:1.15rem;color:var(--primary-900);margin-bottom:8px;">🩺 Disclosed Health Summary</h3>
+                    <p style="font-size:0.95rem;color:var(--slate-800);">${l.health_summary}</p>
+                    ${l.allergies ? `<p style="font-size:0.875rem;margin-top:8px;color:#991b1b;"><strong>Reported Allergies:</strong> ${l.allergies}</p>` : ''}
+                  </div>
+                ` : ''}
+
+                ${l.adoption_requirements ? `
+                  <div style="margin-bottom:20px;">
+                    <h3 style="font-size:1.3rem;margin-bottom:12px;">Adoption Requirements</h3>
+                    <p style="font-size:1rem;line-height:1.6;color:var(--slate-700);">${l.adoption_requirements}</p>
+                  </div>
+                ` : ''}
+
+                <div class="alert-banner alert-info" style="font-size:0.825rem;margin-top:28px;">
+                  ℹ️ ${disclaimer}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Action Sidebar -->
+          <div>
+            <div class="card" style="position:sticky;top:90px;">
+              <h3 style="font-size:1.25rem;margin-bottom:16px;">Interested in ${l.pet_name}?</h3>
+              <p class="text-muted" style="font-size:0.9rem;margin-bottom:20px;line-height:1.5;">
+                Contact the listing owner with questions or submit a formal adoption application.
+              </p>
+
+              <div style="display:flex;flex-direction:column;gap:12px;">
+                <button onclick="openModal('modal-enquiry')" class="btn btn-primary" style="width:100%;height:48px;" id="btn-open-enquiry">
+                  💬 Send Adoption Enquiry
+                </button>
+                <button onclick="checkAppAuth()" class="btn btn-outline" style="width:100%;height:48px;" id="btn-open-application">
+                  📝 Submit Adoption Application
+                </button>
+                <button onclick="toggleFavDetails()" class="btn btn-outline" style="width:100%;" id="btn-fav-details">
+                  ❤️ Save to Favourites
+                </button>
+              </div>
+
+              <div style="border-top:1px solid var(--slate-200);margin-top:24px;padding-top:16px;text-align:center;">
+                <button onclick="openModal('modal-report')" class="btn btn-sm btn-outline" style="color:var(--danger-600);border-color:transparent;" title="Report inaccurate or suspicious content">
+                  🚩 Report this listing
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function checkAppAuth() {
+      if (!currentUser) {
+        if (confirm('Submitting a formal adoption application requires creating or logging into an account so you can track application status. Would you like to log in now?')) {
+          window.location.href = `/login.html?returnUrl=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+        }
+        return;
+      }
+      openModal('modal-application');
+    }
+
+    async function submitEnquiry(e) {
+      e.preventDefault();
+      const payload = {
+        name: document.getElementById('enq-name').value,
+        email: document.getElementById('enq-email').value,
+        phone: document.getElementById('enq-phone').value,
+        household_info: document.getElementById('enq-household').value,
+        message: document.getElementById('enq-message').value,
+        consent: document.getElementById('enq-consent').checked
+      };
+
+      try {
+        const res = await API.post(`/api/adoptions/public/listings/${listingId}/enquiry`, payload);
+        closeModal('modal-enquiry');
+        showToast(res.message, 'success');
+        document.getElementById('form-enquiry').reset();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function submitApplication(e) {
+      e.preventDefault();
+      const payload = {
+        household_type: document.getElementById('app-household').value,
+        has_yard: document.getElementById('app-yard').checked,
+        owns_other_pets: document.getElementById('app-other-pets').checked,
+        experience_description: document.getElementById('app-experience').value,
+        reference_contact: document.getElementById('app-reference').value
+      };
+
+      try {
+        const res = await API.post(`/api/adoptions/listings/${listingId}/apply`, payload);
+        closeModal('modal-application');
+        showToast(res.message, 'success');
+        document.getElementById('form-application').reset();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function submitReport(e) {
+      e.preventDefault();
+      const payload = {
+        category: 'adoption_listing',
+        target_id: listingId,
+        reporter_email: document.getElementById('rep-email').value,
+        subject: document.getElementById('rep-subject').value,
+        details: document.getElementById('rep-details').value
+      };
+
+      try {
+        const res = await API.post('/api/reports', payload);
+        closeModal('modal-report');
+        showToast(res.message, 'success');
+        document.getElementById('form-report').reset();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function toggleFavDetails() {
+      if (!currentUser) {
+        if (confirm('Saving favourites requires an account. Would you like to log in now?')) {
+          window.location.href = `/login.html?returnUrl=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+        }
+        return;
+      }
+      try {
+        const res = await API.post(`/api/adoptions/listings/${listingId}/favourite`);
+        showToast(res.message, res.is_favourite ? 'success' : 'info');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      Auth.init();
+      loadPetDetails();
+    });
+  </script>
+</body>
+</html>

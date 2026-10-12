@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Health & Telemetry - PetCare Passport Admin</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+  <!-- Admin Top Navbar -->
+  <nav class="navbar" style="border-bottom: 2px solid #991b1b;">
+    <div class="container nav-inner">
+      <a href="/admin/dashboard.html" class="brand-logo">
+        <span class="logo-icon" style="background:#991b1b;">🛡️</span>
+        <span>PetCare<span style="color:#991b1b;">Admin</span></span>
+        <span class="brand-badge badge-admin-theme">Platform Oversight</span>
+      </a>
+
+      <div style="display:flex;align-items:center;gap:16px;">
+        <a href="/owner/dashboard.html" class="btn btn-outline btn-sm">🐾 Owner View</a>
+        <a href="/index.html" class="btn btn-outline btn-sm">🌐 Public Site</a>
+        <div class="nav-auth-group" id="nav-auth-container"></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="admin-layout">
+    <!-- Admin Sidebar -->
+    <aside class="admin-sidebar">
+      <div>
+        <div class="admin-brand">
+          <span style="font-size:1.4rem;">⚙️</span>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;">System Console</div>
+            <div class="text-xs" style="color:var(--slate-400);">Role: Authorized Administrator</div>
+          </div>
+        </div>
+
+        <ul class="admin-menu">
+          <li class="admin-menu-item">
+            <a href="/admin/dashboard.html" id="admin-nav-overview"><span class="admin-menu-icon">📊</span> Overview</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/users.html" id="admin-nav-users"><span class="admin-menu-icon">👥</span> User Management</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/moderation.html" id="admin-nav-moderation"><span class="admin-menu-icon">🏡</span> Adoption Moderation</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/lost-found.html" id="admin-nav-lost-found"><span class="admin-menu-icon">🔍</span> Lost & Found Queue</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/reports.html" id="admin-nav-reports"><span class="admin-menu-icon">🚨</span> Reports & Complaints</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/appointments.html" id="admin-nav-appointments"><span class="admin-menu-icon">📅</span> Appointment Oversight</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/clinics.html" id="admin-nav-clinics"><span class="admin-menu-icon">🏥</span> Clinic Directory</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/reminders.html" id="admin-nav-reminders"><span class="admin-menu-icon">📬</span> Reminder Monitoring</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/audit-logs.html" id="admin-nav-audit"><span class="admin-menu-icon">📜</span> System Audit Logs</a>
+          </li>
+          <li class="admin-menu-item active">
+            <a href="/admin/system-health.html" id="admin-nav-health"><span class="admin-menu-icon">⚡</span> System Health</a>
+          </li>
+        </ul>
+      </div>
+
+      <div style="border-top:1px solid var(--slate-800);padding-top:16px;">
+        <ul class="admin-menu">
+          <li class="admin-menu-item">
+            <a href="javascript:void(0)" onclick="Auth.logout()"><span class="admin-menu-icon">🚪</span> Sign Out Admin</a>
+          </li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Admin Content Area -->
+    <main class="admin-main">
+      <div class="admin-header">
+        <div>
+          <h1 style="font-size:2rem;margin-bottom:4px;">Platform Health & Diagnostics</h1>
+          <p class="text-muted">Real-time status of database connection pooling, third-party AI and Email service configurations, and runtime resources.</p>
+        </div>
+        <div>
+          <button class="btn btn-outline" onclick="loadHealth()">🔄 Ping Diagnostics</button>
+        </div>
+      </div>
+
+      <!-- Security / Secret Redaction Guarantee -->
+      <div class="card" style="background:#f8fafc;border-left:4px solid #0284c7;margin-bottom:24px;">
+        <div class="card-body" style="padding:16px;">
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <span style="font-size:1.4rem;">🔒</span>
+            <div style="font-size:0.875rem;color:#0369a1;">
+              <strong>Zero Secret Leakage Guarantee:</strong> Passwords, database credentials, AI API keys, and session secrets are strictly isolated on the backend. This telemetry console reflects operational readiness flags only.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Diagnostics Grid -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:24px;margin-bottom:24px;">
+        
+        <!-- MySQL Database Status -->
+        <div class="card">
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+            <h3>🗄️ MySQL Database</h3>
+            <span id="db-badge" class="badge badge-neutral">Checking...</span>
+          </div>
+          <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:0.9rem;">
+              <div style="display:flex;justify-content:space-between;">
+                <span class="text-muted">Connection Status:</span>
+                <strong id="db-status">-</strong>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span class="text-muted">Round-Trip Latency:</span>
+                <strong id="db-latency">-</strong>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span class="text-muted">Driver:</span>
+                <span>mysql2 (Connection Pool)</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span class="text-muted">Session Store:</span>
+                <span>express-mysql-session</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Service Status -->
+        <div class="card">
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+            <h3>🤖 AI Assistant Service</h3>
+            <span id="ai-badge" class="badge badge-neutral">Checking...</span>
+          </div>
+          <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:0.9rem;">
+              <div style="display:flex;justify-content:space-between;">
+                <span class="text-muted">Active AI Provider:</span>
+                <strong id="ai-provider">-</strong>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span class="text-muted">Gemini Configured:</span>
+                <span id="ai-gemini-status">-</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span class="text-muted">OpenRouter Configured:</span>
+                <span id="ai-openrouter-status">-</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span class="text-muted">Fallback Clinical Engine:</span>
+                <span class="badge badge-success">Active & Enabled</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Email & Notification Status -->
+        <div class="card">
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+            <h3>✉️ Transactional Email Service</h3>
+            <span id="email-badge" class="badge badge-neutral">Checking...</span>
+          </div>
+          <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:0.9rem;">
+              <div style="display:flex;justify-content:space-between;">
+                <span class="text-muted">Provider:</span>
+                <strong id="email-provider">-</strong>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span class="text-muted">Resend HTTP API:</span>
+                <span id="email-resend-status">-</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span class="text-muted">Sender Address:</span>
+                <span id="email-from">-</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span class="text-muted">Graceful Simulation Mode:</span>
+                <span class="badge badge-info" style="background:#e0f2fe;color:#0369a1;">Enabled for Dev</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Node.js Runtime & Memory -->
+        <div class="card">
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+            <h3>🖥️ Node.js Runtime Environment</h3>
+            <span class="badge badge-success">Running</span>
+          </div>
+          <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:0.9rem;">
+              <div style="display:flex;justify-content:space-between;">
+                <span class="text-muted">Server Uptime:</span>
+                <strong id="server-uptime">-</strong>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span class="text-muted">Node Version:</span>
+                <span id="node-version">-</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span class="text-muted">Host Platform:</span>
+                <span id="server-platform">-</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;">
+                <span class="text-muted">Heap Memory Used:</span>
+                <span id="server-heap">-</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Environment Configuration Checklist -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Environment Deployment Checklist (.env)</h3>
+        </div>
+        <div class="card-body">
+          <p class="text-muted text-sm mb-4">Required environment settings validated upon bootstrap:</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:12px;">
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--slate-50);border-radius:var(--radius-sm);">
+              <span style="color:#10b981;">✓</span>
+              <div>
+                <div style="font-weight:600;font-size:0.85rem;">PORT / NODE_ENV</div>
+                <div class="text-xs text-muted">Listening on 3000 (development)</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--slate-50);border-radius:var(--radius-sm);">
+              <span style="color:#10b981;">✓</span>
+              <div>
+                <div style="font-weight:600;font-size:0.85rem;">MYSQL_* CONFIG</div>
+                <div class="text-xs text-muted">Connected to petcare_passport</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--slate-50);border-radius:var(--radius-sm);">
+              <span style="color:#10b981;">✓</span>
+              <div>
+                <div style="font-weight:600;font-size:0.85rem;">SESSION_SECRET</div>
+                <div class="text-xs text-muted">Cryptographic session signing</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--slate-50);border-radius:var(--radius-sm);">
+              <span style="color:#10b981;">✓</span>
+              <div>
+                <div style="font-weight:600;font-size:0.85rem;">ADMIN_BOOTSTRAP</div>
+                <div class="text-xs text-muted">Default admin seeded securely</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await Auth.requireRole('admin');
+      if (!user) return;
+      loadHealth();
+    });
+
+    async function loadHealth() {
+      try {
+        const res = await Api.get('/api/admin/system-health');
+        
+        // 1. Database
+        const dbBadge = document.getElementById('db-badge');
+        if (res.database.status === 'healthy') {
+          dbBadge.className = 'badge badge-success';
+          dbBadge.textContent = 'Operational';
+          document.getElementById('db-status').textContent = 'Connected (Healthy)';
+          document.getElementById('db-status').style.color = '#10b981';
+          document.getElementById('db-latency').textContent = `${res.database.latencyMs} ms`;
+        } else {
+          dbBadge.className = 'badge badge-danger';
+          dbBadge.textContent = 'Degraded';
+          document.getElementById('db-status').textContent = res.database.error || 'Connection Issue';
+          document.getElementById('db-status').style.color = '#ef4444';
+        }
+
+        // 2. AI
+        const aiBadge = document.getElementById('ai-badge');
+        document.getElementById('ai-provider').textContent = (res.ai_service.provider || 'gemini').toUpperCase();
+        
+        if (res.ai_service.geminiConfigured || res.ai_service.openRouterConfigured) {
+          aiBadge.className = 'badge badge-success';
+          aiBadge.textContent = 'API Connected';
+        } else {
+          aiBadge.className = 'badge badge-info';
+          aiBadge.style.background = '#e0f2fe';
+          aiBadge.style.color = '#0369a1';
+          aiBadge.textContent = 'Fallback Mode';
+        }
+
+        document.getElementById('ai-gemini-status').innerHTML = res.ai_service.geminiConfigured ?
+          '<span class="badge badge-success">Configured</span>' :
+          '<span class="badge badge-neutral">Not Set</span>';
+
+        document.getElementById('ai-openrouter-status').innerHTML = res.ai_service.openRouterConfigured ?
+          '<span class="badge badge-success">Configured</span>' :
+          '<span class="badge badge-neutral">Not Set</span>';
+
+        // 3. Email
+        const emailBadge = document.getElementById('email-badge');
+        document.getElementById('email-provider').textContent = (res.email_service.provider || 'resend').toUpperCase();
+        document.getElementById('email-from').textContent = res.email_service.fromAddress || 'Default';
+
+        if (res.email_service.resendConfigured) {
+          emailBadge.className = 'badge badge-success';
+          emailBadge.textContent = 'API Ready';
+          document.getElementById('email-resend-status').innerHTML = '<span class="badge badge-success">Configured</span>';
+        } else {
+          emailBadge.className = 'badge badge-warning';
+          emailBadge.textContent = 'Simulation Mode';
+          document.getElementById('email-resend-status').innerHTML = '<span class="badge badge-warning">Simulated in Dev</span>';
+        }
+
+        // 4. Server
+        document.getElementById('server-uptime').textContent = res.server.uptime_human;
+        document.getElementById('node-version').textContent = res.server.node_version;
+        document.getElementById('server-platform').textContent = res.server.platform;
+        document.getElementById('server-heap').textContent = `${res.server.memory.heapUsedMb} MB / ${res.server.memory.heapTotalMb} MB`;
+
+      } catch (err) {
+        alert('Failed to ping system health diagnostics: ' + err.message);
+      }
+    }
+  </script>
+</body>
+</html>

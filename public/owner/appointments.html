@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Appointments - PetCare Passport</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/owner.css">
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <nav class="navbar">
+    <div class="container nav-inner">
+      <a href="/owner/dashboard.html" class="brand-logo">
+        <span class="logo-icon">🐾</span>
+        <span>PetCare<span style="color:var(--primary-600);">Passport</span></span>
+        <span class="brand-badge badge-owner-theme">Owner Portal</span>
+      </a>
+
+      <div style="display:flex;align-items:center;gap:16px;">
+        <a href="/index.html" class="btn btn-outline btn-sm">🌐 Public Site</a>
+        <div class="nav-auth-group" id="nav-auth-container"></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="owner-layout">
+    <aside class="owner-sidebar">
+      <div>
+        <div style="padding:0 12px 16px;font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--slate-400);">Pet Management</div>
+        <ul class="owner-menu">
+          <li class="owner-menu-item"><a href="/owner/dashboard.html"><span class="owner-menu-icon">📊</span> Overview</a></li>
+          <li class="owner-menu-item"><a href="/owner/pets.html"><span class="owner-menu-icon">🐶</span> My Pets</a></li>
+          <li class="owner-menu-item"><a href="/owner/passports.html"><span class="owner-menu-icon">🛂</span> Digital Passports</a></li>
+          <li class="owner-menu-item"><a href="/owner/health.html"><span class="owner-menu-icon">🩺</span> Health Records</a></li>
+          <li class="owner-menu-item"><a href="/owner/vaccinations.html"><span class="owner-menu-icon">💉</span> Vaccinations</a></li>
+          <li class="owner-menu-item"><a href="/owner/daily-care.html"><span class="owner-menu-icon">💊</span> Daily Care & Tasks</a></li>
+          <li class="owner-menu-item active"><a href="/owner/appointments.html"><span class="owner-menu-icon">📅</span> Appointments</a></li>
+          <li class="owner-menu-item"><a href="/owner/rehoming.html"><span class="owner-menu-icon">🏡</span> Adoption & Rehoming</a></li>
+          <li class="owner-menu-item"><a href="/owner/ai-assistant.html"><span class="owner-menu-icon">🤖</span> AI Pet Assistant</a></li>
+        </ul>
+      </div>
+      <div>
+        <div style="padding:16px 12px 8px;font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--slate-400);border-top:1px solid var(--slate-200);">Account</div>
+        <ul class="owner-menu">
+          <li class="owner-menu-item"><a href="/owner/notifications.html"><span class="owner-menu-icon">🔔</span> Notifications</a></li>
+          <li class="owner-menu-item"><a href="/owner/profile.html"><span class="owner-menu-icon">⚙️</span> Settings</a></li>
+          <li class="owner-menu-item"><a href="javascript:void(0)" onclick="Auth.logout()"><span class="owner-menu-icon">🚪</span> Sign Out</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="owner-main">
+      <div class="owner-page-header">
+        <div>
+          <h1 style="font-size:2rem;margin-bottom:4px;">Veterinary Appointments</h1>
+          <p class="text-muted">Personal scheduling records and reminders for upcoming clinic consultations.</p>
+        </div>
+
+        <button onclick="openAddAptModal()" class="btn btn-primary" id="btn-schedule-apt">
+          ➕ Schedule Appointment Record
+        </button>
+      </div>
+
+      <div class="alert-banner alert-info" style="margin-bottom:24px;">
+        ℹ️ <strong>Owner Scheduling Notice:</strong> These entries are maintained by you for personal tracking and calendar reminders. Unless an official clinic booking integration is active, appointments are not confirmed by the veterinary clinic automatically.
+      </div>
+
+      <!-- Appointments List Table -->
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Pet</th>
+                <th>Clinic / Veterinarian</th>
+                <th>Scheduled Date & Time</th>
+                <th>Purpose</th>
+                <th>Status</th>
+                <th>Notes</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="apts-tbody">
+              <tr><td colspan="7" class="text-muted" style="text-align:center;padding:30px;">Loading appointments...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal: Schedule Appointment -->
+  <div class="modal-backdrop" id="modal-apt">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="apt-modal-title">Schedule Appointment Record</h3>
+        <button class="modal-close" onclick="closeModal('modal-apt')">&times;</button>
+      </div>
+      <form id="apt-form" onsubmit="saveAppointment(event)">
+        <input type="hidden" id="apt-id">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="apt-pet">Select Pet *</label>
+            <select id="apt-pet" class="form-control" required></select>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div class="form-group">
+              <label class="form-label" for="apt-clinic">Clinic / Hospital Name *</label>
+              <input type="text" id="apt-clinic" class="form-control" required placeholder="e.g. Oakridge Animal Hospital">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="apt-vet">Veterinarian Name</label>
+              <input type="text" id="apt-vet" class="form-control" placeholder="e.g. Dr. Emily Watson">
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div class="form-group">
+              <label class="form-label" for="apt-datetime">Appointment Date & Time *</label>
+              <input type="datetime-local" id="apt-datetime" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="apt-status">Status</label>
+              <select id="apt-status" class="form-control">
+                <option value="upcoming">Upcoming</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="rescheduled">Rescheduled</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="apt-purpose">Purpose of Visit *</label>
+            <input type="text" id="apt-purpose" class="form-control" required placeholder="e.g. Annual Booster Vaccinations & Dental Check">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="apt-notes">Preparation Notes & Questions to Ask</label>
+            <textarea id="apt-notes" class="form-control" placeholder="Fasting instructions, questions for veterinarian..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="apt-followup">Follow-Up Instructions</label>
+            <input type="text" id="apt-followup" class="form-control" placeholder="e.g. Recheck in 6 months">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-apt')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-apt">Save Appointment 📅</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    let pets = [];
+    let appointments = [];
+
+    async function init() {
+      await Auth.requireAuth('/login.html');
+      try {
+        const res = await API.get('/api/pets');
+        pets = res.pets || [];
+        document.getElementById('apt-pet').innerHTML = pets.map(p => `<option value="${p.id}">${p.name} (${p.species})</option>`).join('');
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('action') === 'add') {
+          openAddAptModal();
+        }
+
+        loadAppointments();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function loadAppointments() {
+      const tbody = document.getElementById('apts-tbody');
+      try {
+        const res = await API.get('/api/appointments');
+        appointments = res.appointments || [];
+
+        if (appointments.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" class="text-muted" style="text-align:center;padding:30px;">No appointments scheduled.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = appointments.map(a => `
+          <tr id="apt-row-${a.id}">
+            <td style="font-weight:700;">🐾 ${a.pet_name}</td>
+            <td>
+              <div style="font-weight:600;">${a.clinic_name}</div>
+              <div class="text-muted text-xs">${a.veterinarian_name || 'Clinic Team'}</div>
+            </td>
+            <td style="font-weight:600;color:var(--slate-900);">
+              ${formatDateTime(a.appointment_date)}
+            </td>
+            <td>${a.purpose}</td>
+            <td>
+              <span class="badge ${a.status === 'completed' ? 'badge-approved' : (a.status === 'upcoming' ? 'badge-due-soon' : 'badge-overdue')}">
+                ${a.status.toUpperCase()}
+              </span>
+            </td>
+            <td style="font-size:0.85rem;color:var(--slate-600);max-width:200px;">
+              ${a.notes || '<span class="text-muted">-</span>'}
+            </td>
+            <td>
+              <div style="display:flex;gap:6px;">
+                <button onclick="editAppointment(${a.id})" class="btn btn-outline btn-sm" title="Edit / Reschedule">
+                  ✏️
+                </button>
+                <button onclick="deleteAppointment(${a.id})" class="btn btn-outline btn-sm" style="color:var(--danger-600);" title="Cancel / Delete">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" class="alert-banner alert-danger">${err.message}</td></tr>`;
+      }
+    }
+
+    function openAddAptModal() {
+      document.getElementById('apt-form').reset();
+      document.getElementById('apt-id').value = '';
+      document.getElementById('apt-modal-title').textContent = 'Schedule Appointment Record';
+      openModal('modal-apt');
+    }
+
+    function editAppointment(id) {
+      const apt = appointments.find(a => a.id === id);
+      if (!apt) return;
+
+      document.getElementById('apt-id').value = apt.id;
+      document.getElementById('apt-modal-title').textContent = 'Edit Appointment';
+      document.getElementById('apt-pet').value = apt.pet_id;
+      document.getElementById('apt-clinic').value = apt.clinic_name;
+      document.getElementById('apt-vet').value = apt.veterinarian_name || '';
+      
+      // format for datetime-local: YYYY-MM-DDTHH:mm
+      const dt = new Date(apt.appointment_date);
+      const isoStr = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      document.getElementById('apt-datetime').value = isoStr;
+
+      document.getElementById('apt-status').value = apt.status;
+      document.getElementById('apt-purpose').value = apt.purpose;
+      document.getElementById('apt-notes').value = apt.notes || '';
+      document.getElementById('apt-followup').value = apt.follow_up_notes || '';
+
+      openModal('modal-apt');
+    }
+
+    async function saveAppointment(e) {
+      e.preventDefault();
+      const id = document.getElementById('apt-id').value;
+      const payload = {
+        pet_id: document.getElementById('apt-pet').value,
+        clinic_name: document.getElementById('apt-clinic').value,
+        veterinarian_name: document.getElementById('apt-vet').value,
+        appointment_date: document.getElementById('apt-datetime').value,
+        status: document.getElementById('apt-status').value,
+        purpose: document.getElementById('apt-purpose').value,
+        notes: document.getElementById('apt-notes').value,
+        follow_up_notes: document.getElementById('apt-followup').value
+      };
+
+      try {
+        const url = id ? `/api/appointments/${id}` : '/api/appointments';
+        const method = id ? 'PUT' : 'POST';
+        const res = await (method === 'PUT' ? API.put(url, payload) : API.post(url, payload));
+        closeModal('modal-apt');
+        showToast(res.message, 'success');
+        loadAppointments();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function deleteAppointment(id) {
+      if (!confirm('Are you sure you want to cancel and remove this appointment record?')) return;
+      try {
+        const res = await API.delete(`/api/appointments/${id}`);
+        showToast(res.message, 'success');
+        loadAppointments();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

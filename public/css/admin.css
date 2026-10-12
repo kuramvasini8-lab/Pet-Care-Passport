@@ -1,0 +1,173 @@
+/* ==========================================================================
+   PetCare Passport - Administrator Dashboard Styles (Dedicated Protected Interface)
+   ========================================================================== */
+
+.admin-layout {
+  display: flex;
+  min-height: calc(100vh - var(--header-height));
+}
+
+.admin-sidebar {
+  width: var(--sidebar-width);
+  background: var(--slate-900);
+  color: #ffffff;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.admin-sidebar .admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px 20px;
+  border-bottom: 1px solid var(--slate-800);
+  margin-bottom: 16px;
+}
+
+.admin-menu {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-menu-item a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  font-size: 0.925rem;
+  font-weight: 600;
+  color: var(--slate-400);
+  transition: all 0.15s ease;
+}
+
+.admin-menu-item a:hover {
+  background: var(--slate-800);
+  color: #ffffff;
+}
+
+.admin-menu-item.active a {
+  background: #991b1b;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.admin-menu-icon {
+  font-size: 1.15rem;
+  width: 24px;
+  text-align: center;
+}
+
+.admin-main {
+  flex: 1;
+  padding: 32px;
+  background: #f8fafc;
+  max-width: calc(100vw - var(--sidebar-width));
+}
+
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+/* Moderation Queue Card */
+.moderation-card {
+  background: #ffffff;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--slate-200);
+  box-shadow: var(--shadow-sm);
+  padding: 24px;
+  margin-bottom: 24px;
+  transition: box-shadow 0.2s ease;
+}
+
+.moderation-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.moderation-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--slate-100);
+}
+
+.moderation-pet-profile {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.moderation-pet-img {
+  width: 140px;
+  height: 140px;
+  border-radius: var(--radius-lg);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.moderation-details {
+  flex: 1;
+}
+
+.moderation-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--slate-100);
+  padding-top: 16px;
+}
+
+/* Diagnostics Health Gauge Card */
+.health-gauge-card {
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--slate-200);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.health-status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.health-dot-healthy {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--success-500);
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.6);
+}
+
+.health-dot-unhealthy {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--danger-500);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+}
+
+@media (max-width: 900px) {
+  .admin-layout { flex-direction: column; }
+  .admin-sidebar { width: 100%; }
+  .admin-main { max-width: 100vw; padding: 20px 16px; }
+  .moderation-pet-profile { flex-direction: column; }
+  .moderation-pet-img { width: 100%; height: 200px; }
+}

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Responsible Pet Care Guides - PetCare Passport</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container nav-inner">
+      <a href="/index.html" class="brand-logo" id="brand-logo-link">
+        <span class="logo-icon">🐾</span>
+        <span>PetCare<span style="color:var(--primary-600);">Passport</span></span>
+      </a>
+
+      <ul class="nav-links">
+        <li class="nav-item"><a href="/index.html">Home</a></li>
+        <li class="nav-item"><a href="/adopt.html">Adopt a Pet</a></li>
+        <li class="nav-item"><a href="/lost-found.html">Lost & Found</a></li>
+        <li class="nav-item active"><a href="/care-guides.html">Care Guides</a></li>
+      </ul>
+
+      <div class="nav-auth-group" id="nav-auth-container">
+        <!-- Injected via auth.js -->
+      </div>
+    </div>
+  </nav>
+
+  <!-- Header -->
+  <header style="background:var(--slate-900);color:#ffffff;padding:50px 0;">
+    <div class="container">
+      <span class="badge badge-owner-theme" style="margin-bottom:12px;">Preventative Wellness Library</span>
+      <h1 style="color:#ffffff;font-size:2.4rem;margin-bottom:8px;">Responsible Pet Care Guides</h1>
+      <p style="color:var(--slate-300);max-width:650px;">
+        Essential guidelines for preventative health, vaccination timelines, nutrition, and emergency preparedness.
+      </p>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="container" style="padding-top:40px;padding-bottom:80px;">
+    <div class="grid grid-cols-2 gap-8" style="grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));">
+      
+      <div class="card">
+        <div style="font-size:2rem;margin-bottom:12px;">💉</div>
+        <h2 style="font-size:1.4rem;margin-bottom:10px;">Vaccination Protocols & Due Dates</h2>
+        <p class="text-muted" style="line-height:1.6;margin-bottom:16px;">
+          Core vaccines protect dogs and cats against life-threatening viral pathogens. Staying on schedule prevents gaps in immunity.
+        </p>
+        <ul style="padding-left:20px;color:var(--slate-700);line-height:1.7;margin-bottom:16px;font-size:0.95rem;">
+          <li><strong>Canine Rabies:</strong> Legally required booster given every 1 to 3 years.</li>
+          <li><strong>Canine DHPP / DA2PP:</strong> Protects against Distemper, Hepatitis, Parvovirus, and Parainfluenza.</li>
+          <li><strong>Feline FVRCP:</strong> Core 3-in-1 protecting against Rhinotracheitis, Calicivirus, and Panleukopenia.</li>
+          <li><strong>Lifestyle Vaccines:</strong> Bordetella (kennel cough) and Leptospirosis based on boarding and outdoor risk.</li>
+        </ul>
+        <a href="/owner/vaccinations.html" class="btn btn-outline btn-sm">Track Vaccinations in Dashboard →</a>
+      </div>
+
+      <div class="card">
+        <div style="font-size:2rem;margin-bottom:12px;">📱</div>
+        <h2 style="font-size:1.4rem;margin-bottom:10px;">Smart QR Passports vs Microchips</h2>
+        <p class="text-muted" style="line-height:1.6;margin-bottom:16px;">
+          Microchips require veterinary scanners, but smartphone QR tags allow anyone who finds your pet to access vital emergency details instantly.
+        </p>
+        <ul style="padding-left:20px;color:var(--slate-700);line-height:1.7;margin-bottom:16px;font-size:0.95rem;">
+          <li><strong>Zero App Required:</strong> Any modern smartphone camera scans the collar QR tag.</li>
+          <li><strong>Owner-Controlled Privacy:</strong> You choose whether your phone number or allergies are visible.</li>
+          <li><strong>One-Click Revocation:</strong> Regenerate identifiers instantly if a tag is misplaced.</li>
+          <li><strong>Medical Alerts:</strong> Critical alerts (e.g. diabetic or seizure precautions) display immediately.</li>
+        </ul>
+        <a href="/register.html" class="btn btn-primary btn-sm">Generate Free Digital Passport →</a>
+      </div>
+
+      <div class="card">
+        <div style="font-size:2rem;margin-bottom:12px;">🥗</div>
+        <h2 style="font-size:1.4rem;margin-bottom:10px;">Dangerous Household Foods</h2>
+        <p class="text-muted" style="line-height:1.6;margin-bottom:16px;">
+          Keep common human foods away from curious companion animals to avoid life-threatening toxicity.
+        </p>
+        <ul style="padding-left:20px;color:var(--slate-700);line-height:1.7;margin-bottom:16px;font-size:0.95rem;">
+          <li><strong>Xylitol / Birch Bark Sweetener:</strong> Present in sugar-free gums and nut butters; causes severe hypoglycemia and liver failure in dogs.</li>
+          <li><strong>Chocolate & Caffeine:</strong> Theobromine toxicity causes cardiac arrhythmia and tremors.</li>
+          <li><strong>Grapes & Raisins:</strong> Can induce sudden acute renal failure in canines.</li>
+          <li><strong>Alliums (Onions & Garlic):</strong> Causes hemolytic red blood cell destruction.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div style="font-size:2rem;margin-bottom:12px;">📋</div>
+        <h2 style="font-size:1.4rem;margin-bottom:10px;">Preparing for Veterinary Visits</h2>
+        <p class="text-muted" style="line-height:1.6;margin-bottom:16px;">
+          Maximize the value of your annual exam with structured medical preparation.
+        </p>
+        <ul style="padding-left:20px;color:var(--slate-700);line-height:1.7;margin-bottom:16px;font-size:0.95rem;">
+          <li>Bring your PetCare Passport timeline showing past vaccination dates and batch records.</li>
+          <li>Note subtle behavioral changes: water intake, appetite, mobility after resting.</li>
+          <li>List active supplements and dosages currently administered at home.</li>
+          <li>Use carriers for cats and secure leashes in veterinary clinic reception lobbies.</li>
+        </ul>
+        <a href="/owner/ai-assistant.html" class="btn btn-outline btn-sm">Generate AI Visit Checklist →</a>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+</body>
+</html>

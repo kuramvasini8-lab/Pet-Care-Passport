@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lost & Found Moderation - PetCare Passport Admin</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+  <!-- Admin Navbar -->
+  <nav class="navbar" style="border-bottom: 2px solid #991b1b;">
+    <div class="container nav-inner">
+      <a href="/admin/dashboard.html" class="brand-logo">
+        <span class="logo-icon" style="background:#991b1b;">🛡️</span>
+        <span>PetCare<span style="color:#991b1b;">Admin</span></span>
+        <span class="brand-badge badge-admin-theme">Platform Oversight</span>
+      </a>
+
+      <div style="display:flex;align-items:center;gap:16px;">
+        <a href="/owner/dashboard.html" class="btn btn-outline btn-sm">🐾 Owner View</a>
+        <div class="nav-auth-group" id="nav-auth-container"></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div>
+        <div class="admin-brand">
+          <span style="font-size:1.4rem;">⚙️</span>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;">System Console</div>
+            <div class="text-xs" style="color:var(--slate-400);">Role: Administrator</div>
+          </div>
+        </div>
+        <ul class="admin-menu">
+          <li class="admin-menu-item"><a href="/admin/dashboard.html"><span class="admin-menu-icon">📊</span> Overview</a></li>
+          <li class="admin-menu-item"><a href="/admin/users.html"><span class="admin-menu-icon">👥</span> User Management</a></li>
+          <li class="admin-menu-item"><a href="/admin/moderation.html"><span class="admin-menu-icon">🏡</span> Adoption Moderation</a></li>
+          <li class="admin-menu-item active"><a href="/admin/lost-found.html"><span class="admin-menu-icon">🔍</span> Lost & Found Queue</a></li>
+          <li class="admin-menu-item"><a href="/admin/reports.html"><span class="admin-menu-icon">🚨</span> Reports & Complaints</a></li>
+          <li class="admin-menu-item"><a href="/admin/appointments.html"><span class="admin-menu-icon">📅</span> Appointment Oversight</a></li>
+          <li class="admin-menu-item"><a href="/admin/clinics.html"><span class="admin-menu-icon">🏥</span> Clinic Directory</a></li>
+          <li class="admin-menu-item"><a href="/admin/reminders.html"><span class="admin-menu-icon">📬</span> Reminder Monitoring</a></li>
+          <li class="admin-menu-item"><a href="/admin/audit-logs.html"><span class="admin-menu-icon">📜</span> System Audit Logs</a></li>
+          <li class="admin-menu-item"><a href="/admin/system-health.html"><span class="admin-menu-icon">⚡</span> System Health</a></li>
+        </ul>
+      </div>
+      <div style="border-top:1px solid var(--slate-800);padding-top:16px;">
+        <ul class="admin-menu">
+          <li class="admin-menu-item"><a href="javascript:void(0)" onclick="Auth.logout()"><span class="admin-menu-icon">🚪</span> Sign Out</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <div class="admin-header">
+        <div>
+          <h1 style="font-size:2rem;margin-bottom:4px;">Lost & Found Community Moderation</h1>
+          <p class="text-muted">Inspect community lost/found submissions, moderate spam, and suspend inappropriate reports.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Pet / Details</th>
+                <th>Location & Date</th>
+                <th>Contact</th>
+                <th>Status</th>
+                <th>Moderation Actions</th>
+              </tr>
+            </thead>
+            <tbody id="lf-tbody">
+              <tr><td colspan="6" class="text-muted" style="text-align:center;padding:30px;">Loading reports...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    async function loadReports() {
+      await Auth.requireAdmin('/login.html');
+      const tbody = document.getElementById('lf-tbody');
+
+      try {
+        const res = await API.get('/api/admin/lost-found');
+        const reports = res.reports || [];
+
+        if (reports.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="text-muted" style="text-align:center;padding:30px;">No reports submitted.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = reports.map(r => `
+          <tr id="lf-row-${r.id}">
+            <td>
+              <span class="badge ${r.report_type === 'lost' ? 'badge-rejected' : 'badge-approved'}">
+                ${r.report_type.toUpperCase()}
+              </span>
+            </td>
+            <td>
+              <div style="font-weight:700;">${r.pet_name || 'Name Unknown'} (${r.species} - ${r.breed || 'Mix'})</div>
+              <div class="text-muted text-xs">${r.color_markings}</div>
+              <div style="font-size:0.85rem;color:var(--slate-600);margin-top:4px;">${r.description.slice(0, 80)}...</div>
+            </td>
+            <td>
+              <div>📍 ${r.general_location}</div>
+              <div class="text-muted text-xs">${formatDate(r.date_lost_or_found)}</div>
+            </td>
+            <td>
+              <div>${r.contact_name}</div>
+              <div class="text-muted text-xs">${r.contact_email} ${r.contact_phone ? `&bull; ${r.contact_phone}` : ''}</div>
+            </td>
+            <td>
+              <span class="badge ${r.status === 'published' ? 'badge-approved' : (r.status === 'suspended' ? 'badge-rejected' : 'badge-unknown')}">
+                ${r.status.toUpperCase()}
+              </span>
+            </td>
+            <td>
+              ${r.status === 'published' ? `
+                <button onclick="updateLfStatus(${r.id}, 'suspended')" class="btn btn-outline btn-sm" style="color:var(--danger-600);">
+                  ⛔ Suspend
+                </button>
+              ` : `
+                <button onclick="updateLfStatus(${r.id}, 'published')" class="btn btn-outline btn-sm" style="color:var(--success-600);">
+                  ✓ Publish
+                </button>
+              `}
+            </td>
+          </tr>
+        `).join('');
+
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="alert-banner alert-danger">${err.message}</td></tr>`;
+      }
+    }
+
+    async function updateLfStatus(id, status) {
+      const reason = prompt(`Reason for marking report as ${status}:`);
+      if (reason === null) return;
+
+      try {
+        const res = await API.put(`/api/admin/lost-found/${id}/status`, { status, admin_notes: reason });
+        showToast(res.message, 'success');
+        loadReports();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadReports);
+  </script>
+</body>
+</html>

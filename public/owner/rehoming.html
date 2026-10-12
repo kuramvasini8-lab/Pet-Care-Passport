@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adoption & Rehoming - PetCare Passport</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/owner.css">
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <nav class="navbar">
+    <div class="container nav-inner">
+      <a href="/owner/dashboard.html" class="brand-logo">
+        <span class="logo-icon">🐾</span>
+        <span>PetCare<span style="color:var(--primary-600);">Passport</span></span>
+        <span class="brand-badge badge-owner-theme">Owner Portal</span>
+      </a>
+
+      <div style="display:flex;align-items:center;gap:16px;">
+        <a href="/index.html" class="btn btn-outline btn-sm">🌐 Public Site</a>
+        <div class="nav-auth-group" id="nav-auth-container"></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="owner-layout">
+    <aside class="owner-sidebar">
+      <div>
+        <div style="padding:0 12px 16px;font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--slate-400);">Pet Management</div>
+        <ul class="owner-menu">
+          <li class="owner-menu-item"><a href="/owner/dashboard.html"><span class="owner-menu-icon">📊</span> Overview</a></li>
+          <li class="owner-menu-item"><a href="/owner/pets.html"><span class="owner-menu-icon">🐶</span> My Pets</a></li>
+          <li class="owner-menu-item"><a href="/owner/passports.html"><span class="owner-menu-icon">🛂</span> Digital Passports</a></li>
+          <li class="owner-menu-item"><a href="/owner/health.html"><span class="owner-menu-icon">🩺</span> Health Records</a></li>
+          <li class="owner-menu-item"><a href="/owner/vaccinations.html"><span class="owner-menu-icon">💉</span> Vaccinations</a></li>
+          <li class="owner-menu-item"><a href="/owner/daily-care.html"><span class="owner-menu-icon">💊</span> Daily Care & Tasks</a></li>
+          <li class="owner-menu-item"><a href="/owner/appointments.html"><span class="owner-menu-icon">📅</span> Appointments</a></li>
+          <li class="owner-menu-item active"><a href="/owner/rehoming.html"><span class="owner-menu-icon">🏡</span> Adoption & Rehoming</a></li>
+          <li class="owner-menu-item"><a href="/owner/ai-assistant.html"><span class="owner-menu-icon">🤖</span> AI Pet Assistant</a></li>
+        </ul>
+      </div>
+      <div>
+        <div style="padding:16px 12px 8px;font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--slate-400);border-top:1px solid var(--slate-200);">Account</div>
+        <ul class="owner-menu">
+          <li class="owner-menu-item"><a href="/owner/notifications.html"><span class="owner-menu-icon">🔔</span> Notifications</a></li>
+          <li class="owner-menu-item"><a href="/owner/profile.html"><span class="owner-menu-icon">⚙️</span> Settings</a></li>
+          <li class="owner-menu-item"><a href="javascript:void(0)" onclick="Auth.logout()"><span class="owner-menu-icon">🚪</span> Sign Out</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="owner-main">
+      <div class="owner-page-header">
+        <div>
+          <h1 style="font-size:2rem;margin-bottom:4px;">Adoption & Rehoming Listings</h1>
+          <p class="text-muted">Submit rehoming profiles for administrator review, respond to feedback, and manage prospective adopter enquiries.</p>
+        </div>
+
+        <button onclick="openCreateListingModal()" class="btn btn-primary" id="btn-create-listing">
+          ➕ Submit Pet for Adoption
+        </button>
+      </div>
+
+      <!-- Moderation Workflow Banner -->
+      <div class="alert-banner alert-info" style="margin-bottom:24px;">
+        ℹ️ <strong>Platform Moderation Workflow:</strong> To ensure animal safety and prevent scams, all submitted adoption listings remain unpublished until reviewed by an administrator. You will receive notifications when approved or if revisions are requested.
+      </div>
+
+      <!-- My Rehoming Listings List -->
+      <div class="card" style="margin-bottom:32px;">
+        <div class="card-header">
+          <h2 class="card-title">My Submitted Adoption Listings</h2>
+        </div>
+        <div id="listings-container">
+          <div class="text-muted" style="text-align:center;padding:30px;">Loading your listings...</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal 1: Create / Edit Adoption Listing -->
+  <div class="modal-backdrop" id="modal-listing">
+    <div class="modal-dialog" style="max-width:700px;">
+      <div class="modal-header">
+        <h3 id="listing-modal-title">Create Adoption Listing</h3>
+        <button class="modal-close" onclick="closeModal('modal-listing')">&times;</button>
+      </div>
+      <form id="listing-form" onsubmit="saveListing(event)">
+        <input type="hidden" id="list-id">
+        <div class="modal-body">
+          <div class="form-group" id="group-pet-select">
+            <label class="form-label" for="list-pet">Select Registered Pet *</label>
+            <select id="list-pet" class="form-control" required></select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="list-title">Listing Headline / Title *</label>
+            <input type="text" id="list-title" class="form-control" required placeholder="e.g. Friendly and playful Golden Retriever looking for an active family">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="list-location">General City / Region *</label>
+            <input type="text" id="list-location" class="form-control" required placeholder="e.g. Seattle, WA Metro Area (Never input your private home address)">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="list-desc">Full Description & Reason for Rehoming *</label>
+            <textarea id="list-desc" class="form-control" required placeholder="Describe personality, history, house-training status, and reasons for rehoming..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="list-temperament">Personality & Compatibility with Children / Other Animals</label>
+            <input type="text" id="list-temperament" class="form-control" placeholder="e.g. Excellent with children and calm dogs; needs slow introduction to cats">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="list-health">Public Health Summary & Vaccination Status</label>
+            <textarea id="list-health" class="form-control" placeholder="Vaccinated, neutered, microchipped, clear dental records..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="list-reqs">Adoption Requirements for Prospective Adopter</label>
+            <textarea id="list-reqs" class="form-control" placeholder="e.g. Fenced yard preferred, experienced handler, committed to daily walks..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-listing')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-listing">Submit for Admin Review 🚀</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 2: Enquiries & Applications Manager -->
+  <div class="modal-backdrop" id="modal-enquiries-view">
+    <div class="modal-dialog" style="max-width:760px;">
+      <div class="modal-header">
+        <h3 id="enq-view-title">Adoption Inquiries & Applications</h3>
+        <button class="modal-close" onclick="closeModal('modal-enquiries-view')">&times;</button>
+      </div>
+      <div class="modal-body" id="enq-view-content">
+        <!-- Injected dynamically -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-enquiries-view')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    let pets = [];
+    let listings = [];
+
+    async function init() {
+      await Auth.requireAuth('/login.html');
+      try {
+        const res = await API.get('/api/pets');
+        pets = res.pets || [];
+        document.getElementById('list-pet').innerHTML = pets.map(p => `<option value="${p.id}">${p.name} (${p.species})</option>`).join('');
+
+        loadListings();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function loadListings() {
+      const container = document.getElementById('listings-container');
+      try {
+        const res = await API.get('/api/adoptions/owner/listings');
+        listings = res.listings || [];
+
+        if (listings.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">🏡</div>
+              <h3>No adoption listings submitted</h3>
+              <p class="text-muted">If you need to find a loving home for a companion, create an adoption listing for review.</p>
+              <button onclick="openCreateListingModal()" class="btn btn-primary btn-sm" style="margin-top:12px;">Create First Listing</button>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = listings.map(l => {
+          let badgeClass = 'badge-unknown';
+          let statusText = l.status;
+
+          if (l.status === 'approved') { badgeClass = 'badge-approved'; statusText = 'Approved & Public'; }
+          else if (l.status === 'pending_approval') { badgeClass = 'badge-pending_approval'; statusText = 'Pending Admin Review'; }
+          else if (l.status === 'changes_requested') { badgeClass = 'badge-changes-requested'; statusText = 'Changes Requested'; }
+          else if (l.status === 'rejected') { badgeClass = 'badge-rejected'; statusText = 'Rejected'; }
+          else if (l.status === 'suspended') { badgeClass = 'badge-suspended'; statusText = 'Suspended'; }
+          else if (l.status === 'adopted') { badgeClass = 'badge-adopted'; statusText = 'Adopted / Rehomed 🎉'; }
+
+          return `
+            <div class="card" style="margin-bottom:18px;border-left:4px solid ${l.status === 'approved' ? 'var(--primary-600)' : (l.status === 'changes_requested' ? 'var(--warning-500)' : 'var(--slate-400)')};">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+                <div style="display:flex;gap:16px;align-items:center;">
+                  <img src="${l.pet_photo || '/assets/images/default-pet.jpg'}" alt="${l.pet_name}" style="width:64px;height:64px;border-radius:var(--radius-md);object-fit:cover;">
+                  <div>
+                    <span class="badge ${badgeClass}" style="margin-bottom:4px;">${statusText}</span>
+                    <h3 style="font-size:1.25rem;">${l.title}</h3>
+                    <div class="text-muted text-sm">
+                      🐾 ${l.pet_name} &bull; 📍 ${l.general_location} &bull; Submitted ${formatDate(l.created_at)}
+                    </div>
+                  </div>
+                </div>
+
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                  <button onclick="viewEnquiries(${l.id}, '${l.pet_name}')" class="btn btn-outline btn-sm" id="btn-view-enq-${l.id}">
+                    📬 Inquiries (${l.enquiry_count || 0}) / Applications (${l.application_count || 0})
+                  </button>
+                  ${l.status === 'changes_requested' ? `
+                    <button onclick="editListing(${l.id})" class="btn btn-warning btn-sm">
+                      ✏️ Edit & Resubmit
+                    </button>
+                  ` : `
+                    <button onclick="editListing(${l.id})" class="btn btn-outline btn-sm">
+                      ✏️ Edit
+                    </button>
+                  `}
+                  ${l.status === 'approved' ? `
+                    <button onclick="markAdopted(${l.id})" class="btn btn-outline btn-sm" style="color:var(--primary-700);">
+                      🎉 Mark Adopted
+                    </button>
+                  ` : ''}
+                </div>
+              </div>
+
+              ${l.moderation_notes ? `
+                <div style="margin-top:14px;background:#fffbeb;border:1px solid #fef3c7;padding:12px 16px;border-radius:var(--radius-md);">
+                  <strong style="color:#b45309;font-size:0.875rem;">🛡️ Administrator Feedback / Note:</strong>
+                  <div style="font-size:0.9rem;color:#78350f;margin-top:4px;">${l.moderation_notes}</div>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('');
+
+      } catch (err) {
+        container.innerHTML = `<div class="alert-banner alert-danger">${err.message}</div>`;
+      }
+    }
+
+    function openCreateListingModal() {
+      document.getElementById('listing-form').reset();
+      document.getElementById('list-id').value = '';
+      document.getElementById('listing-modal-title').textContent = 'Submit Pet for Adoption';
+      document.getElementById('group-pet-select').style.display = 'block';
+      openModal('modal-listing');
+    }
+
+    function editListing(id) {
+      const l = listings.find(item => item.id === id);
+      if (!l) return;
+
+      document.getElementById('list-id').value = l.id;
+      document.getElementById('listing-modal-title').textContent = `Edit Listing for ${l.pet_name}`;
+      document.getElementById('group-pet-select').style.display = 'none';
+      document.getElementById('list-title').value = l.title || '';
+      document.getElementById('list-location').value = l.general_location || '';
+      document.getElementById('list-desc').value = l.description || '';
+      document.getElementById('list-temperament').value = l.temperament || '';
+      document.getElementById('list-health').value = l.health_summary || '';
+      document.getElementById('list-reqs').value = l.adoption_requirements || '';
+
+      openModal('modal-listing');
+    }
+
+    async function saveListing(e) {
+      e.preventDefault();
+      const id = document.getElementById('list-id').value;
+      const isEdit = !!id;
+
+      const payload = {
+        title: document.getElementById('list-title').value,
+        general_location: document.getElementById('list-location').value,
+        description: document.getElementById('list-desc').value,
+        temperament: document.getElementById('list-temperament').value,
+        health_summary: document.getElementById('list-health').value,
+        adoption_requirements: document.getElementById('list-reqs').value,
+        resubmit_for_review: true
+      };
+
+      if (!isEdit) {
+        payload.pet_id = document.getElementById('list-pet').value;
+      }
+
+      try {
+        const url = isEdit ? `/api/adoptions/owner/listings/${id}` : '/api/adoptions/owner/listings';
+        const method = isEdit ? 'PUT' : 'POST';
+        const res = await (method === 'PUT' ? API.put(url, payload) : API.post(url, payload));
+
+        closeModal('modal-listing');
+        showToast(res.message, 'success');
+        loadListings();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function markAdopted(id) {
+      if (!confirm('Mark this pet as officially adopted? The public listing will be closed.')) return;
+      try {
+        const res = await API.put(`/api/adoptions/owner/listings/${id}/status`, { status: 'adopted' });
+        showToast(res.message, 'success');
+        loadListings();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function viewEnquiries(listingId, petName) {
+      document.getElementById('enq-view-title').textContent = `Inquiries & Applications for ${petName}`;
+      const content = document.getElementById('enq-view-content');
+      content.innerHTML = `<div class="text-muted" style="padding:20px;text-align:center;">Loading messages...</div>`;
+      openModal('modal-enquiries-view');
+
+      try {
+        const res = await API.get(`/api/adoptions/owner/listings/${listingId}/enquiries`);
+        const enqs = res.enquiries || [];
+        const apps = res.applications || [];
+
+        let html = '';
+
+        // Formal Applications
+        html += `<h4 style="font-size:1.15rem;margin-bottom:12px;">Formal Adoption Applications (${apps.length})</h4>`;
+        if (apps.length === 0) {
+          html += `<p class="text-muted" style="font-size:0.9rem;margin-bottom:24px;">No formal adoption applications submitted yet.</p>`;
+        } else {
+          html += apps.map(a => `
+            <div style="background:var(--slate-50);border:1px solid var(--slate-200);border-radius:var(--radius-md);padding:16px;margin-bottom:14px;">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <div>
+                  <strong>${a.applicant_name}</strong> (&lt;${a.applicant_email}&gt;)
+                  <div class="text-muted text-xs">Submitted ${formatDate(a.created_at)} &bull; Phone: ${a.applicant_phone || 'None'}</div>
+                </div>
+                <span class="badge ${a.status === 'accepted' ? 'badge-approved' : (a.status === 'declined' ? 'badge-rejected' : 'badge-due-soon')}">
+                  ${a.status.toUpperCase()}
+                </span>
+              </div>
+              <div style="margin-top:10px;font-size:0.875rem;">
+                <div><strong>Dwelling:</strong> ${a.household_type} &bull; <strong>Yard:</strong> ${a.has_yard ? 'Yes' : 'No'} &bull; <strong>Other Pets:</strong> ${a.owns_other_pets ? 'Yes' : 'No'}</div>
+                ${a.experience_description ? `<div style="margin-top:6px;"><strong>Experience:</strong> ${a.experience_description}</div>` : ''}
+                ${a.reference_contact ? `<div style="margin-top:4px;"><strong>Reference:</strong> ${a.reference_contact}</div>` : ''}
+              </div>
+              <div style="margin-top:12px;display:flex;gap:8px;border-top:1px solid var(--slate-200);padding-top:10px;">
+                <button onclick="updateAppStatus(${a.id}, 'accepted', ${listingId}, '${petName}')" class="btn btn-outline btn-sm" style="color:var(--success-600);">Accept Application ✓</button>
+                <button onclick="updateAppStatus(${a.id}, 'declined', ${listingId}, '${petName}')" class="btn btn-outline btn-sm" style="color:var(--danger-600);">Decline ✗</button>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        // General Enquiries
+        html += `<h4 style="font-size:1.15rem;margin:24px 0 12px;">General Messages & Inquiries (${enqs.length})</h4>`;
+        if (enqs.length === 0) {
+          html += `<p class="text-muted" style="font-size:0.9rem;">No visitor inquiries received yet.</p>`;
+        } else {
+          html += enqs.map(e => `
+            <div style="border-bottom:1px solid var(--slate-200);padding:14px 0;">
+              <div style="display:flex;justify-content:space-between;">
+                <strong>${e.inquirer_name}</strong>
+                <span class="text-muted text-xs">${formatDate(e.created_at)}</span>
+              </div>
+              <div class="text-muted text-xs" style="margin-bottom:6px;">
+                Email: <a href="mailto:${e.inquirer_email}">${e.inquirer_email}</a> ${e.inquirer_phone ? `&bull; Phone: ${e.inquirer_phone}` : ''}
+              </div>
+              <div style="background:#ffffff;padding:10px;border-radius:4px;border:1px solid var(--slate-100);font-size:0.9rem;">
+                ${e.message}
+              </div>
+            </div>
+          `).join('');
+        }
+
+        content.innerHTML = html;
+      } catch (err) {
+        content.innerHTML = `<div class="alert-banner alert-danger">${err.message}</div>`;
+      }
+    }
+
+    async function updateAppStatus(appId, status, listingId, petName) {
+      const reason = prompt(`Optional message or note for ${status === 'accepted' ? 'acceptance' : 'decline'}:`);
+      try {
+        const res = await API.put(`/api/adoptions/owner/applications/${appId}/status`, { status, status_reason: reason });
+        showToast(res.message, 'success');
+        viewEnquiries(listingId, petName);
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vaccination Management - PetCare Passport</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/owner.css">
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <nav class="navbar">
+    <div class="container nav-inner">
+      <a href="/owner/dashboard.html" class="brand-logo">
+        <span class="logo-icon">🐾</span>
+        <span>PetCare<span style="color:var(--primary-600);">Passport</span></span>
+        <span class="brand-badge badge-owner-theme">Owner Portal</span>
+      </a>
+
+      <div style="display:flex;align-items:center;gap:16px;">
+        <a href="/index.html" class="btn btn-outline btn-sm">🌐 Public Site</a>
+        <div class="nav-auth-group" id="nav-auth-container"></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="owner-layout">
+    <aside class="owner-sidebar">
+      <div>
+        <div style="padding:0 12px 16px;font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--slate-400);">Pet Management</div>
+        <ul class="owner-menu">
+          <li class="owner-menu-item"><a href="/owner/dashboard.html"><span class="owner-menu-icon">📊</span> Overview</a></li>
+          <li class="owner-menu-item"><a href="/owner/pets.html"><span class="owner-menu-icon">🐶</span> My Pets</a></li>
+          <li class="owner-menu-item"><a href="/owner/passports.html"><span class="owner-menu-icon">🛂</span> Digital Passports</a></li>
+          <li class="owner-menu-item"><a href="/owner/health.html"><span class="owner-menu-icon">🩺</span> Health Records</a></li>
+          <li class="owner-menu-item active"><a href="/owner/vaccinations.html"><span class="owner-menu-icon">💉</span> Vaccinations</a></li>
+          <li class="owner-menu-item"><a href="/owner/daily-care.html"><span class="owner-menu-icon">💊</span> Daily Care & Tasks</a></li>
+          <li class="owner-menu-item"><a href="/owner/appointments.html"><span class="owner-menu-icon">📅</span> Appointments</a></li>
+          <li class="owner-menu-item"><a href="/owner/rehoming.html"><span class="owner-menu-icon">🏡</span> Adoption & Rehoming</a></li>
+          <li class="owner-menu-item"><a href="/owner/ai-assistant.html"><span class="owner-menu-icon">🤖</span> AI Pet Assistant</a></li>
+        </ul>
+      </div>
+      <div>
+        <div style="padding:16px 12px 8px;font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--slate-400);border-top:1px solid var(--slate-200);">Account</div>
+        <ul class="owner-menu">
+          <li class="owner-menu-item"><a href="/owner/notifications.html"><span class="owner-menu-icon">🔔</span> Notifications</a></li>
+          <li class="owner-menu-item"><a href="/owner/profile.html"><span class="owner-menu-icon">⚙️</span> Settings</a></li>
+          <li class="owner-menu-item"><a href="javascript:void(0)" onclick="Auth.logout()"><span class="owner-menu-icon">🚪</span> Sign Out</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="owner-main">
+      <div class="owner-page-header">
+        <div>
+          <h1 style="font-size:2rem;margin-bottom:4px;">Vaccination Schedule & History</h1>
+          <p class="text-muted">Dynamic status engine tracking boosters based on entered clinical dates.</p>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <label class="form-label" style="margin:0;font-weight:700;">Filter Pet:</label>
+            <select id="vacc-pet-select" class="form-control" style="width:180px;" onchange="loadVaccinations()">
+              <option value="">All Pets</option>
+            </select>
+          </div>
+          <button onclick="openAddVaccineModal()" class="btn btn-primary" id="btn-add-vaccine">
+            ➕ Record Vaccine
+          </button>
+        </div>
+      </div>
+
+      <!-- Disclaimer Banner -->
+      <div class="alert-banner alert-info" style="margin-bottom:24px;">
+        ℹ️ <strong>Clinical Notice:</strong> Vaccination statuses below are computed solely from entered administration and due dates. This organizational tool does not substitute for professional veterinary advice or legal rabies certification.
+      </div>
+
+      <!-- Vaccinations Table -->
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Pet</th>
+                <th>Vaccine Name</th>
+                <th>Administered Date</th>
+                <th>Next Due Date</th>
+                <th>Calculated Status</th>
+                <th>Clinic</th>
+                <th>Source</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="vaccinations-tbody">
+              <tr><td colspan="8" class="text-muted" style="text-align:center;padding:30px;">Loading vaccination records...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal: Record Vaccine -->
+  <div class="modal-backdrop" id="modal-vaccine">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="vacc-modal-title">Record Vaccination</h3>
+        <button class="modal-close" onclick="closeModal('modal-vaccine')">&times;</button>
+      </div>
+      <form id="vaccine-form" onsubmit="saveVaccine(event)">
+        <input type="hidden" id="vacc-id">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="vacc-pet">Select Pet *</label>
+            <select id="vacc-pet" class="form-control" required></select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="vacc-name">Vaccine Name *</label>
+            <input type="text" id="vacc-name" class="form-control" required placeholder="e.g. Canine Rabies 3-Year Booster or DHPP">
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div class="form-group">
+              <label class="form-label" for="vacc-date">Administered Date *</label>
+              <input type="date" id="vacc-date" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="vacc-due">Next Due Date (if provided by vet)</label>
+              <input type="date" id="vacc-due" class="form-control">
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div class="form-group">
+              <label class="form-label" for="vacc-clinic">Administering Clinic</label>
+              <input type="text" id="vacc-clinic" class="form-control" placeholder="e.g. Oakridge Animal Hospital">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="vacc-batch">Batch / Lot Number</label>
+              <input type="text" id="vacc-batch" class="form-control" placeholder="e.g. RB-98214-X">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="vacc-notes">Clinical Notes</label>
+            <textarea id="vacc-notes" class="form-control" placeholder="Subcutaneous administration, booster notes..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="vacc-file">Upload Certificate / Sticker Scan</label>
+            <input type="file" id="vacc-file" class="form-control" accept=".pdf,image/*">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-vaccine')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-vaccine">Save Vaccination 💉</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    let pets = [];
+
+    async function init() {
+      await Auth.requireAuth('/login.html');
+      try {
+        const res = await API.get('/api/pets');
+        pets = res.pets || [];
+
+        const petSelectFilter = document.getElementById('vacc-pet-select');
+        const petModalSelect = document.getElementById('vacc-pet');
+
+        petSelectFilter.innerHTML = '<option value="">All Pets</option>' + pets.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+        petModalSelect.innerHTML = pets.map(p => `<option value="${p.id}">${p.name} (${p.species})</option>`).join('');
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('action') === 'add') {
+          openAddVaccineModal();
+        }
+
+        loadVaccinations();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function loadVaccinations() {
+      const petId = document.getElementById('vacc-pet-select').value;
+      const tbody = document.getElementById('vaccinations-tbody');
+
+      try {
+        const res = await API.get(`/api/vaccinations?${petId ? `petId=${petId}` : ''}`);
+        const rows = res.vaccinations || [];
+
+        if (rows.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" class="text-muted" style="text-align:center;padding:30px;">No vaccination records found.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = rows.map(v => `
+          <tr id="vacc-row-${v.id}">
+            <td style="font-weight:700;">🐾 ${v.pet_name}</td>
+            <td style="font-weight:600;">${v.vaccine_name}</td>
+            <td>${formatDate(v.administered_date)}</td>
+            <td>${v.next_due_date ? formatDate(v.next_due_date) : '<span class="text-muted">Not specified</span>'}</td>
+            <td>
+              <span class="badge ${v.status.badgeClass}">${v.status.label}</span>
+            </td>
+            <td>${v.clinic_name || '<span class="text-muted">-</span>'}</td>
+            <td>
+              <span class="badge ${v.entry_source === 'clinic_verified' ? 'badge-approved' : 'badge-unknown'}">
+                ${v.entry_source === 'clinic_verified' ? 'Clinic Verified' : 'Owner Entered'}
+              </span>
+            </td>
+            <td>
+              <button onclick="deleteVaccine(${v.id})" class="btn btn-outline btn-sm" style="color:var(--danger-600);border-color:transparent;" title="Delete">
+                🗑️
+              </button>
+            </td>
+          </tr>
+        `).join('');
+
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="8" class="alert-banner alert-danger">${err.message}</td></tr>`;
+      }
+    }
+
+    function openAddVaccineModal() {
+      document.getElementById('vaccine-form').reset();
+      document.getElementById('vacc-id').value = '';
+      document.getElementById('vacc-date').valueAsDate = new Date();
+      openModal('modal-vaccine');
+    }
+
+    async function saveVaccine(e) {
+      e.preventDefault();
+      const petId = document.getElementById('vacc-pet').value;
+      const fd = new FormData();
+      fd.append('vaccine_name', document.getElementById('vacc-name').value);
+      fd.append('administered_date', document.getElementById('vacc-date').value);
+      fd.append('next_due_date', document.getElementById('vacc-due').value || '');
+      fd.append('clinic_name', document.getElementById('vacc-clinic').value);
+      fd.append('batch_number', document.getElementById('vacc-batch').value);
+      fd.append('notes', document.getElementById('vacc-notes').value);
+
+      const fileInput = document.getElementById('vacc-file');
+      if (fileInput.files[0]) {
+        fd.append('document', fileInput.files[0]);
+      }
+
+      try {
+        const res = await API.upload(`/api/vaccinations/${petId}`, fd);
+        closeModal('modal-vaccine');
+        showToast(res.message, 'success');
+        loadVaccinations();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function deleteVaccine(id) {
+      if (!confirm('Are you sure you want to remove this vaccination record?')) return;
+      try {
+        const res = await API.delete(`/api/vaccinations/${id}`);
+        showToast(res.message, 'success');
+        loadVaccinations();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Pet-Care Assistant - PetCare Passport</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/owner.css">
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <nav class="navbar">
+    <div class="container nav-inner">
+      <a href="/owner/dashboard.html" class="brand-logo">
+        <span class="logo-icon">🐾</span>
+        <span>PetCare<span style="color:var(--primary-600);">Passport</span></span>
+        <span class="brand-badge badge-owner-theme">Owner Portal</span>
+      </a>
+
+      <div style="display:flex;align-items:center;gap:16px;">
+        <a href="/index.html" class="btn btn-outline btn-sm">🌐 Public Site</a>
+        <div class="nav-auth-group" id="nav-auth-container"></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="owner-layout">
+    <aside class="owner-sidebar">
+      <div>
+        <div style="padding:0 12px 16px;font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--slate-400);">Pet Management</div>
+        <ul class="owner-menu">
+          <li class="owner-menu-item"><a href="/owner/dashboard.html"><span class="owner-menu-icon">📊</span> Overview</a></li>
+          <li class="owner-menu-item"><a href="/owner/pets.html"><span class="owner-menu-icon">🐶</span> My Pets</a></li>
+          <li class="owner-menu-item"><a href="/owner/passports.html"><span class="owner-menu-icon">🛂</span> Digital Passports</a></li>
+          <li class="owner-menu-item"><a href="/owner/health.html"><span class="owner-menu-icon">🩺</span> Health Records</a></li>
+          <li class="owner-menu-item"><a href="/owner/vaccinations.html"><span class="owner-menu-icon">💉</span> Vaccinations</a></li>
+          <li class="owner-menu-item"><a href="/owner/daily-care.html"><span class="owner-menu-icon">💊</span> Daily Care & Tasks</a></li>
+          <li class="owner-menu-item"><a href="/owner/appointments.html"><span class="owner-menu-icon">📅</span> Appointments</a></li>
+          <li class="owner-menu-item"><a href="/owner/rehoming.html"><span class="owner-menu-icon">🏡</span> Adoption & Rehoming</a></li>
+          <li class="owner-menu-item active"><a href="/owner/ai-assistant.html"><span class="owner-menu-icon">🤖</span> AI Pet Assistant</a></li>
+        </ul>
+      </div>
+      <div>
+        <div style="padding:16px 12px 8px;font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--slate-400);border-top:1px solid var(--slate-200);">Account</div>
+        <ul class="owner-menu">
+          <li class="owner-menu-item"><a href="/owner/notifications.html"><span class="owner-menu-icon">🔔</span> Notifications</a></li>
+          <li class="owner-menu-item"><a href="/owner/profile.html"><span class="owner-menu-icon">⚙️</span> Settings</a></li>
+          <li class="owner-menu-item"><a href="javascript:void(0)" onclick="Auth.logout()"><span class="owner-menu-icon">🚪</span> Sign Out</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="owner-main">
+      <div class="owner-page-header">
+        <div>
+          <h1 style="font-size:2rem;margin-bottom:4px;">AI Pet-Care Assistant</h1>
+          <p class="text-muted">Evidence-based care advice, veterinary exam preparation, and wellness checklists.</p>
+        </div>
+      </div>
+
+      <!-- Prominent Clinical Disclaimer -->
+      <div class="alert-banner alert-warning" style="margin-bottom:24px;">
+        ⚠️ <strong>Veterinary Disclaimer:</strong> The PetCare Passport AI Assistant is an informational wellness advisor. It cannot diagnose illnesses, interpret medical emergencies, or prescribe medications or dosages. For acute symptoms, bleeding, collapse, or poisoning, contact an emergency animal hospital immediately.
+      </div>
+
+      <div style="display:grid;grid-template-columns: 1fr 340px;gap:28px;align-items:flex-start;">
+        <!-- Chat Interaction Card -->
+        <div class="card" style="display:flex;flex-direction:column;min-height:560px;">
+          <div class="card-header">
+            <h2 class="card-title">Conversation & Advice</h2>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <label class="form-label" style="margin:0;font-size:0.85rem;">Pet Context:</label>
+              <select id="ai-pet-select" class="form-control" style="width:160px;padding:6px 10px;font-size:0.85rem;">
+                <option value="">General (No Pet)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Chat Stream Output -->
+          <div id="ai-chat-output" style="flex:1;overflow-y:auto;padding:12px;background:var(--slate-50);border-radius:var(--radius-md);margin-bottom:16px;max-height:420px;border:1px solid var(--slate-200);">
+            <div style="background:#ffffff;padding:16px;border-radius:var(--radius-md);border:1px solid var(--slate-200);margin-bottom:12px;">
+              <strong>🐾 PetCare Passport AI Advisor:</strong>
+              <p style="margin-top:6px;line-height:1.6;font-size:0.95rem;">
+                Hello! I can help you prepare for upcoming vet visits, formulate questions to ask your veterinarian, understand routine vaccination schedules, or create healthy feeding and enrichment routines for your pets. How can I assist you today?
+              </p>
+            </div>
+          </div>
+
+          <!-- Query Input -->
+          <form id="ai-query-form" onsubmit="askAI(event)" style="display:flex;gap:10px;">
+            <input type="text" id="ai-prompt-input" class="form-control" required placeholder="e.g. Give me a vet visit checklist for my dog, or explain core vaccinations...">
+            <button type="submit" class="btn btn-primary" id="btn-send-ai" style="padding:10px 24px;">
+              Send ✨
+            </button>
+          </form>
+        </div>
+
+        <!-- Quick Prompt Starter Pills -->
+        <div class="card">
+          <h3 style="font-size:1.15rem;margin-bottom:14px;">⚡ Suggested Topics</h3>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <button type="button" onclick="setQuickPrompt('Provide a comprehensive vet visit preparation checklist and questions to ask our veterinarian.')" class="btn btn-outline btn-sm" style="text-align:left;justify-content:flex-start;">
+              📋 Vet Visit Preparation Checklist
+            </button>
+            <button type="button" onclick="setQuickPrompt('Explain why rabies and core combo vaccines are essential and when boosters are typically scheduled.')" class="btn btn-outline btn-sm" style="text-align:left;justify-content:flex-start;">
+              💉 Understanding Vaccination Protocols
+            </button>
+            <button type="button" onclick="setQuickPrompt('What are common toxic household foods and plants that pet owners must keep away from animals?')" class="btn btn-outline btn-sm" style="text-align:left;justify-content:flex-start;">
+              🥗 Toxic Foods & Safety Guidance
+            </button>
+            <button type="button" onclick="setQuickPrompt('How can I introduce dental hygiene and coat brushing routines safely at home?')" class="btn btn-outline btn-sm" style="text-align:left;justify-content:flex-start;">
+              🪥 Home Dental & Coat Care
+            </button>
+          </div>
+
+          <div style="margin-top:24px;border-top:1px solid var(--slate-200);padding-top:16px;font-size:0.8rem;color:var(--slate-500);line-height:1.5;">
+            🔒 <strong>Privacy Assurance:</strong> AI queries run safely through the server. Your account passwords and private personal identifiers are never forwarded to AI providers.
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    let pets = [];
+
+    async function init() {
+      await Auth.requireAuth('/login.html');
+      try {
+        const res = await API.get('/api/pets');
+        pets = res.pets || [];
+        const select = document.getElementById('ai-pet-select');
+        select.innerHTML = '<option value="">General Advice</option>' + pets.map(p => `<option value="${p.id}">${p.name} (${p.species})</option>`).join('');
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    function setQuickPrompt(text) {
+      document.getElementById('ai-prompt-input').value = text;
+      document.getElementById('ai-prompt-input').focus();
+    }
+
+    async function askAI(e) {
+      e.preventDefault();
+      const input = document.getElementById('ai-prompt-input');
+      const prompt = input.value.trim();
+      const petId = document.getElementById('ai-pet-select').value;
+      const sendBtn = document.getElementById('btn-send-ai');
+      const chatBox = document.getElementById('ai-chat-output');
+
+      if (!prompt) return;
+
+      // Append user bubble
+      chatBox.innerHTML += `
+        <div style="background:var(--primary-100);border:1px solid var(--primary-200);padding:14px;border-radius:var(--radius-md);margin-bottom:12px;text-align:right;">
+          <strong>You:</strong>
+          <p style="margin-top:4px;font-size:0.95rem;color:var(--primary-900);">${prompt}</p>
+        </div>
+      `;
+
+      input.value = '';
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Thinking...';
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      try {
+        const res = await API.post('/api/ai/ask', { prompt, petId });
+
+        // Simple Markdown conversion for bold, headers, and bullet points
+        let formatted = res.answer
+          .replace(/### (.*?)\n/g, '<h4 style="font-size:1.1rem;margin:12px 0 6px;">$1</h4>')
+          .replace(/## (.*?)\n/g, '<h3 style="font-size:1.2rem;margin:14px 0 6px;">$1</h3>')
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\*(.*?)\*/g, '<em>$1</em>')
+          .replace(/- (.*?)\n/g, '<li>$1</li>');
+
+        chatBox.innerHTML += `
+          <div style="background:#ffffff;padding:16px;border-radius:var(--radius-md);border:1px solid var(--slate-200);margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <strong>🐾 PetCare Passport AI Advisor:</strong>
+              <span class="badge badge-unknown" style="font-size:0.7rem;">Provider: ${res.provider}</span>
+            </div>
+            <div style="line-height:1.6;font-size:0.95rem;color:var(--slate-800);">
+              ${formatted}
+            </div>
+          </div>
+        `;
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+      } catch (err) {
+        chatBox.innerHTML += `
+          <div class="alert-banner alert-danger" style="margin-bottom:12px;">
+            Failed to process query: ${err.message}
+          </div>
+        `;
+      } finally {
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Send ✨';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

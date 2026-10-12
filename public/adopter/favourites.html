@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Saved Pets - PetCare Passport</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/adopter.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container nav-inner">
+      <a href="/index.html" class="brand-logo" id="brand-logo-link">
+        <span class="logo-icon">🐾</span>
+        <span>PetCare<span style="color:var(--primary-600);">Passport</span></span>
+        <span class="brand-badge badge-visitor-theme">Adopter Portal</span>
+      </a>
+
+      <ul class="nav-links">
+        <li class="nav-item"><a href="/index.html">Home</a></li>
+        <li class="nav-item"><a href="/adopt.html">Adopt a Pet</a></li>
+        <li class="nav-item active"><a href="/adopter/favourites.html">Favourites ❤️</a></li>
+        <li class="nav-item"><a href="/adopter/applications.html">My Applications 📋</a></li>
+        <li class="nav-item"><a href="/lost-found.html">Lost & Found</a></li>
+      </ul>
+
+      <div class="nav-auth-group" id="nav-auth-container"></div>
+    </div>
+  </nav>
+
+  <main class="container" style="padding-top:40px;padding-bottom:80px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;flex-wrap:wrap;gap:16px;">
+      <div>
+        <h1 style="font-size:2.2rem;margin-bottom:4px;">My Saved Pets</h1>
+        <p class="text-muted">Companion animals you have saved while exploring our verified adoption directory.</p>
+      </div>
+      <a href="/adopt.html" class="btn btn-outline btn-sm">Browse More Pets →</a>
+    </div>
+
+    <!-- Favourites Grid -->
+    <div class="adoption-grid" id="favourites-grid">
+      <div class="text-muted" style="grid-column:1/-1;text-align:center;padding:40px;">Loading your saved pets...</div>
+    </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    async function loadFavourites() {
+      await Auth.requireAuth('/login.html');
+      const grid = document.getElementById('favourites-grid');
+
+      try {
+        const res = await API.get('/api/adoptions/adopter/favourites');
+        const favs = res.favourites || [];
+
+        if (favs.length === 0) {
+          grid.innerHTML = `
+            <div class="empty-state" style="grid-column:1/-1;">
+              <div class="empty-icon">❤️</div>
+              <h3>No saved pets yet</h3>
+              <p class="text-muted">Click the heart icon on any pet listing to save them here for quick access.</p>
+              <a href="/adopt.html" class="btn btn-primary btn-sm" style="margin-top:14px;">Browse Available Pets</a>
+            </div>
+          `;
+          return;
+        }
+
+        grid.innerHTML = favs.map(f => `
+          <div class="adoption-card" id="fav-card-${f.listing_id}">
+            <div class="adoption-image-wrap">
+              <img src="${f.photo_url || '/assets/images/default-pet.jpg'}" alt="${f.pet_name}" class="adoption-image">
+              <span class="pet-card-badge badge badge-approved">Active Listing</span>
+            </div>
+            <div class="adoption-body">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <h3 class="adoption-pet-name">${f.pet_name}</h3>
+                <span class="badge ${f.sex === 'Male' ? 'badge-unknown' : 'badge-owner-theme'}">${f.sex}</span>
+              </div>
+              <div class="adoption-location">
+                📍 ${f.general_location} &bull; ${f.species} &bull; ${f.breed || 'Mixed'}
+              </div>
+              <p class="adoption-desc">${f.title}</p>
+              <div style="margin-top:auto;display:flex;gap:10px;padding-top:14px;border-top:1px solid var(--slate-100);">
+                <a href="/pet-details.html?id=${f.listing_id}" class="btn btn-primary btn-sm" style="flex:1;">
+                  View & Inquire
+                </a>
+                <button onclick="removeFavourite(${f.listing_id})" class="btn btn-outline btn-sm" style="color:var(--danger-600);" title="Remove">
+                  🗑️
+                </button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+      } catch (err) {
+        grid.innerHTML = `<div class="alert-banner alert-danger" style="grid-column:1/-1;">${err.message}</div>`;
+      }
+    }
+
+    async function removeFavourite(listingId) {
+      try {
+        const res = await API.post(`/api/adoptions/listings/${listingId}/favourite`);
+        showToast(res.message, 'info');
+        loadFavourites();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadFavourites);
+  </script>
+</body>
+</html>

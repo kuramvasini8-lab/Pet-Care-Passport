@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reminder & Notification Monitoring - PetCare Passport Admin</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+  <!-- Admin Top Navbar -->
+  <nav class="navbar" style="border-bottom: 2px solid #991b1b;">
+    <div class="container nav-inner">
+      <a href="/admin/dashboard.html" class="brand-logo">
+        <span class="logo-icon" style="background:#991b1b;">🛡️</span>
+        <span>PetCare<span style="color:#991b1b;">Admin</span></span>
+        <span class="brand-badge badge-admin-theme">Platform Oversight</span>
+      </a>
+
+      <div style="display:flex;align-items:center;gap:16px;">
+        <a href="/owner/dashboard.html" class="btn btn-outline btn-sm">🐾 Owner View</a>
+        <a href="/index.html" class="btn btn-outline btn-sm">🌐 Public Site</a>
+        <div class="nav-auth-group" id="nav-auth-container"></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="admin-layout">
+    <!-- Admin Sidebar -->
+    <aside class="admin-sidebar">
+      <div>
+        <div class="admin-brand">
+          <span style="font-size:1.4rem;">⚙️</span>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;">System Console</div>
+            <div class="text-xs" style="color:var(--slate-400);">Role: Authorized Administrator</div>
+          </div>
+        </div>
+
+        <ul class="admin-menu">
+          <li class="admin-menu-item">
+            <a href="/admin/dashboard.html" id="admin-nav-overview"><span class="admin-menu-icon">📊</span> Overview</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/users.html" id="admin-nav-users"><span class="admin-menu-icon">👥</span> User Management</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/moderation.html" id="admin-nav-moderation"><span class="admin-menu-icon">🏡</span> Adoption Moderation</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/lost-found.html" id="admin-nav-lost-found"><span class="admin-menu-icon">🔍</span> Lost & Found Queue</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/reports.html" id="admin-nav-reports"><span class="admin-menu-icon">🚨</span> Reports & Complaints</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/appointments.html" id="admin-nav-appointments"><span class="admin-menu-icon">📅</span> Appointment Oversight</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/clinics.html" id="admin-nav-clinics"><span class="admin-menu-icon">🏥</span> Clinic Directory</a>
+          </li>
+          <li class="admin-menu-item active">
+            <a href="/admin/reminders.html" id="admin-nav-reminders"><span class="admin-menu-icon">📬</span> Reminder Monitoring</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/audit-logs.html" id="admin-nav-audit"><span class="admin-menu-icon">📜</span> System Audit Logs</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/system-health.html" id="admin-nav-health"><span class="admin-menu-icon">⚡</span> System Health</a>
+          </li>
+        </ul>
+      </div>
+
+      <div style="border-top:1px solid var(--slate-800);padding-top:16px;">
+        <ul class="admin-menu">
+          <li class="admin-menu-item">
+            <a href="javascript:void(0)" onclick="Auth.logout()"><span class="admin-menu-icon">🚪</span> Sign Out Admin</a>
+          </li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Admin Content Area -->
+    <main class="admin-main">
+      <div class="admin-header">
+        <div>
+          <h1 style="font-size:2rem;margin-bottom:4px;">Reminder & Notification Monitoring</h1>
+          <p class="text-muted">Inspect asynchronous reminder dispatches, transactional email provider statuses, and retry failed transmissions.</p>
+        </div>
+        <div>
+          <button class="btn btn-outline" onclick="loadReminders()">🔄 Refresh Queue</button>
+        </div>
+      </div>
+
+      <!-- State Fidelity Disclaimer -->
+      <div class="card" style="background:#f0fdf4;border-left:4px solid #22c55e;margin-bottom:24px;">
+        <div class="card-body" style="padding:16px;">
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <span style="font-size:1.4rem;">ℹ️</span>
+            <div style="font-size:0.875rem;color:#166534;">
+              <strong>Delivery State Fidelity Policy:</strong> Email dispatches accepted by Resend HTTP API are strictly marked as <code>accepted_by_provider</code>. They are never prematurely classified as <code>delivered</code> unless verified webhook delivery confirmation is returned.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary Stats Cards -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:16px;margin-bottom:24px;">
+        <div class="card">
+          <div class="card-body" style="padding:16px;text-align:center;">
+            <div class="text-xs text-muted" style="font-weight:600;">TOTAL PROCESSED</div>
+            <div id="stat-total" style="font-size:1.8rem;font-weight:700;color:var(--slate-800);margin-top:4px;">-</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body" style="padding:16px;text-align:center;">
+            <div class="text-xs text-muted" style="font-weight:600;">ACCEPTED BY PROVIDER</div>
+            <div id="stat-accepted" style="font-size:1.8rem;font-weight:700;color:#0284c7;margin-top:4px;">-</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body" style="padding:16px;text-align:center;">
+            <div class="text-xs text-muted" style="font-weight:600;">DELIVERED (CONFIRMED)</div>
+            <div id="stat-delivered" style="font-size:1.8rem;font-weight:700;color:#16a34a;margin-top:4px;">-</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body" style="padding:16px;text-align:center;">
+            <div class="text-xs text-muted" style="font-weight:600;">FAILED ATTEMPTS</div>
+            <div id="stat-failed" style="font-size:1.8rem;font-weight:700;color:#dc2626;margin-top:4px;">-</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body" style="padding:16px;text-align:center;">
+            <div class="text-xs text-muted" style="font-weight:600;">IN PROCESSING</div>
+            <div id="stat-processing" style="font-size:1.8rem;font-weight:700;color:#d97706;margin-top:4px;">-</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="card mb-4">
+        <div class="card-body" style="padding:16px;">
+          <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+            <div>
+              <label class="form-label text-xs">Filter by Dispatch Status:</label>
+              <select id="filter-status" class="form-select" onchange="loadReminders()">
+                <option value="">All Statuses</option>
+                <option value="failed">Failed Only (Requires Attention)</option>
+                <option value="accepted_by_provider">Accepted by Provider</option>
+                <option value="delivered">Confirmed Delivered</option>
+                <option value="processing">Processing</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label text-xs">Filter by Notification Type:</label>
+              <select id="filter-type" class="form-select" onchange="loadReminders()">
+                <option value="">All Types</option>
+                <option value="vaccination">Vaccination Reminder</option>
+                <option value="appointment">Appointment Reminder</option>
+                <option value="daily_care">Daily Care Alert</option>
+                <option value="adoption_enquiry">Adoption Enquiry Alert</option>
+                <option value="system">System Notification</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logs Table -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Transmission & Reminder Queue Activity</h3>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table" id="reminders-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Recipient (Redacted)</th>
+                <th>Status</th>
+                <th>Retries</th>
+                <th>Created At</th>
+                <th>Error Diagnostics (Safe)</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="reminders-tbody">
+              <tr>
+                <td colspan="8" class="text-center py-4">Loading reminder telemetry...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await Auth.requireRole('admin');
+      if (!user) return;
+      loadReminders();
+    });
+
+    async function loadReminders() {
+      const status = document.getElementById('filter-status').value;
+      const type = document.getElementById('filter-type').value;
+
+      let queryParams = [];
+      if (status) queryParams.push(`status=${encodeURIComponent(status)}`);
+      if (type) queryParams.push(`type=${encodeURIComponent(type)}`);
+      const url = `/api/admin/reminders${queryParams.length ? '?' + queryParams.join('&') : ''}`;
+
+      try {
+        const res = await Api.get(url);
+        
+        // Update summary cards
+        if (res.summary) {
+          document.getElementById('stat-total').textContent = res.summary.total || 0;
+          document.getElementById('stat-accepted').textContent = res.summary.accepted || 0;
+          document.getElementById('stat-delivered').textContent = res.summary.delivered || 0;
+          document.getElementById('stat-failed').textContent = res.summary.failed || 0;
+          document.getElementById('stat-processing').textContent = res.summary.processing || 0;
+        }
+
+        renderLogs(res.logs || []);
+      } catch (err) {
+        document.getElementById('reminders-tbody').innerHTML = `
+          <tr><td colspan="8" class="text-center text-danger py-4">Error loading telemetry: ${err.message}</td></tr>
+        `;
+      }
+    }
+
+    function renderLogs(logs) {
+      const tbody = document.getElementById('reminders-tbody');
+      if (logs.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="8" class="text-center py-4 text-muted">No reminder records match current criteria.</td></tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = logs.map(log => {
+        const statusBadge = getStatusBadge(log.status);
+        const recipientSafe = maskEmail(log.recipient_email || 'n/a');
+        const formattedDate = new Date(log.created_at).toLocaleString();
+        const safeError = log.error_message ? escapeHtml(log.error_message) : '<span class="text-muted">None</span>';
+
+        return `
+          <tr>
+            <td><code>#${log.id}</code></td>
+            <td><span class="badge" style="background:#e0f2fe;color:#0369a1;text-transform:uppercase;font-size:0.75rem;">${escapeHtml(log.type)}</span></td>
+            <td>${recipientSafe}</td>
+            <td>${statusBadge}</td>
+            <td><span class="badge" style="background:${log.retry_count > 0 ? '#fef3c7' : '#f1f5f9'};color:${log.retry_count > 0 ? '#92400e' : '#475569'};">${log.retry_count || 0}</span></td>
+            <td class="text-xs text-muted">${formattedDate}</td>
+            <td style="max-width:240px;font-size:0.8rem;word-break:break-word;">
+              ${safeError}
+            </td>
+            <td>
+              ${log.status === 'failed' ? `
+                <button class="btn btn-outline btn-sm" style="color:#0284c7;border-color:#bae6fd;" onclick="retryReminder(${log.id})" id="retry-btn-${log.id}">
+                  🔁 Retry
+                </button>
+              ` : `
+                <span class="text-xs text-muted">-</span>
+              `}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function getStatusBadge(status) {
+      switch (status) {
+        case 'delivered':
+          return '<span class="badge badge-success">✓ Delivered</span>';
+        case 'accepted_by_provider':
+          return '<span class="badge badge-info" style="background:#e0f2fe;color:#0369a1;">Accepted by API</span>';
+        case 'failed':
+          return '<span class="badge badge-danger">Failed</span>';
+        case 'processing':
+          return '<span class="badge badge-warning">Processing</span>';
+        case 'queued':
+          return '<span class="badge" style="background:#f1f5f9;color:#64748b;">Queued</span>';
+        default:
+          return `<span class="badge badge-neutral">${escapeHtml(status)}</span>`;
+      }
+    }
+
+    function maskEmail(email) {
+      if (!email || !email.includes('@')) return email;
+      const [user, domain] = email.split('@');
+      const maskedUser = user.length > 2 ? user[0] + '***' + user[user.length - 1] : user[0] + '***';
+      return `${maskedUser}@${domain}`;
+    }
+
+    async function retryReminder(id) {
+      const btn = document.getElementById(`retry-btn-${id}`);
+      if (btn) btn.disabled = true;
+
+      try {
+        const res = await Api.post(`/api/admin/reminders/${id}/retry`, {});
+        alert(`Retry complete: ${res.message}`);
+        await loadReminders();
+      } catch (err) {
+        alert('Retry attempt failed: ' + err.message);
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text).replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    }
+  </script>
+</body>
+</html>

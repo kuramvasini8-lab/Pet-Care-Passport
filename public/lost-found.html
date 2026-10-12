@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lost & Found Pets - PetCare Passport</title>
+  <meta name="description" content="Community lost and found pet recovery network. Report a lost pet, report a found animal, or submit a sighting.">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/adopter.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container nav-inner">
+      <a href="/index.html" class="brand-logo" id="brand-logo-link">
+        <span class="logo-icon">🐾</span>
+        <span>PetCare<span style="color:var(--primary-600);">Passport</span></span>
+      </a>
+
+      <ul class="nav-links">
+        <li class="nav-item"><a href="/index.html">Home</a></li>
+        <li class="nav-item"><a href="/adopt.html">Adopt a Pet</a></li>
+        <li class="nav-item active"><a href="/lost-found.html">Lost & Found</a></li>
+        <li class="nav-item"><a href="/care-guides.html">Care Guides</a></li>
+      </ul>
+
+      <div class="nav-auth-group" id="nav-auth-container">
+        <!-- Injected via auth.js -->
+      </div>
+    </div>
+  </nav>
+
+  <!-- Banner -->
+  <header style="background:linear-gradient(135deg, #1e293b, #0f172a);color:#ffffff;padding:52px 0;">
+    <div class="container" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;">
+      <div>
+        <span class="badge badge-overdue" style="margin-bottom:12px;">Emergency Recovery Network</span>
+        <h1 style="color:#ffffff;font-size:2.4rem;margin-bottom:8px;">Lost & Found Pet Registry</h1>
+        <p style="color:var(--slate-300);max-width:620px;">
+          Report a missing companion, notify neighbors of a found animal, or submit sightings to help reunite families swiftly.
+        </p>
+      </div>
+      <div style="display:flex;gap:12px;">
+        <button onclick="openReportModal('lost')" class="btn btn-danger btn-lg" id="btn-report-lost">
+          📢 Report a Lost Pet
+        </button>
+        <button onclick="openReportModal('found')" class="btn btn-primary btn-lg" id="btn-report-found">
+          🏡 Report a Found Pet
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Filter Controls -->
+  <main class="container" style="padding-top:36px;padding-bottom:80px;">
+    <div class="card" style="margin-bottom:32px;">
+      <div style="display:grid;grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));gap:16px;">
+        <div>
+          <label class="form-label" for="filter-type">Report Type</label>
+          <select id="filter-type" class="form-control" onchange="loadReports()">
+            <option value="">All Reports (Lost & Found)</option>
+            <option value="lost">Lost Pets Only 🚨</option>
+            <option value="found">Found Pets Only 🐾</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label" for="filter-species">Species</label>
+          <select id="filter-species" class="form-control" onchange="loadReports()">
+            <option value="">All Species</option>
+            <option value="Dog">Dogs</option>
+            <option value="Cat">Cats</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label" for="filter-location">Location / Area</label>
+          <input type="text" id="filter-location" class="form-control" placeholder="Search neighborhood..." oninput="loadReports()">
+        </div>
+        <div>
+          <label class="form-label" for="filter-search">Pet Name or Description</label>
+          <input type="text" id="filter-search" class="form-control" placeholder="Search keywords..." oninput="loadReports()">
+        </div>
+      </div>
+    </div>
+
+    <!-- Reports Grid -->
+    <div class="grid grid-cols-3 gap-6" id="reports-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
+      <div class="text-muted" style="grid-column:1/-1;text-align:center;padding:40px;">
+        Loading community reports from database...
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal: Submit Lost / Found Report -->
+  <div class="modal-backdrop" id="modal-submit-report">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="report-modal-title">Submit Pet Report</h3>
+        <button class="modal-close" onclick="closeModal('modal-submit-report')">&times;</button>
+      </div>
+      <form id="form-submit-report" onsubmit="submitPetReport(event)">
+        <input type="hidden" id="rep-type" value="lost">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="rep-pet-name">Pet Name (if known)</label>
+            <input type="text" id="rep-pet-name" class="form-control" placeholder="e.g. Daisy or Unknown">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div class="form-group">
+              <label class="form-label" for="rep-species">Species *</label>
+              <select id="rep-species" class="form-control" required>
+                <option value="Dog">Dog</option>
+                <option value="Cat">Cat</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="rep-breed">Breed (if known)</label>
+              <input type="text" id="rep-breed" class="form-control" placeholder="e.g. Corgi, Tabby">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="rep-markings">Color & Distinguishing Markings *</label>
+            <input type="text" id="rep-markings" class="form-control" required placeholder="e.g. Red and white, stub tail, white chest star">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div class="form-group">
+              <label class="form-label" for="rep-date">Date Lost or Found *</label>
+              <input type="date" id="rep-date" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="rep-location">General Location / Cross Street *</label>
+              <input type="text" id="rep-location" class="form-control" required placeholder="e.g. Green Lake Park, Seattle">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="rep-desc">Description & Circumstances *</label>
+            <textarea id="rep-desc" class="form-control" required placeholder="Provide helpful details (collar color, personality, direction last headed)..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="rep-photo">Upload Photograph</label>
+            <input type="file" id="rep-photo" class="form-control" accept="image/*">
+          </div>
+          <div style="background:var(--slate-50);padding:14px;border-radius:var(--radius-md);margin-top:10px;">
+            <h4 style="font-size:0.9rem;margin-bottom:10px;">Contact Information</h4>
+            <div class="form-group">
+              <label class="form-label" for="rep-contact-name">Your Name *</label>
+              <input type="text" id="rep-contact-name" class="form-control" required placeholder="e.g. Jennifer Miller">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+              <div class="form-group">
+                <label class="form-label" for="rep-contact-phone">Phone Number</label>
+                <input type="tel" id="rep-contact-phone" class="form-control" placeholder="+1 (555) 000-0000">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="rep-contact-email">Email Address *</label>
+                <input type="email" id="rep-contact-email" class="form-control" required placeholder="jennifer@example.com">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-submit-report')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-report">Publish Report 🐾</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Sighting Submission -->
+  <div class="modal-backdrop" id="modal-sighting">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Submit Pet Sighting Update</h3>
+        <button class="modal-close" onclick="closeModal('modal-sighting')">&times;</button>
+      </div>
+      <form id="form-sighting" onsubmit="submitSighting(event)">
+        <input type="hidden" id="sight-report-id">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="sight-name">Your Name *</label>
+            <input type="text" id="sight-name" class="form-control" required placeholder="e.g. David K.">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="sight-contact">Contact Phone or Email</label>
+            <input type="text" id="sight-contact" class="form-control" placeholder="+1 (555) 777-8899">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="sight-location">Where Did You See This Pet? *</label>
+            <input type="text" id="sight-location" class="form-control" required placeholder="e.g. Near tennis courts by playground">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="sight-notes">Sighting Notes & Direction Headed *</label>
+            <textarea id="sight-notes" class="form-control" required placeholder="Saw pet trotting north toward community center at 2:15 PM..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-sighting')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-sighting">Record Sighting 📍</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    async function loadReports() {
+      const grid = document.getElementById('reports-grid');
+      const type = document.getElementById('filter-type').value;
+      const species = document.getElementById('filter-species').value;
+      const location = document.getElementById('filter-location').value;
+      const search = document.getElementById('filter-search').value;
+
+      const params = new URLSearchParams({
+        ...(type && { type }),
+        ...(species && { species }),
+        ...(location && { location }),
+        ...(search && { search })
+      });
+
+      try {
+        const res = await API.get(`/api/lost-found/public?${params.toString()}`);
+        if (!res.reports || res.reports.length === 0) {
+          grid.innerHTML = `
+            <div class="empty-state" style="grid-column:1/-1;">
+              <div class="empty-icon">🐾</div>
+              <h3>No reports found</h3>
+              <p class="text-muted">No missing or found animals match the selected filters.</p>
+            </div>
+          `;
+          return;
+        }
+
+        grid.innerHTML = res.reports.map(r => `
+          <div class="lf-card" id="lf-card-${r.id}">
+            <div class="${r.status === 'reunited' ? 'lf-banner-reunited' : (r.report_type === 'lost' ? 'lf-banner-lost' : 'lf-banner-found')}">
+              ${r.status === 'reunited' ? '🎉 REUNITED WITH FAMILY' : (r.report_type === 'lost' ? '🚨 MISSING PET' : '🏡 FOUND ANIMAL')}
+            </div>
+            <div style="height:200px;background:var(--slate-100);overflow:hidden;">
+              <img src="${r.photo_url || '/assets/images/default-pet.jpg'}" alt="${r.pet_name || 'Pet'}" style="width:100%;height:100%;object-fit:cover;">
+            </div>
+            <div style="padding:20px;">
+              <h3 style="font-size:1.3rem;margin-bottom:4px;">${r.pet_name || 'Name Unknown'} (${r.species})</h3>
+              <div class="text-muted" style="font-size:0.875rem;margin-bottom:12px;">
+                📍 ${r.general_location} &bull; ${formatDate(r.date_lost_or_found)}
+              </div>
+              <div style="font-size:0.875rem;margin-bottom:8px;">
+                <strong>Markings:</strong> ${r.color_markings}
+              </div>
+              <p style="font-size:0.9rem;color:var(--slate-600);line-height:1.5;margin-bottom:16px;">
+                ${r.description}
+              </p>
+              <div style="border-top:1px solid var(--slate-100);padding-top:14px;display:flex;gap:8px;">
+                <button onclick="openSightingModal(${r.id})" class="btn btn-outline btn-sm" style="flex:1;">
+                  📍 Report Sighting
+                </button>
+                <a href="mailto:${r.contact_email}" class="btn btn-primary btn-sm">
+                  ✉️ Contact
+                </a>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        grid.innerHTML = `<div class="alert-banner alert-danger" style="grid-column:1/-1;">Failed to load reports: ${err.message}</div>`;
+      }
+    }
+
+    function openReportModal(type) {
+      document.getElementById('rep-type').value = type;
+      document.getElementById('report-modal-title').textContent = type === 'lost' ? 'Report a Missing Pet' : 'Report a Found Animal';
+      document.getElementById('rep-date').valueAsDate = new Date();
+      openModal('modal-submit-report');
+    }
+
+    function openSightingModal(reportId) {
+      document.getElementById('sight-report-id').value = reportId;
+      openModal('modal-sighting');
+    }
+
+    async function submitPetReport(e) {
+      e.preventDefault();
+      const fd = new FormData();
+      fd.append('report_type', document.getElementById('rep-type').value);
+      fd.append('pet_name', document.getElementById('rep-pet-name').value);
+      fd.append('species', document.getElementById('rep-species').value);
+      fd.append('breed', document.getElementById('rep-breed').value);
+      fd.append('color_markings', document.getElementById('rep-markings').value);
+      fd.append('date_lost_or_found', document.getElementById('rep-date').value);
+      fd.append('general_location', document.getElementById('rep-location').value);
+      fd.append('description', document.getElementById('rep-desc').value);
+      fd.append('contact_name', document.getElementById('rep-contact-name').value);
+      fd.append('contact_phone', document.getElementById('rep-contact-phone').value);
+      fd.append('contact_email', document.getElementById('rep-contact-email').value);
+
+      const fileInput = document.getElementById('rep-photo');
+      if (fileInput.files[0]) {
+        fd.append('photo', fileInput.files[0]);
+      }
+
+      try {
+        const res = await API.upload('/api/lost-found/submit', fd);
+        closeModal('modal-submit-report');
+        showToast(res.message, 'success');
+        document.getElementById('form-submit-report').reset();
+        loadReports();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function submitSighting(e) {
+      e.preventDefault();
+      const reportId = document.getElementById('sight-report-id').value;
+      const payload = {
+        reporter_name: document.getElementById('sight-name').value,
+        reporter_contact: document.getElementById('sight-contact').value,
+        location: document.getElementById('sight-location').value,
+        notes: document.getElementById('sight-notes').value
+      };
+
+      try {
+        const res = await API.post(`/api/lost-found/public/${reportId}/sighting`, payload);
+        closeModal('modal-sighting');
+        showToast(res.message, 'success');
+        document.getElementById('form-sighting').reset();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      Auth.init();
+      loadReports();
+    });
+  </script>
+</body>
+</html>

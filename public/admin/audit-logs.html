@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Audit Logs - PetCare Passport Admin</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+  <!-- Admin Top Navbar -->
+  <nav class="navbar" style="border-bottom: 2px solid #991b1b;">
+    <div class="container nav-inner">
+      <a href="/admin/dashboard.html" class="brand-logo">
+        <span class="logo-icon" style="background:#991b1b;">🛡️</span>
+        <span>PetCare<span style="color:#991b1b;">Admin</span></span>
+        <span class="brand-badge badge-admin-theme">Platform Oversight</span>
+      </a>
+
+      <div style="display:flex;align-items:center;gap:16px;">
+        <a href="/owner/dashboard.html" class="btn btn-outline btn-sm">🐾 Owner View</a>
+        <a href="/index.html" class="btn btn-outline btn-sm">🌐 Public Site</a>
+        <div class="nav-auth-group" id="nav-auth-container"></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="admin-layout">
+    <!-- Admin Sidebar -->
+    <aside class="admin-sidebar">
+      <div>
+        <div class="admin-brand">
+          <span style="font-size:1.4rem;">⚙️</span>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;">System Console</div>
+            <div class="text-xs" style="color:var(--slate-400);">Role: Authorized Administrator</div>
+          </div>
+        </div>
+
+        <ul class="admin-menu">
+          <li class="admin-menu-item">
+            <a href="/admin/dashboard.html" id="admin-nav-overview"><span class="admin-menu-icon">📊</span> Overview</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/users.html" id="admin-nav-users"><span class="admin-menu-icon">👥</span> User Management</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/moderation.html" id="admin-nav-moderation"><span class="admin-menu-icon">🏡</span> Adoption Moderation</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/lost-found.html" id="admin-nav-lost-found"><span class="admin-menu-icon">🔍</span> Lost & Found Queue</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/reports.html" id="admin-nav-reports"><span class="admin-menu-icon">🚨</span> Reports & Complaints</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/appointments.html" id="admin-nav-appointments"><span class="admin-menu-icon">📅</span> Appointment Oversight</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/clinics.html" id="admin-nav-clinics"><span class="admin-menu-icon">🏥</span> Clinic Directory</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/reminders.html" id="admin-nav-reminders"><span class="admin-menu-icon">📬</span> Reminder Monitoring</a>
+          </li>
+          <li class="admin-menu-item active">
+            <a href="/admin/audit-logs.html" id="admin-nav-audit"><span class="admin-menu-icon">📜</span> System Audit Logs</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/system-health.html" id="admin-nav-health"><span class="admin-menu-icon">⚡</span> System Health</a>
+          </li>
+        </ul>
+      </div>
+
+      <div style="border-top:1px solid var(--slate-800);padding-top:16px;">
+        <ul class="admin-menu">
+          <li class="admin-menu-item">
+            <a href="javascript:void(0)" onclick="Auth.logout()"><span class="admin-menu-icon">🚪</span> Sign Out Admin</a>
+          </li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Admin Content Area -->
+    <main class="admin-main">
+      <div class="admin-header">
+        <div>
+          <h1 style="font-size:2rem;margin-bottom:4px;">Administrative Audit Trail</h1>
+          <p class="text-muted">Immutable ledger of privileged operations, account status modifications, moderation verdicts, and appointment updates.</p>
+        </div>
+        <div>
+          <button class="btn btn-outline" onclick="loadAuditLogs()">🔄 Refresh Log</button>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="card mb-4">
+        <div class="card-body" style="padding:16px;">
+          <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+            <div style="flex:1;min-width:240px;">
+              <input type="text" id="filter-action" class="form-input" placeholder="Search by action type (e.g. MODERATE, SUSPEND)..." oninput="loadAuditLogs()">
+            </div>
+            <div>
+              <select id="filter-entity" class="form-select" onchange="loadAuditLogs()">
+                <option value="">All Entities</option>
+                <option value="users">Users</option>
+                <option value="adoption_listings">Adoption Listings</option>
+                <option value="appointments">Appointments</option>
+                <option value="lost_found_reports">Lost & Found</option>
+                <option value="reports_and_complaints">Complaints</option>
+                <option value="clinics">Clinics</option>
+                <option value="reminders_log">Reminders</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Audit Logs Table -->
+      <div class="card">
+        <div class="table-responsive">
+          <table class="data-table" id="audit-table">
+            <thead>
+              <tr>
+                <th>Log ID</th>
+                <th>Timestamp</th>
+                <th>Administrator</th>
+                <th>Action Type</th>
+                <th>Target Entity</th>
+                <th>Target ID</th>
+                <th>Documented Reason</th>
+                <th>Inspection</th>
+              </tr>
+            </thead>
+            <tbody id="audit-tbody">
+              <tr>
+                <td colspan="8" class="text-center py-4">Loading audit logs...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Detail Inspection Modal -->
+  <div id="audit-modal" class="modal-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center;padding:16px;">
+    <div class="card" style="width:100%;max-width:650px;max-height:85vh;overflow-y:auto;">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <h3>Audit Log Inspection</h3>
+        <button class="btn btn-outline btn-sm" onclick="closeAuditModal()">✕</button>
+      </div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+          <div>
+            <div class="text-xs text-muted">LOG ID</div>
+            <div id="modal-log-id" style="font-weight:600;">-</div>
+          </div>
+          <div>
+            <div class="text-xs text-muted">TIMESTAMP</div>
+            <div id="modal-timestamp" style="font-weight:600;">-</div>
+          </div>
+          <div>
+            <div class="text-xs text-muted">ADMINISTRATOR</div>
+            <div id="modal-admin" style="font-weight:600;">-</div>
+          </div>
+          <div>
+            <div class="text-xs text-muted">IP ADDRESS</div>
+            <div id="modal-ip" style="font-weight:600;">-</div>
+          </div>
+          <div>
+            <div class="text-xs text-muted">ACTION TYPE</div>
+            <div id="modal-action" style="font-weight:600;">-</div>
+          </div>
+          <div>
+            <div class="text-xs text-muted">TARGET ENTITY</div>
+            <div id="modal-target" style="font-weight:600;">-</div>
+          </div>
+        </div>
+
+        <div class="form-group mb-3">
+          <div class="text-xs text-muted mb-1">MANDATORY DOCUMENTED REASON</div>
+          <div id="modal-reason" style="background:var(--slate-50);padding:10px 14px;border-radius:var(--radius-sm);border:1px solid var(--slate-200);font-size:0.9rem;">-</div>
+        </div>
+
+        <div class="form-group">
+          <div class="text-xs text-muted mb-1">AUDIT DELTA / METADATA PAYLOAD (EXCLUDING SECRETS)</div>
+          <pre id="modal-details" style="background:#0f172a;color:#38bdf8;padding:14px;border-radius:var(--radius-sm);font-size:0.8rem;overflow-x:auto;max-height:220px;"></pre>
+        </div>
+      </div>
+      <div class="card-footer" style="display:flex;justify-content:flex-end;">
+        <button class="btn btn-primary" onclick="closeAuditModal()">Close Inspector</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    let currentLogs = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await Auth.requireRole('admin');
+      if (!user) return;
+      loadAuditLogs();
+    });
+
+    async function loadAuditLogs() {
+      const action = document.getElementById('filter-action').value;
+      const entity = document.getElementById('filter-entity').value;
+
+      let queryParams = [];
+      if (action) queryParams.push(`action=${encodeURIComponent(action)}`);
+      if (entity) queryParams.push(`entity=${encodeURIComponent(entity)}`);
+      const url = `/api/admin/audit-logs${queryParams.length ? '?' + queryParams.join('&') : ''}`;
+
+      try {
+        const res = await Api.get(url);
+        currentLogs = res.logs || [];
+        renderAuditLogs(currentLogs);
+      } catch (err) {
+        document.getElementById('audit-tbody').innerHTML = `
+          <tr><td colspan="8" class="text-center text-danger py-4">Error loading audit logs: ${err.message}</td></tr>
+        `;
+      }
+    }
+
+    function renderAuditLogs(logs) {
+      const tbody = document.getElementById('audit-tbody');
+      if (logs.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="8" class="text-center py-4 text-muted">No audit records found matching your filters.</td></tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = logs.map(log => {
+        const dateStr = new Date(log.created_at).toLocaleString();
+        const actionBadge = getActionBadge(log.action_type);
+
+        return `
+          <tr>
+            <td><code>#${log.id}</code></td>
+            <td class="text-xs text-muted">${dateStr}</td>
+            <td><strong>${escapeHtml(log.admin_name || `Admin #${log.admin_id}`)}</strong></td>
+            <td>${actionBadge}</td>
+            <td><code>${escapeHtml(log.target_entity)}</code></td>
+            <td>#${log.target_id || 'n/a'}</td>
+            <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(log.reason || '')}">
+              ${escapeHtml(log.reason || '—')}
+            </td>
+            <td>
+              <button class="btn btn-outline btn-sm" onclick="inspectLog(${log.id})">🔍 Details</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function getActionBadge(action) {
+      if (!action) return '-';
+      if (action.includes('SUSPEND') || action.includes('REJECT') || action.includes('DELETE')) {
+        return `<span class="badge badge-danger">${escapeHtml(action)}</span>`;
+      } else if (action.includes('APPROVE') || action.includes('REACTIVATE')) {
+        return `<span class="badge badge-success">${escapeHtml(action)}</span>`;
+      } else if (action.includes('MODIFY') || action.includes('UPDATE')) {
+        return `<span class="badge badge-warning">${escapeHtml(action)}</span>`;
+      }
+      return `<span class="badge badge-info" style="background:#e0f2fe;color:#0369a1;">${escapeHtml(action)}</span>`;
+    }
+
+    function inspectLog(id) {
+      const log = currentLogs.find(l => l.id === id);
+      if (!log) return;
+
+      document.getElementById('modal-log-id').textContent = `#${log.id}`;
+      document.getElementById('modal-timestamp').textContent = new Date(log.created_at).toLocaleString();
+      document.getElementById('modal-admin').textContent = `${log.admin_name || 'Admin'} (ID: ${log.admin_id})`;
+      document.getElementById('modal-ip').textContent = log.ip_address || 'Internal';
+      document.getElementById('modal-action').textContent = log.action_type;
+      document.getElementById('modal-target').textContent = `${log.target_entity} (ID: ${log.target_id || 'n/a'})`;
+      document.getElementById('modal-reason').textContent = log.reason || 'None specified';
+
+      let detailsParsed = log.details;
+      if (typeof detailsParsed === 'string') {
+        try { detailsParsed = JSON.parse(detailsParsed); } catch (e) {}
+      }
+      document.getElementById('modal-details').textContent = JSON.stringify(detailsParsed, null, 2);
+
+      document.getElementById('audit-modal').style.display = 'flex';
+    }
+
+    function closeAuditModal() {
+      document.getElementById('audit-modal').style.display = 'none';
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text).replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    }
+  </script>
+</body>
+</html>

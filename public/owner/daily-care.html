@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medications & Daily Care - PetCare Passport</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/owner.css">
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <nav class="navbar">
+    <div class="container nav-inner">
+      <a href="/owner/dashboard.html" class="brand-logo">
+        <span class="logo-icon">🐾</span>
+        <span>PetCare<span style="color:var(--primary-600);">Passport</span></span>
+        <span class="brand-badge badge-owner-theme">Owner Portal</span>
+      </a>
+
+      <div style="display:flex;align-items:center;gap:16px;">
+        <a href="/index.html" class="btn btn-outline btn-sm">🌐 Public Site</a>
+        <div class="nav-auth-group" id="nav-auth-container"></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="owner-layout">
+    <aside class="owner-sidebar">
+      <div>
+        <div style="padding:0 12px 16px;font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--slate-400);">Pet Management</div>
+        <ul class="owner-menu">
+          <li class="owner-menu-item"><a href="/owner/dashboard.html"><span class="owner-menu-icon">📊</span> Overview</a></li>
+          <li class="owner-menu-item"><a href="/owner/pets.html"><span class="owner-menu-icon">🐶</span> My Pets</a></li>
+          <li class="owner-menu-item"><a href="/owner/passports.html"><span class="owner-menu-icon">🛂</span> Digital Passports</a></li>
+          <li class="owner-menu-item"><a href="/owner/health.html"><span class="owner-menu-icon">🩺</span> Health Records</a></li>
+          <li class="owner-menu-item"><a href="/owner/vaccinations.html"><span class="owner-menu-icon">💉</span> Vaccinations</a></li>
+          <li class="owner-menu-item active"><a href="/owner/daily-care.html"><span class="owner-menu-icon">💊</span> Daily Care & Tasks</a></li>
+          <li class="owner-menu-item"><a href="/owner/appointments.html"><span class="owner-menu-icon">📅</span> Appointments</a></li>
+          <li class="owner-menu-item"><a href="/owner/rehoming.html"><span class="owner-menu-icon">🏡</span> Adoption & Rehoming</a></li>
+          <li class="owner-menu-item"><a href="/owner/ai-assistant.html"><span class="owner-menu-icon">🤖</span> AI Pet Assistant</a></li>
+        </ul>
+      </div>
+      <div>
+        <div style="padding:16px 12px 8px;font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--slate-400);border-top:1px solid var(--slate-200);">Account</div>
+        <ul class="owner-menu">
+          <li class="owner-menu-item"><a href="/owner/notifications.html"><span class="owner-menu-icon">🔔</span> Notifications</a></li>
+          <li class="owner-menu-item"><a href="/owner/profile.html"><span class="owner-menu-icon">⚙️</span> Settings</a></li>
+          <li class="owner-menu-item"><a href="javascript:void(0)" onclick="Auth.logout()"><span class="owner-menu-icon">🚪</span> Sign Out</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="owner-main">
+      <div class="owner-page-header">
+        <div>
+          <h1 style="font-size:2rem;margin-bottom:4px;">Daily Care & Medication Regimen</h1>
+          <p class="text-muted">Track recurring feedings, walking schedules, coat grooming, and owner-managed supplements.</p>
+        </div>
+
+        <button onclick="openAddTaskModal()" class="btn btn-primary" id="btn-add-care-task">
+          ➕ Add Care Routine
+        </button>
+      </div>
+
+      <div class="alert-banner alert-warning" style="margin-bottom:24px;">
+        ⚠️ <strong>Prescription Disclaimer:</strong> Daily care instructions and dosages recorded here are managed strictly by the pet owner according to their veterinary clinic's advice. PetCare Passport does not prescribe medications or generate unverified dosages.
+      </div>
+
+      <!-- Tasks List Grid -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Active Routine Care Tasks</h2>
+          <span class="text-muted text-sm" id="tasks-status-summary">Loading...</span>
+        </div>
+
+        <div id="care-tasks-list">
+          <div class="text-muted" style="text-align:center;padding:40px;">Loading routines...</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal: Add Care Task -->
+  <div class="modal-backdrop" id="modal-care">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="care-modal-title">Create Care Routine</h3>
+        <button class="modal-close" onclick="closeModal('modal-care')">&times;</button>
+      </div>
+      <form id="care-form" onsubmit="saveCareTask(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="task-pet">Associated Pet *</label>
+            <select id="task-pet" class="form-control" required></select>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div class="form-group">
+              <label class="form-label" for="task-type">Task Type *</label>
+              <select id="task-type" class="form-control" required>
+                <option value="medication">Medication / Supplement 💊</option>
+                <option value="feeding">Feeding Schedule 🥣</option>
+                <option value="grooming">Grooming / Brushing ✂️</option>
+                <option value="walking">Walking / Exercise 🦮</option>
+                <option value="recurring_care">Recurring Preventative Care 🐾</option>
+                <option value="follow_up">Clinical Follow-Up 📋</option>
+                <option value="other">Other Routine Activity 📌</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="task-frequency">Frequency</label>
+              <select id="task-frequency" class="form-control">
+                <option value="daily">Daily</option>
+                <option value="twice_daily">Twice Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="once">One-Time Task</option>
+                <option value="as_needed">As Needed</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="task-title">Task Title *</label>
+            <input type="text" id="task-title" class="form-control" required placeholder="e.g. Omega-3 Fish Oil Capsule or Evening Walk">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="task-dosage">Dosage / Instruction (Owner-Recorded)</label>
+            <input type="text" id="task-dosage" class="form-control" placeholder="e.g. 1 capsule with food (as directed by vet)">
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div class="form-group">
+              <label class="form-label" for="task-time">Scheduled Time</label>
+              <input type="time" id="task-time" class="form-control" value="08:00">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="task-due-date">Due Date</label>
+              <input type="date" id="task-due-date" class="form-control">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="task-desc">Notes / Instructions</label>
+            <textarea id="task-desc" class="form-control" placeholder="Special handling notes, food pairing..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-care')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-task">Save Routine ✓</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    let pets = [];
+
+    async function init() {
+      await Auth.requireAuth('/login.html');
+      try {
+        const res = await API.get('/api/pets');
+        pets = res.pets || [];
+        const select = document.getElementById('task-pet');
+        select.innerHTML = pets.map(p => `<option value="${p.id}">${p.name} (${p.species})</option>`).join('');
+
+        loadCareTasks();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function loadCareTasks() {
+      const container = document.getElementById('care-tasks-list');
+      const summary = document.getElementById('tasks-status-summary');
+
+      try {
+        const res = await API.get('/api/care');
+        const tasks = res.tasks || [];
+        const completed = tasks.filter(t => t.is_completed).length;
+        summary.textContent = `${completed} / ${tasks.length} tasks completed today`;
+
+        if (tasks.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">💊</div>
+              <h3>No daily care routines created</h3>
+              <p class="text-muted">Set up feeding schedules, recurring walking times, or medication reminders.</p>
+              <button onclick="openAddTaskModal()" class="btn btn-primary btn-sm" style="margin-top:12px;">Add First Routine</button>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = tasks.map(t => `
+          <div class="care-task-item ${t.is_completed ? 'completed' : ''}" id="care-task-${t.id}">
+            <div style="display:flex;align-items:center;gap:16px;">
+              <input type="checkbox" ${t.is_completed ? 'checked' : ''} onchange="toggleTaskStatus(${t.id})" style="width:20px;height:20px;cursor:pointer;">
+              <div>
+                <div class="care-task-title" style="font-size:1.05rem;font-weight:700;">
+                  ${t.title}
+                </div>
+                <div class="text-muted text-sm" style="margin-top:2px;">
+                  🐾 <strong>${t.pet_name}</strong> &bull;
+                  <span>🕒 ${t.due_time ? t.due_time.slice(0, 5) : 'Anytime'}</span> &bull;
+                  <span>🔄 ${t.frequency}</span>
+                  ${t.dosage_instruction ? `&bull; <span style="color:var(--slate-800);background:var(--slate-100);padding:1px 6px;border-radius:4px;">${t.dosage_instruction}</span>` : ''}
+                </div>
+                ${t.description ? `<p style="font-size:0.875rem;color:var(--slate-600);margin-top:6px;">${t.description}</p>` : ''}
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="badge ${t.is_completed ? 'badge-delivered' : 'badge-due-soon'}">
+                ${t.is_completed ? 'Done' : 'Pending'}
+              </span>
+              <button onclick="deleteTask(${t.id})" class="btn btn-outline btn-sm" style="color:var(--danger-600);border-color:transparent;" title="Remove Routine">
+                🗑️
+              </button>
+            </div>
+          </div>
+        `).join('');
+
+      } catch (err) {
+        container.innerHTML = `<div class="alert-banner alert-danger">${err.message}</div>`;
+      }
+    }
+
+    function openAddTaskModal() {
+      document.getElementById('care-form').reset();
+      document.getElementById('task-due-date').valueAsDate = new Date();
+      openModal('modal-care');
+    }
+
+    async function toggleTaskStatus(taskId) {
+      try {
+        const res = await API.put(`/api/care/${taskId}/toggle`);
+        showToast(res.message, 'success');
+        loadCareTasks();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function saveCareTask(e) {
+      e.preventDefault();
+      const petId = document.getElementById('task-pet').value;
+      const payload = {
+        task_type: document.getElementById('task-type').value,
+        title: document.getElementById('task-title').value,
+        dosage_instruction: document.getElementById('task-dosage').value,
+        frequency: document.getElementById('task-frequency').value,
+        due_time: document.getElementById('task-time').value,
+        due_date: document.getElementById('task-due-date').value,
+        description: document.getElementById('task-desc').value
+      };
+
+      try {
+        const res = await API.post(`/api/care/${petId}`, payload);
+        closeModal('modal-care');
+        showToast(res.message, 'success');
+        loadCareTasks();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function deleteTask(id) {
+      if (!confirm('Are you sure you want to remove this care task?')) return;
+      try {
+        const res = await API.delete(`/api/care/${id}`);
+        showToast(res.message, 'success');
+        loadCareTasks();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

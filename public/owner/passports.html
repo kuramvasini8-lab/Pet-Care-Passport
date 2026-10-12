@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digital Pet Passports & QR Management - PetCare Passport</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/owner.css">
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <nav class="navbar">
+    <div class="container nav-inner">
+      <a href="/owner/dashboard.html" class="brand-logo">
+        <span class="logo-icon">🐾</span>
+        <span>PetCare<span style="color:var(--primary-600);">Passport</span></span>
+        <span class="brand-badge badge-owner-theme">Owner Portal</span>
+      </a>
+
+      <div style="display:flex;align-items:center;gap:16px;">
+        <a href="/index.html" class="btn btn-outline btn-sm">🌐 Public Site</a>
+        <div class="nav-auth-group" id="nav-auth-container"></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="owner-layout">
+    <aside class="owner-sidebar">
+      <div>
+        <div style="padding:0 12px 16px;font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--slate-400);">Pet Management</div>
+        <ul class="owner-menu">
+          <li class="owner-menu-item"><a href="/owner/dashboard.html"><span class="owner-menu-icon">📊</span> Overview</a></li>
+          <li class="owner-menu-item"><a href="/owner/pets.html"><span class="owner-menu-icon">🐶</span> My Pets</a></li>
+          <li class="owner-menu-item active"><a href="/owner/passports.html"><span class="owner-menu-icon">🛂</span> Digital Passports</a></li>
+          <li class="owner-menu-item"><a href="/owner/health.html"><span class="owner-menu-icon">🩺</span> Health Records</a></li>
+          <li class="owner-menu-item"><a href="/owner/vaccinations.html"><span class="owner-menu-icon">💉</span> Vaccinations</a></li>
+          <li class="owner-menu-item"><a href="/owner/daily-care.html"><span class="owner-menu-icon">💊</span> Daily Care & Tasks</a></li>
+          <li class="owner-menu-item"><a href="/owner/appointments.html"><span class="owner-menu-icon">📅</span> Appointments</a></li>
+          <li class="owner-menu-item"><a href="/owner/rehoming.html"><span class="owner-menu-icon">🏡</span> Adoption & Rehoming</a></li>
+          <li class="owner-menu-item"><a href="/owner/ai-assistant.html"><span class="owner-menu-icon">🤖</span> AI Pet Assistant</a></li>
+        </ul>
+      </div>
+      <div>
+        <div style="padding:16px 12px 8px;font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--slate-400);border-top:1px solid var(--slate-200);">Account</div>
+        <ul class="owner-menu">
+          <li class="owner-menu-item"><a href="/owner/notifications.html"><span class="owner-menu-icon">🔔</span> Notifications</a></li>
+          <li class="owner-menu-item"><a href="/owner/profile.html"><span class="owner-menu-icon">⚙️</span> Settings</a></li>
+          <li class="owner-menu-item"><a href="javascript:void(0)" onclick="Auth.logout()"><span class="owner-menu-icon">🚪</span> Sign Out</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="owner-main">
+      <div class="owner-page-header">
+        <div>
+          <h1 style="font-size:2rem;margin-bottom:4px;">Digital Pet Passports & QR Management</h1>
+          <p class="text-muted">Control public visibility, generate emergency tags, and manage collar QR codes.</p>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;">
+          <label class="form-label" style="margin:0;font-weight:700;">Select Pet:</label>
+          <select id="pet-selector" class="form-control" style="width:200px;" onchange="loadPassportForSelectedPet()"></select>
+        </div>
+      </div>
+
+      <!-- Passport Management Grid -->
+      <div id="passport-editor-area" style="display:grid;grid-template-columns: 320px 1fr;gap:32px;align-items:flex-start;">
+        <div class="text-muted" style="grid-column:1/-1;text-align:center;padding:60px;">Loading passport settings...</div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    let pets = [];
+    let currentPetId = null;
+    let currentPassport = null;
+
+    async function init() {
+      await Auth.requireAuth('/login.html');
+      try {
+        const res = await API.get('/api/pets');
+        pets = res.pets || [];
+
+        const selector = document.getElementById('pet-selector');
+        if (pets.length === 0) {
+          document.getElementById('passport-editor-area').innerHTML = `
+            <div class="empty-state" style="grid-column:1/-1;">
+              <div class="empty-icon">🛂</div>
+              <h3>No pets registered</h3>
+              <p class="text-muted">Register a pet first to generate their smart digital passport.</p>
+              <a href="/owner/pets.html?action=add" class="btn btn-primary btn-sm" style="margin-top:12px;">Register Pet</a>
+            </div>
+          `;
+          return;
+        }
+
+        selector.innerHTML = pets.map(p => `<option value="${p.id}">${p.name} (${p.species})</option>`).join('');
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const paramPetId = urlParams.get('petId');
+        if (paramPetId && pets.some(p => p.id == paramPetId)) {
+          selector.value = paramPetId;
+        }
+
+        loadPassportForSelectedPet();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function loadPassportForSelectedPet() {
+      currentPetId = document.getElementById('pet-selector').value;
+      const area = document.getElementById('passport-editor-area');
+      area.innerHTML = `<div class="text-muted" style="grid-column:1/-1;text-align:center;padding:40px;">Loading passport...</div>`;
+
+      try {
+        const res = await API.get(`/api/passports/${currentPetId}`);
+        currentPassport = res;
+        renderEditor(res);
+      } catch (err) {
+        area.innerHTML = `<div class="alert-banner alert-danger" style="grid-column:1/-1;">${err.message}</div>`;
+      }
+    }
+
+    function renderEditor(data) {
+      const p = data.pet;
+      const pass = data.passport;
+      const area = document.getElementById('passport-editor-area');
+
+      area.innerHTML = `
+        <!-- Left: QR Code Preview & Actions -->
+        <div>
+          <div class="card" style="text-align:center;padding:24px;">
+            <div style="font-weight:700;font-size:1.1rem;margin-bottom:8px;">Live Collar QR Code</div>
+            <p class="text-muted" style="font-size:0.8rem;margin-bottom:16px;">
+              Scan with any phone camera to access ${p.name}'s emergency profile.
+            </p>
+
+            <div style="background:#ffffff;padding:12px;border:2px dashed var(--slate-300);border-radius:var(--radius-lg);margin-bottom:16px;display:inline-block;">
+              <img src="${pass.qr_code_url}" alt="Passport QR" style="width:200px;height:200px;border-radius:var(--radius-sm);" id="qr-preview-img">
+            </div>
+
+            <div style="font-family:monospace;font-size:0.75rem;color:var(--slate-500);margin-bottom:20px;word-break:break-all;">
+              ID: ${p.public_id}
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <a href="${data.public_url}" target="_blank" class="btn btn-primary" id="btn-open-public-pass">
+                🌐 View Public Passport ↗
+              </a>
+              <button onclick="downloadQrImage()" class="btn btn-outline" id="btn-download-qr-img">
+                📥 Download QR (PNG)
+              </button>
+              <button onclick="regenerateQr()" class="btn btn-outline" style="color:var(--warning-600);border-color:#fde68a;" id="btn-regen-qr" title="Invalidates current link if tag was lost">
+                🔄 Revoke & Regenerate QR
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Privacy & Visibility Controls -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Passport Public Visibility Controls</h2>
+            <span class="badge ${pass.is_public_enabled ? 'badge-approved' : 'badge-unknown'}">
+              ${pass.is_public_enabled ? 'Public Access Enabled' : 'Access Disabled (Private)'}
+            </span>
+          </div>
+
+          <p class="text-muted" style="font-size:0.9rem;margin-bottom:24px;line-height:1.5;">
+            You have absolute control over which information is disclosed to someone scanning your pet's collar tag. Private account credentials, internal database IDs, and home addresses are NEVER exposed.
+          </p>
+
+          <form id="privacy-form" onsubmit="savePrivacySettings(event)">
+            <div style="background:var(--slate-50);padding:18px;border-radius:var(--radius-md);margin-bottom:24px;border:1px solid var(--slate-200);">
+              <label class="toggle-label" style="font-weight:700;font-size:1rem;">
+                <input type="checkbox" id="set-public" ${pass.is_public_enabled ? 'checked' : ''}>
+                <span>Enable Public Passport Access via QR Tag</span>
+              </label>
+              <div class="text-muted" style="font-size:0.8rem;margin-left:26px;margin-top:4px;">
+                When disabled, finders who scan the tag will see a private notice instead of profile data.
+              </div>
+            </div>
+
+            <h3 style="font-size:1.1rem;margin-bottom:14px;">Visible Information Toggles</h3>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px;">
+              <label class="toggle-label">
+                <input type="checkbox" id="set-photo" ${pass.show_photo ? 'checked' : ''}>
+                <span>Show Pet Photograph</span>
+              </label>
+
+              <label class="toggle-label">
+                <input type="checkbox" id="set-name" ${pass.show_name ? 'checked' : ''}>
+                <span>Show Pet Name</span>
+              </label>
+
+              <label class="toggle-label">
+                <input type="checkbox" id="set-breed" ${pass.show_breed ? 'checked' : ''}>
+                <span>Show Species & Breed</span>
+              </label>
+
+              <label class="toggle-label">
+                <input type="checkbox" id="set-allergies" ${pass.show_allergies ? 'checked' : ''}>
+                <span>Show Critical Allergies</span>
+              </label>
+
+              <label class="toggle-label">
+                <input type="checkbox" id="set-alerts" ${pass.show_medical_alerts ? 'checked' : ''}>
+                <span>Show Medical Conditions & Care Notes</span>
+              </label>
+
+              <label class="toggle-label">
+                <input type="checkbox" id="set-vaccines" ${pass.show_vaccinations ? 'checked' : ''}>
+                <span>Show Vaccination History</span>
+              </label>
+            </div>
+
+            <div style="border-top:1px solid var(--slate-200);padding-top:20px;margin-top:20px;">
+              <h3 style="font-size:1.1rem;margin-bottom:12px;">🚨 Emergency Contact Information</h3>
+              <label class="toggle-label" style="margin-bottom:16px;">
+                <input type="checkbox" id="set-show-contact" ${pass.show_emergency_contact ? 'checked' : ''} onchange="toggleContactInputs(this)">
+                <span>Display Emergency Contact to Finders</span>
+              </label>
+
+              <div id="contact-fields-wrap" style="display:${pass.show_emergency_contact ? 'block' : 'none'};background:var(--slate-50);padding:16px;border-radius:var(--radius-md);">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                  <div class="form-group">
+                    <label class="form-label" for="set-contact-name">Emergency Contact Name</label>
+                    <input type="text" id="set-contact-name" class="form-control" value="${pass.emergency_contact_name || ''}" placeholder="e.g. Sarah Jenkins">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="set-contact-phone">Emergency Phone Number</label>
+                    <input type="tel" id="set-contact-phone" class="form-control" value="${pass.emergency_contact_phone || ''}" placeholder="+1 (555) 234-5678">
+                  </div>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label class="form-label" for="set-emergency-notes">Instructions for Finder</label>
+                  <textarea id="set-emergency-notes" class="form-control" placeholder="e.g. Please call immediately. Friendly dog who loves treats...">${pass.emergency_notes || ''}</textarea>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:28px;display:flex;justify-content:flex-end;">
+              <button type="submit" class="btn btn-primary" id="btn-save-privacy">
+                💾 Save Privacy Settings
+              </button>
+            </div>
+          </form>
+        </div>
+      `;
+    }
+
+    function toggleContactInputs(cb) {
+      document.getElementById('contact-fields-wrap').style.display = cb.checked ? 'block' : 'none';
+    }
+
+    async function savePrivacySettings(e) {
+      e.preventDefault();
+      const payload = {
+        is_public_enabled: document.getElementById('set-public').checked,
+        show_photo: document.getElementById('set-photo').checked,
+        show_name: document.getElementById('set-name').checked,
+        show_breed: document.getElementById('set-breed').checked,
+        show_allergies: document.getElementById('set-allergies').checked,
+        show_medical_alerts: document.getElementById('set-alerts').checked,
+        show_vaccinations: document.getElementById('set-vaccines').checked,
+        show_emergency_contact: document.getElementById('set-show-contact').checked,
+        emergency_contact_name: document.getElementById('set-contact-name')?.value || null,
+        emergency_contact_phone: document.getElementById('set-contact-phone')?.value || null,
+        emergency_notes: document.getElementById('set-emergency-notes')?.value || null
+      };
+
+      try {
+        const res = await API.put(`/api/passports/${currentPetId}`, payload);
+        showToast(res.message, 'success');
+        loadPassportForSelectedPet();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function regenerateQr() {
+      if (!confirm('Revoking this QR code will invalidate any existing printed collar tags or links. A new cryptographic public ID and QR code will be generated immediately. Continue?')) {
+        return;
+      }
+      try {
+        const res = await API.post(`/api/passports/${currentPetId}/regenerate-qr`);
+        showToast(res.message, 'success');
+        loadPassportForSelectedPet();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    function downloadQrImage() {
+      if (!currentPassport || !currentPassport.passport || !currentPassport.passport.qr_code_url) return;
+      const link = document.createElement('a');
+      link.download = `${currentPassport.pet.name}-passport-qr.png`;
+      link.href = currentPassport.passport.qr_code_url;
+      link.click();
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

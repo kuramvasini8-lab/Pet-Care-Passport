@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Applications & Inquiries - PetCare Passport</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/adopter.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container nav-inner">
+      <a href="/index.html" class="brand-logo" id="brand-logo-link">
+        <span class="logo-icon">🐾</span>
+        <span>PetCare<span style="color:var(--primary-600);">Passport</span></span>
+        <span class="brand-badge badge-visitor-theme">Adopter Portal</span>
+      </a>
+
+      <ul class="nav-links">
+        <li class="nav-item"><a href="/index.html">Home</a></li>
+        <li class="nav-item"><a href="/adopt.html">Adopt a Pet</a></li>
+        <li class="nav-item"><a href="/adopter/favourites.html">Favourites ❤️</a></li>
+        <li class="nav-item active"><a href="/adopter/applications.html">My Applications 📋</a></li>
+        <li class="nav-item"><a href="/lost-found.html">Lost & Found</a></li>
+      </ul>
+
+      <div class="nav-auth-group" id="nav-auth-container"></div>
+    </div>
+  </nav>
+
+  <main class="container" style="padding-top:40px;padding-bottom:80px;">
+    <div style="margin-bottom:28px;">
+      <h1 style="font-size:2.2rem;margin-bottom:4px;">My Adoption Applications & Inquiries</h1>
+      <p class="text-muted">Track real-time review statuses, respond to owner queries, and manage your adoption requests.</p>
+    </div>
+
+    <!-- Formal Adoption Applications Section -->
+    <div class="card" style="margin-bottom:32px;">
+      <div class="card-header">
+        <h2 class="card-title">Formal Applications</h2>
+      </div>
+      <div id="applications-list">
+        <div class="text-muted" style="text-align:center;padding:30px;">Loading your applications...</div>
+      </div>
+    </div>
+
+    <!-- Submitted Enquiries Section -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">General Inquiries Submitted</h2>
+      </div>
+      <div id="enquiries-list">
+        <div class="text-muted" style="text-align:center;padding:30px;">Loading your inquiries...</div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    async function init() {
+      await Auth.requireAuth('/login.html');
+      loadApplications();
+      loadEnquiries();
+    }
+
+    async function loadApplications() {
+      const container = document.getElementById('applications-list');
+      try {
+        const res = await API.get('/api/adoptions/adopter/applications');
+        const apps = res.applications || [];
+
+        if (apps.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">📋</div>
+              <h3>No formal applications submitted</h3>
+              <p class="text-muted">When you apply for a pet on their profile page, you can track their status here.</p>
+              <a href="/adopt.html" class="btn btn-primary btn-sm" style="margin-top:12px;">Browse Pets to Adopt</a>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = apps.map(a => {
+          let badgeClass = 'badge-submitted';
+          if (a.status === 'accepted') badgeClass = 'badge-approved';
+          else if (a.status === 'declined') badgeClass = 'badge-rejected';
+          else if (a.status === 'under_review') badgeClass = 'badge-due-soon';
+          else if (a.status === 'more_info_requested') badgeClass = 'badge-changes-requested';
+
+          return `
+            <div class="card" style="margin-bottom:16px;border:1px solid var(--slate-200);background:var(--slate-50);">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+                <div style="display:flex;gap:16px;align-items:center;">
+                  <img src="${a.pet_photo || '/assets/images/default-pet.jpg'}" alt="${a.pet_name}" style="width:60px;height:60px;border-radius:var(--radius-md);object-fit:cover;">
+                  <div>
+                    <span class="badge ${badgeClass}" style="margin-bottom:4px;">Status: ${a.status.toUpperCase().replace('_', ' ')}</span>
+                    <h3 style="font-size:1.25rem;">Application for ${a.pet_name}</h3>
+                    <div class="text-muted text-xs">
+                      🐾 ${a.species} &bull; Submitted ${formatDateTime(a.created_at)}
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  ${a.status !== 'withdrawn' && a.status !== 'accepted' ? `
+                    <button onclick="withdrawApplication(${a.id})" class="btn btn-outline btn-sm" style="color:var(--danger-600);">
+                      Withdraw Application
+                    </button>
+                  ` : ''}
+                </div>
+              </div>
+
+              <div style="margin-top:14px;font-size:0.9rem;background:#ffffff;padding:14px;border-radius:var(--radius-md);border:1px solid var(--slate-200);">
+                <div><strong>Dwelling:</strong> ${a.household_type} &bull; <strong>Yard:</strong> ${a.has_yard ? 'Yes' : 'No'} &bull; <strong>Other Pets:</strong> ${a.owns_other_pets ? 'Yes' : 'No'}</div>
+                ${a.experience_description ? `<div style="margin-top:6px;"><strong>Your Experience:</strong> ${a.experience_description}</div>` : ''}
+                ${a.status_reason ? `
+                  <div style="margin-top:10px;background:#fef3c7;padding:10px;border-radius:4px;border-left:3px solid #f59e0b;">
+                    <strong>Owner Feedback:</strong> ${a.status_reason}
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+      } catch (err) {
+        container.innerHTML = `<div class="alert-banner alert-danger">${err.message}</div>`;
+      }
+    }
+
+    async function loadEnquiries() {
+      const container = document.getElementById('enquiries-list');
+      try {
+        const res = await API.get('/api/adoptions/adopter/enquiries');
+        const enqs = res.enquiries || [];
+
+        if (enqs.length === 0) {
+          container.innerHTML = `<p class="text-muted" style="text-align:center;padding:20px;">No message inquiries submitted yet.</p>`;
+          return;
+        }
+
+        container.innerHTML = enqs.map(e => `
+          <div style="padding:14px;border-bottom:1px solid var(--slate-100);">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <strong>🐾 Inquired about ${e.pet_name}</strong>
+              <span class="text-muted text-xs">${formatDateTime(e.created_at)}</span>
+            </div>
+            <div style="margin-top:6px;font-size:0.925rem;color:var(--slate-700);background:var(--slate-50);padding:10px;border-radius:4px;">
+              "${e.message}"
+            </div>
+          </div>
+        `).join('');
+
+      } catch (err) {
+        container.innerHTML = `<div class="alert-banner alert-danger">${err.message}</div>`;
+      }
+    }
+
+    async function withdrawApplication(id) {
+      if (!confirm('Are you sure you want to withdraw this adoption application?')) return;
+      try {
+        const res = await API.put(`/api/adoptions/adopter/applications/${id}/withdraw`);
+        showToast(res.message, 'info');
+        loadApplications();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

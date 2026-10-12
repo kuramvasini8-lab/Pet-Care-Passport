@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clinic Directory - PetCare Passport Admin</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+  <!-- Admin Top Navbar -->
+  <nav class="navbar" style="border-bottom: 2px solid #991b1b;">
+    <div class="container nav-inner">
+      <a href="/admin/dashboard.html" class="brand-logo">
+        <span class="logo-icon" style="background:#991b1b;">🛡️</span>
+        <span>PetCare<span style="color:#991b1b;">Admin</span></span>
+        <span class="brand-badge badge-admin-theme">Platform Oversight</span>
+      </a>
+
+      <div style="display:flex;align-items:center;gap:16px;">
+        <a href="/owner/dashboard.html" class="btn btn-outline btn-sm">🐾 Owner View</a>
+        <a href="/index.html" class="btn btn-outline btn-sm">🌐 Public Site</a>
+        <div class="nav-auth-group" id="nav-auth-container"></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="admin-layout">
+    <!-- Admin Sidebar -->
+    <aside class="admin-sidebar">
+      <div>
+        <div class="admin-brand">
+          <span style="font-size:1.4rem;">⚙️</span>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;">System Console</div>
+            <div class="text-xs" style="color:var(--slate-400);">Role: Authorized Administrator</div>
+          </div>
+        </div>
+
+        <ul class="admin-menu">
+          <li class="admin-menu-item">
+            <a href="/admin/dashboard.html" id="admin-nav-overview"><span class="admin-menu-icon">📊</span> Overview</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/users.html" id="admin-nav-users"><span class="admin-menu-icon">👥</span> User Management</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/moderation.html" id="admin-nav-moderation"><span class="admin-menu-icon">🏡</span> Adoption Moderation</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/lost-found.html" id="admin-nav-lost-found"><span class="admin-menu-icon">🔍</span> Lost & Found Queue</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/reports.html" id="admin-nav-reports"><span class="admin-menu-icon">🚨</span> Reports & Complaints</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/appointments.html" id="admin-nav-appointments"><span class="admin-menu-icon">📅</span> Appointment Oversight</a>
+          </li>
+          <li class="admin-menu-item active">
+            <a href="/admin/clinics.html" id="admin-nav-clinics"><span class="admin-menu-icon">🏥</span> Clinic Directory</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/reminders.html" id="admin-nav-reminders"><span class="admin-menu-icon">📬</span> Reminder Monitoring</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/audit-logs.html" id="admin-nav-audit"><span class="admin-menu-icon">📜</span> System Audit Logs</a>
+          </li>
+          <li class="admin-menu-item">
+            <a href="/admin/system-health.html" id="admin-nav-health"><span class="admin-menu-icon">⚡</span> System Health</a>
+          </li>
+        </ul>
+      </div>
+
+      <div style="border-top:1px solid var(--slate-800);padding-top:16px;">
+        <ul class="admin-menu">
+          <li class="admin-menu-item">
+            <a href="javascript:void(0)" onclick="Auth.logout()"><span class="admin-menu-icon">🚪</span> Sign Out Admin</a>
+          </li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Admin Content Area -->
+    <main class="admin-main">
+      <div class="admin-header">
+        <div>
+          <h1 style="font-size:2rem;margin-bottom:4px;">Veterinary Clinic Directory</h1>
+          <p class="text-muted">Manage vetted and community-listed veterinary facilities available for pet care references.</p>
+        </div>
+        <div>
+          <button class="btn btn-primary" onclick="openAddClinicModal()">➕ Add New Clinic</button>
+        </div>
+      </div>
+
+      <!-- Legal & Scope Notice -->
+      <div class="card" style="background:#fffbeb;border-left:4px solid #f59e0b;margin-bottom:24px;">
+        <div class="card-body" style="padding:16px;">
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <span style="font-size:1.4rem;">⚠️</span>
+            <div style="font-size:0.875rem;color:#92400e;">
+              <strong>Verification & Endorsement Policy:</strong> The Verified badge must only be applied after verifying active veterinary licensing and operational status. The directory is an informational reference and must never imply commercial endorsement or guarantee clinic availability.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search & Filters -->
+      <div class="card mb-4">
+        <div class="card-body" style="padding:16px;">
+          <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+            <div style="flex:1;min-width:260px;">
+              <input type="text" id="clinic-search" class="form-input" placeholder="Search by clinic name, city, or service..." oninput="filterClinics()">
+            </div>
+            <div>
+              <select id="clinic-filter-verified" class="form-select" onchange="filterClinics()">
+                <option value="all">All Clinics</option>
+                <option value="verified">Verified Clinics Only</option>
+                <option value="unverified">Community / Unverified Only</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Clinics List -->
+      <div id="clinics-container">
+        <div class="empty-state">
+          <div class="empty-icon">⏳</div>
+          <h3>Loading Clinic Directory...</h3>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add / Edit Clinic Modal -->
+  <div id="clinic-modal" class="modal-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center;padding:16px;">
+    <div class="card" style="width:100%;max-width:600px;max-height:90vh;overflow-y:auto;">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 id="clinic-modal-title">Add Clinic</h3>
+        <button class="btn btn-outline btn-sm" onclick="closeClinicModal()">✕</button>
+      </div>
+      <form id="clinic-form" onsubmit="handleSaveClinic(event)">
+        <div class="card-body">
+          <input type="hidden" id="clinic-id">
+          
+          <div class="form-group mb-3">
+            <label class="form-label">Clinic Name *</label>
+            <input type="text" id="clinic-name" class="form-input" required placeholder="e.g. Metro Animal Health Center">
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" class="mb-3">
+            <div class="form-group">
+              <label class="form-label">Phone Number *</label>
+              <input type="text" id="clinic-phone" class="form-input" required placeholder="(555) 000-0000">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email Address</label>
+              <input type="email" id="clinic-email" class="form-input" placeholder="contact@vetclinic.com">
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;" class="mb-3">
+            <div class="form-group">
+              <label class="form-label">Street Address *</label>
+              <input type="text" id="clinic-address" class="form-input" required placeholder="123 Medical Way">
+            </div>
+            <div class="form-group">
+              <label class="form-label">City / Region *</label>
+              <input type="text" id="clinic-city" class="form-input" required placeholder="Seattle, WA">
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" class="mb-3">
+            <div class="form-group">
+              <label class="form-label">Website URL</label>
+              <input type="url" id="clinic-website" class="form-input" placeholder="https://example.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Operating Hours</label>
+              <input type="text" id="clinic-hours" class="form-input" placeholder="Mon-Fri: 8am-7pm, Sat: 9am-3pm">
+            </div>
+          </div>
+
+          <div class="form-group mb-3">
+            <label class="form-label">Services Offered</label>
+            <input type="text" id="clinic-services" class="form-input" placeholder="General Checkup, Vaccinations, Surgery, 24/7 Emergency, Dental">
+          </div>
+
+          <div class="form-group mb-3" style="display:flex;align-items:center;gap:10px;background:var(--slate-50);padding:12px;border-radius:var(--radius-md);">
+            <input type="checkbox" id="clinic-verified" style="width:18px;height:18px;">
+            <div>
+              <label for="clinic-verified" style="font-weight:600;cursor:pointer;">Verified Clinic Status</label>
+              <div class="text-xs text-muted">Confirm that professional licensing has been validated by an administrator.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-footer" style="display:flex;justify-content:flex-end;gap:12px;">
+          <button type="button" class="btn btn-outline" onclick="closeClinicModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="clinic-save-btn">Save Clinic</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    let allClinics = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = await Auth.requireRole('admin');
+      if (!user) return;
+      loadClinics();
+    });
+
+    async function loadClinics() {
+      try {
+        const res = await Api.get('/api/admin/clinics');
+        allClinics = res.clinics || [];
+        renderClinics(allClinics);
+      } catch (err) {
+        document.getElementById('clinics-container').innerHTML = `
+          <div class="alert alert-danger">Failed to load clinics: ${err.message}</div>
+        `;
+      }
+    }
+
+    function renderClinics(clinics) {
+      const container = document.getElementById('clinics-container');
+      if (clinics.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">🏥</div>
+            <h3>No Clinics Found</h3>
+            <p>No veterinary clinics match your current search criteria.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(340px, 1fr));gap:20px;">
+          ${clinics.map(c => `
+            <div class="card" style="border-top: 4px solid ${c.is_verified ? '#10b981' : '#94a3b8'};display:flex;flex-direction:column;justify-content:space-between;">
+              <div class="card-body">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+                  <h3 style="font-size:1.15rem;margin:0;">${escapeHtml(c.name)}</h3>
+                  ${c.is_verified ? 
+                    `<span class="badge badge-success" title="Licensing verified by admin">✓ Verified</span>` : 
+                    `<span class="badge badge-neutral" style="background:var(--slate-200);color:var(--slate-700);">Unverified</span>`
+                  }
+                </div>
+                
+                <div style="font-size:0.875rem;color:var(--slate-600);margin-bottom:12px;">
+                  📍 ${escapeHtml(c.address)}, ${escapeHtml(c.city)}
+                </div>
+
+                <div style="font-size:0.85rem;display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">
+                  <div><strong>📞 Phone:</strong> <a href="tel:${escapeHtml(c.phone)}" style="color:var(--primary);">${escapeHtml(c.phone)}</a></div>
+                  ${c.email ? `<div><strong>✉️ Email:</strong> <a href="mailto:${escapeHtml(c.email)}" style="color:var(--primary);">${escapeHtml(c.email)}</a></div>` : ''}
+                  ${c.website ? `<div><strong>🌐 Web:</strong> <a href="${escapeHtml(c.website)}" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline;">Visit Website</a></div>` : ''}
+                  ${c.hours ? `<div><strong>🕒 Hours:</strong> ${escapeHtml(c.hours)}</div>` : ''}
+                </div>
+
+                ${c.services ? `
+                  <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--slate-100);">
+                    <div class="text-xs text-muted" style="font-weight:600;margin-bottom:4px;">SERVICES:</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:4px;">
+                      ${c.services.split(',').map(s => `<span class="badge" style="background:#f1f5f9;color:#334155;font-size:0.75rem;">${escapeHtml(s.trim())}</span>`).join('')}
+                    </div>
+                  </div>
+                ` : ''}
+              </div>
+
+              <div class="card-footer" style="display:flex;justify-content:space-between;align-items:center;background:var(--slate-50);padding:10px 16px;">
+                <span class="text-xs text-muted">ID #${c.id}</span>
+                <div style="display:flex;gap:8px;">
+                  <button class="btn btn-outline btn-sm" onclick="openEditClinicModal(${c.id})">✏️ Edit</button>
+                  <button class="btn btn-outline btn-sm" style="color:#ef4444;border-color:#fca5a5;" onclick="deleteClinic(${c.id}, '${escapeHtml(c.name)}')">🗑️ Delete</button>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function filterClinics() {
+      const q = document.getElementById('clinic-search').value.toLowerCase();
+      const verifiedFilter = document.getElementById('clinic-filter-verified').value;
+
+      const filtered = allClinics.filter(c => {
+        const matchesQuery = !q || c.name.toLowerCase().includes(q) || c.city.toLowerCase().includes(q) || (c.services && c.services.toLowerCase().includes(q));
+        const matchesVerified = verifiedFilter === 'all' || 
+          (verifiedFilter === 'verified' && c.is_verified) || 
+          (verifiedFilter === 'unverified' && !c.is_verified);
+        return matchesQuery && matchesVerified;
+      });
+
+      renderClinics(filtered);
+    }
+
+    function openAddClinicModal() {
+      document.getElementById('clinic-form').reset();
+      document.getElementById('clinic-id').value = '';
+      document.getElementById('clinic-modal-title').textContent = 'Add New Veterinary Clinic';
+      document.getElementById('clinic-modal').style.display = 'flex';
+    }
+
+    function openEditClinicModal(id) {
+      const c = allClinics.find(item => item.id === id);
+      if (!c) return;
+
+      document.getElementById('clinic-id').value = c.id;
+      document.getElementById('clinic-name').value = c.name || '';
+      document.getElementById('clinic-phone').value = c.phone || '';
+      document.getElementById('clinic-email').value = c.email || '';
+      document.getElementById('clinic-address').value = c.address || '';
+      document.getElementById('clinic-city').value = c.city || '';
+      document.getElementById('clinic-website').value = c.website || '';
+      document.getElementById('clinic-hours').value = c.hours || '';
+      document.getElementById('clinic-services').value = c.services || '';
+      document.getElementById('clinic-verified').checked = !!c.is_verified;
+
+      document.getElementById('clinic-modal-title').textContent = 'Edit Clinic Information';
+      document.getElementById('clinic-modal').style.display = 'flex';
+    }
+
+    function closeClinicModal() {
+      document.getElementById('clinic-modal').style.display = 'none';
+    }
+
+    async function handleSaveClinic(e) {
+      e.preventDefault();
+      const id = document.getElementById('clinic-id').value;
+      const saveBtn = document.getElementById('clinic-save-btn');
+      saveBtn.disabled = true;
+
+      const payload = {
+        name: document.getElementById('clinic-name').value,
+        phone: document.getElementById('clinic-phone').value,
+        email: document.getElementById('clinic-email').value,
+        address: document.getElementById('clinic-address').value,
+        city: document.getElementById('clinic-city').value,
+        website: document.getElementById('clinic-website').value,
+        hours: document.getElementById('clinic-hours').value,
+        services: document.getElementById('clinic-services').value,
+        is_verified: document.getElementById('clinic-verified').checked
+      };
+
+      try {
+        if (id) {
+          await Api.put(`/api/admin/clinics/${id}`, payload);
+        } else {
+          await Api.post('/api/admin/clinics', payload);
+        }
+        closeClinicModal();
+        await loadClinics();
+      } catch (err) {
+        alert('Error saving clinic: ' + err.message);
+      } finally {
+        saveBtn.disabled = false;
+      }
+    }
+
+    async function deleteClinic(id, name) {
+      if (!confirm(`Are you sure you want to permanently delete "${name}" from the directory? This administrative action is recorded in the audit log.`)) {
+        return;
+      }
+
+      try {
+        await Api.delete(`/api/admin/clinics/${id}`);
+        await loadClinics();
+      } catch (err) {
+        alert('Failed to delete clinic: ' + err.message);
+      }
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text).replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - PetCare Passport</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+</head>
+<body style="background:var(--slate-100);display:flex;flex-direction:column;min-height:100vh;">
+
+  <!-- Simple Header -->
+  <nav class="navbar" style="background:#ffffff;">
+    <div class="container nav-inner">
+      <a href="/index.html" class="brand-logo">
+        <span class="logo-icon">🐾</span>
+        <span>PetCare<span style="color:var(--primary-600);">Passport</span></span>
+      </a>
+      <div>
+        <a href="/register.html" class="btn btn-outline btn-sm">Don't have an account? Register</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container" style="display:flex;align-items:center;justify-content:center;flex:1;padding:40px 16px;">
+    <div class="card" style="max-width:460px;width:100%;box-shadow:var(--shadow-xl);padding:36px;">
+      
+      <div style="text-align:center;margin-bottom:28px;">
+        <span style="font-size:2.5rem;">🔐</span>
+        <h1 style="font-size:1.8rem;margin-top:8px;">Sign In to PetCare Passport</h1>
+        <p class="text-muted" style="font-size:0.9rem;margin-top:4px;">Access your pets, adoption applications, or moderation portal</p>
+      </div>
+
+      <!-- Quick Demo Role Switcher (For Pair Programming / Testing) -->
+      <div style="background:var(--slate-50);border:1px dashed var(--slate-300);border-radius:var(--radius-md);padding:14px;margin-bottom:24px;">
+        <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--slate-500);margin-bottom:8px;">
+          ⚡ Quick Demo Login (One-Click)
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button type="button" onclick="fillCredentials('sarah@example.com', 'Owner123!')" class="btn btn-outline btn-sm" style="flex:1;" id="btn-demo-owner">
+            🐾 Pet Owner
+          </button>
+          <button type="button" onclick="fillCredentials('mark@example.com', 'Adopter123!')" class="btn btn-outline btn-sm" style="flex:1;" id="btn-demo-adopter">
+            🏡 Adopter
+          </button>
+          <button type="button" onclick="fillCredentials('admin@petcarepassport.com', 'AdminPass123!')" class="btn btn-outline btn-sm" style="flex:1;border-color:#fca5a5;color:#991b1b;" id="btn-demo-admin">
+            🛡️ Admin
+          </button>
+        </div>
+      </div>
+
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label class="form-label" for="login-email">Email Address</label>
+          <input type="email" id="login-email" class="form-control" required placeholder="name@example.com">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="login-password">Password</label>
+          <input type="password" id="login-password" class="form-control" required placeholder="Enter password">
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%;height:46px;margin-top:8px;" id="btn-submit-login">
+          Sign In →
+        </button>
+      </form>
+
+      <div style="text-align:center;margin-top:24px;font-size:0.875rem;color:var(--slate-500);">
+        New to PetCare Passport? <a href="/register.html" style="font-weight:600;">Create an account</a>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script>
+    function fillCredentials(email, password) {
+      document.getElementById('login-email').value = email;
+      document.getElementById('login-password').value = password;
+      showToast(`Credentials filled for ${email}`, 'info');
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      const btn = document.getElementById('btn-submit-login');
+
+      btn.disabled = true;
+      btn.textContent = 'Authenticating...';
+
+      try {
+        const res = await API.post('/api/auth/login', { email, password });
+        showToast('Login successful! Welcome back.', 'success');
+
+        // Check if there's a returnUrl in query parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const returnUrl = urlParams.get('returnUrl');
+
+        setTimeout(() => {
+          if (returnUrl) {
+            window.location.href = decodeURIComponent(returnUrl);
+          } else if (res.user.role === 'admin') {
+            window.location.href = '/admin/dashboard.html';
+          } else {
+            window.location.href = '/owner/dashboard.html';
+          }
+        }, 600);
+      } catch (err) {
+        showToast(err.message, 'error');
+        btn.disabled = false;
+        btn.textContent = 'Sign In →';
+      }
+    }
+  </script>
+</body>
+</html>

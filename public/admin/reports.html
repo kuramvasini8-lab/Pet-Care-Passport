@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reports & Complaints - PetCare Passport Admin</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+
+  <!-- Admin Navbar -->
+  <nav class="navbar" style="border-bottom: 2px solid #991b1b;">
+    <div class="container nav-inner">
+      <a href="/admin/dashboard.html" class="brand-logo">
+        <span class="logo-icon" style="background:#991b1b;">🛡️</span>
+        <span>PetCare<span style="color:#991b1b;">Admin</span></span>
+        <span class="brand-badge badge-admin-theme">Platform Oversight</span>
+      </a>
+
+      <div style="display:flex;align-items:center;gap:16px;">
+        <a href="/owner/dashboard.html" class="btn btn-outline btn-sm">🐾 Owner View</a>
+        <div class="nav-auth-group" id="nav-auth-container"></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div>
+        <div class="admin-brand">
+          <span style="font-size:1.4rem;">⚙️</span>
+          <div>
+            <div style="font-weight:700;font-size:0.95rem;">System Console</div>
+            <div class="text-xs" style="color:var(--slate-400);">Role: Administrator</div>
+          </div>
+        </div>
+        <ul class="admin-menu">
+          <li class="admin-menu-item"><a href="/admin/dashboard.html"><span class="admin-menu-icon">📊</span> Overview</a></li>
+          <li class="admin-menu-item"><a href="/admin/users.html"><span class="admin-menu-icon">👥</span> User Management</a></li>
+          <li class="admin-menu-item"><a href="/admin/moderation.html"><span class="admin-menu-icon">🏡</span> Adoption Moderation</a></li>
+          <li class="admin-menu-item"><a href="/admin/lost-found.html"><span class="admin-menu-icon">🔍</span> Lost & Found Queue</a></li>
+          <li class="admin-menu-item active"><a href="/admin/reports.html"><span class="admin-menu-icon">🚨</span> Reports & Complaints</a></li>
+          <li class="admin-menu-item"><a href="/admin/appointments.html"><span class="admin-menu-icon">📅</span> Appointment Oversight</a></li>
+          <li class="admin-menu-item"><a href="/admin/clinics.html"><span class="admin-menu-icon">🏥</span> Clinic Directory</a></li>
+          <li class="admin-menu-item"><a href="/admin/reminders.html"><span class="admin-menu-icon">📬</span> Reminder Monitoring</a></li>
+          <li class="admin-menu-item"><a href="/admin/audit-logs.html"><span class="admin-menu-icon">📜</span> System Audit Logs</a></li>
+          <li class="admin-menu-item"><a href="/admin/system-health.html"><span class="admin-menu-icon">⚡</span> System Health</a></li>
+        </ul>
+      </div>
+      <div style="border-top:1px solid var(--slate-800);padding-top:16px;">
+        <ul class="admin-menu">
+          <li class="admin-menu-item"><a href="javascript:void(0)" onclick="Auth.logout()"><span class="admin-menu-icon">🚪</span> Sign Out</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <div class="admin-header">
+        <div>
+          <h1 style="font-size:2rem;margin-bottom:4px;">Platform Reports & Complaints Queue</h1>
+          <p class="text-muted">Investigate reported listings, scam allegations, and integrity concerns with documented resolutions.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Subject & Details</th>
+                <th>Reporter Email</th>
+                <th>Status</th>
+                <th>Submitted</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="complaints-tbody">
+              <tr><td colspan="6" class="text-muted" style="text-align:center;padding:30px;">Loading reports...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal: Resolve Complaint -->
+  <div class="modal-backdrop" id="modal-resolve">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="resolve-modal-title">Investigate / Resolve Complaint</h3>
+        <button class="modal-close" onclick="closeModal('modal-resolve')">&times;</button>
+      </div>
+      <form id="resolve-form" onsubmit="handleSaveResolution(event)">
+        <input type="hidden" id="res-complaint-id">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label" for="res-status">Updated Status *</label>
+            <select id="res-status" class="form-control" required>
+              <option value="under_review">Under Active Investigation</option>
+              <option value="resolved">Resolved (Action Taken)</option>
+              <option value="dismissed">Dismissed (No Violation Found)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="res-notes">Private Administrator Investigation Notes & Resolution *</label>
+            <textarea id="res-notes" class="form-control" required placeholder="Document actions taken, findings, and internal review conclusions..."></textarea>
+            <div class="form-hint">Private to platform administrators only; not exposed to regular users.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-resolve')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Resolution ✓</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    let complaints = [];
+
+    async function loadComplaints() {
+      await Auth.requireAdmin('/login.html');
+      const tbody = document.getElementById('complaints-tbody');
+
+      try {
+        const res = await API.get('/api/admin/reports');
+        complaints = res.reports || [];
+
+        if (complaints.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="text-muted" style="text-align:center;padding:30px;">No complaints in queue.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = complaints.map(c => `
+          <tr id="comp-row-${c.id}">
+            <td>
+              <span class="badge ${c.category === 'scam_misleading' ? 'badge-rejected' : 'badge-owner-theme'}">
+                ${c.category.replace('_', ' ').toUpperCase()}
+              </span>
+            </td>
+            <td>
+              <div style="font-weight:700;">${c.subject}</div>
+              <div style="font-size:0.875rem;color:var(--slate-600);margin-top:2px;">${c.details}</div>
+              ${c.admin_notes ? `
+                <div style="margin-top:6px;background:var(--slate-100);padding:6px 10px;border-radius:4px;font-size:0.8rem;color:var(--slate-700);">
+                  <strong>Admin Note:</strong> ${c.admin_notes} ${c.resolved_by_name ? `(${c.resolved_by_name})` : ''}
+                </div>
+              ` : ''}
+            </td>
+            <td class="text-sm">${c.reporter_email}</td>
+            <td>
+              <span class="badge ${c.status === 'resolved' ? 'badge-approved' : (c.status === 'open' ? 'badge-rejected' : 'badge-due-soon')}">
+                ${c.status.toUpperCase()}
+              </span>
+            </td>
+            <td class="text-xs">${formatDateTime(c.created_at)}</td>
+            <td>
+              <button onclick="openResolveModal(${c.id})" class="btn btn-primary btn-sm">
+                🔍 Investigate
+              </button>
+            </td>
+          </tr>
+        `).join('');
+
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="alert-banner alert-danger">${err.message}</td></tr>`;
+      }
+    }
+
+    function openResolveModal(id) {
+      const c = complaints.find(item => item.id === id);
+      if (!c) return;
+
+      document.getElementById('res-complaint-id').value = c.id;
+      document.getElementById('res-status').value = c.status === 'open' ? 'under_review' : c.status;
+      document.getElementById('res-notes').value = c.admin_notes || '';
+      openModal('modal-resolve');
+    }
+
+    async function handleSaveResolution(e) {
+      e.preventDefault();
+      const id = document.getElementById('res-complaint-id').value;
+      const status = document.getElementById('res-status').value;
+      const admin_notes = document.getElementById('res-notes').value;
+
+      try {
+        const res = await API.put(`/api/admin/reports/${id}`, { status, admin_notes });
+        closeModal('modal-resolve');
+        showToast(res.message, 'success');
+        loadComplaints();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadComplaints);
+  </script>
+</body>
+</html>
