@@ -1,10 +1,13 @@
 /**
  * PetCare Passport - Full-Stack Express Server
  *
- * Three user experiences:
+ * Features:
  * 1. Pet Owner Dashboard
  * 2. Adopter / Visitor Experience
  * 3. Administrator Dashboard
+ * 4. Aiven MySQL database with SSL
+ * 5. MySQL-backed Express sessions
+ * 6. Render deployment support
  */
 
 const express = require('express');
@@ -16,19 +19,20 @@ const path = require('path');
 const fs = require('fs');
 const cors = require('cors');
 
+// ==========================================
+// ENVIRONMENT CONFIGURATION
+// ==========================================
+
 require('dotenv').config({
     path: path.join(__dirname, '.env')
 });
-
-// ==========================================
-// ENVIRONMENT VALIDATION
-// ==========================================
 
 const requiredEnvironmentVariables = [
     'MYSQL_HOST',
     'MYSQL_USER',
     'MYSQL_PASSWORD',
-    'SESSION_SECRET'
+    'SESSION_SECRET',
+    'MYSQL_SSL_CA'
 ];
 
 for (const variable of requiredEnvironmentVariables) {
@@ -39,25 +43,22 @@ for (const variable of requiredEnvironmentVariables) {
     }
 }
 
-const PORT = parseInt(process.env.PORT || '3000', 10);
+const PORT = Number.parseInt(process.env.PORT || '3000', 10);
 
 if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
     throw new Error('PORT must be a valid port number.');
 }
 
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
 // ==========================================
 // AIVEN MYSQL SSL CONFIGURATION
 // ==========================================
 
-const caPath = process.env.MYSQL_SSL_CA
-    ? path.resolve(__dirname, process.env.MYSQL_SSL_CA)
-    : null;
-
-if (!caPath) {
-    throw new Error(
-        'MYSQL_SSL_CA is missing from the environment configuration.'
-    );
-}
+const caPath = path.resolve(
+    __dirname,
+    process.env.MYSQL_SSL_CA
+);
 
 if (!fs.existsSync(caPath)) {
     throw new Error(
@@ -74,7 +75,10 @@ const sessionSsl = {
 // DATABASE AND SERVICE IMPORTS
 // ==========================================
 
-const { pool, checkDbHealth } = require('./src/config/db');
+const {
+    pool,
+    checkDbHealth
+} = require('./src/config/db');
 
 const {
     processSystemReminders
@@ -105,6 +109,12 @@ const app = express();
 
 app.disable('x-powered-by');
 
+// Render terminates HTTPS at its reverse proxy.
+// Trust the Render proxy so Express can recognize HTTPS requests.
+if (IS_PRODUCTION) {
+    app.set('trust proxy', 1);
+}
+
 // ==========================================
 // SECURITY MIDDLEWARE
 // ==========================================
@@ -118,11 +128,9 @@ app.use(
     })
 );
 
-// Configure CORS.
-//
-// For production, set ALLOWED_ORIGINS to a comma-separated list
-// of trusted frontend origins. If omitted, the application uses
-// same-origin access rather than allowing arbitrary origins.
+// ==========================================
+// CORS CONFIGURATION
+// ==========================================
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS
@@ -150,6 +158,10 @@ app.use(
     })
 );
 
+// ==========================================
+// REQUEST PARSING
+// ==========================================
+
 app.use(
     express.json({
         limit: '15mb'
@@ -174,7 +186,7 @@ const authLimiter = rateLimit({
     legacyHeaders: false,
     message: {
         success: false,
-        error: 'Too many requests from this IP. Please try again later.'
+        error: 'Too many requests. Please try again later.'
     }
 });
 
@@ -189,7 +201,10 @@ app.use('/api/auth/reset-password', authLimiter);
 
 const sessionStoreOptions = {
     host: process.env.MYSQL_HOST,
-    port: parseInt(process.env.MYSQL_PORT || '3306', 10),
+    port: Number.parseInt(
+        process.env.MYSQL_PORT || '3306',
+        10
+    ),
     user: process.env.MYSQL_USER,
     password: process.env.MYSQL_PASSWORD,
     database: process.env.MYSQL_DATABASE || 'defaultdb',
@@ -211,18 +226,27 @@ sessionStore.on('error', error => {
     );
 });
 
+// ==========================================
+// EXPRESS SESSION MIDDLEWARE
+// ==========================================
+
 app.use(
     session({
-        key: 'petcare_session_id',
+        name: 'petcare_session_id',
         secret: process.env.SESSION_SECRET,
         store: sessionStore,
         resave: false,
         saveUninitialized: false,
+
+        // Trust Express's proxy-aware HTTPS detection in production.
+        proxy: IS_PRODUCTION,
+
         cookie: {
             maxAge: 24 * 60 * 60 * 1000,
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax'
+            secure: IS_PRODUCTION,
+            sameSite: 'lax',
+            path: '/'
         }
     })
 );
@@ -244,7 +268,10 @@ app.use(
     )
 );
 
-// Public passport viewing route.
+// ==========================================
+// PUBLIC PASSPORT VIEW
+// ==========================================
+
 app.get('/passport-view', (req, res) => {
     res.sendFile(
         path.join(
@@ -276,18 +303,21 @@ app.use('/api/reports', reportRoutes);
 // HEALTH CHECK
 // ==========================================
 
-app.get('/api/health-check', async (req, res) => {
-    const dbHealth = await checkDbHealth();
+app.get('/api/health-check', async (req, res, next) => {
+    try {
+        const dbHealth = await checkDbHealth();
+        const healthy = dbHealth.connected === true;
 
-    const healthy = dbHealth.connected === true;
-
-    res.status(healthy ? 200 : 503).json({
-        success: healthy,
-        status: healthy ? 'online' : 'degraded',
-        appName: 'PetCare Passport',
-        database: dbHealth,
-        timestamp: new Date().toISOString()
-    });
+        res.status(healthy ? 200 : 503).json({
+            success: healthy,
+            status: healthy ? 'online' : 'degraded',
+            appName: 'PetCare Passport',
+            database: dbHealth,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        next(error);
+    }
 });
 
 // ==========================================
@@ -319,7 +349,7 @@ app.use((err, req, res, next) => {
 
     res.status(statusCode).json({
         success: false,
-        error: process.env.NODE_ENV === 'production'
+        error: IS_PRODUCTION
             ? 'An error occurred while processing the request.'
             : err.message
     });
@@ -334,7 +364,6 @@ let reminderInterval;
 
 async function startServer() {
     try {
-        // Verify database connectivity before accepting requests.
         const dbHealth = await checkDbHealth();
 
         if (!dbHealth.connected) {
@@ -356,7 +385,6 @@ async function startServer() {
             console.log('================================================');
         });
 
-        // Avoid crashing the application if reminders fail.
         try {
             const result = await processSystemReminders();
 
@@ -372,7 +400,6 @@ async function startServer() {
             );
         }
 
-        // Run the reminder service every 30 minutes.
         reminderInterval = setInterval(async () => {
             try {
                 await processSystemReminders();
@@ -387,7 +414,6 @@ async function startServer() {
         if (typeof reminderInterval.unref === 'function') {
             reminderInterval.unref();
         }
-
     } catch (error) {
         console.error(
             '[Startup Error]',
@@ -396,6 +422,7 @@ async function startServer() {
 
         if (server) {
             server.close();
+            server = null;
         }
 
         process.exitCode = 1;
@@ -406,7 +433,15 @@ async function startServer() {
 // GRACEFUL SHUTDOWN
 // ==========================================
 
+let shuttingDown = false;
+
 async function shutdown(signal) {
+    if (shuttingDown) {
+        return;
+    }
+
+    shuttingDown = true;
+
     console.log(`[Shutdown] Received ${signal}.`);
 
     if (reminderInterval) {
@@ -414,7 +449,9 @@ async function shutdown(signal) {
     }
 
     if (server) {
-        server.close();
+        await new Promise(resolve => {
+            server.close(resolve);
+        });
     }
 
     try {
@@ -434,8 +471,6 @@ async function shutdown(signal) {
             error.message
         );
     }
-
-    process.exit(0);
 }
 
 process.on('SIGTERM', () => {
