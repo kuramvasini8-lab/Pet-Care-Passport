@@ -31,6 +31,21 @@ router.get('/', requireAuth, async (req, res) => {
   }
 });
 
+// Get unread notification count
+router.get('/unread-count', requireAuth, async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    const [unreadCount] = await query(
+      'SELECT COUNT(*) as count FROM notifications WHERE user_id = ? AND is_read = false',
+      [userId]
+    );
+    res.json({ success: true, count: unreadCount[0].count });
+  } catch (error) {
+    console.error('[NotificationRoutes] Count error:', error);
+    res.status(500).json({ success: false, error: 'Failed to count notifications.' });
+  }
+});
+
 // Mark single notification as read
 router.put('/:id/read', requireAuth, async (req, res) => {
   try {

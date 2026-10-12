@@ -65,7 +65,7 @@
 .admin-main {
   flex: 1;
   padding: 32px;
-  background: #f8fafc;
+  background: var(--cream-100);
   max-width: calc(100vw - var(--sidebar-width));
 }
 
@@ -82,7 +82,7 @@
 .moderation-card {
   background: #ffffff;
   border-radius: var(--radius-xl);
-  border: 1px solid var(--slate-200);
+  border: 1px solid var(--cream-300);
   box-shadow: var(--shadow-sm);
   padding: 24px;
   margin-bottom: 24px;

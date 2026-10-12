@@ -160,7 +160,13 @@
           <div class="adoption-card" id="adoption-card-${l.id}">
             <div class="adoption-image-wrap">
               <img src="${l.photo_url || '/assets/images/default-pet.jpg'}" alt="${l.pet_name}" class="adoption-image">
-              <span class="pet-card-badge badge badge-approved">Approved & Active</span>
+              ${l.is_verified ? `
+                <span class="pet-card-badge badge-verified-adoption" style="position:absolute;top:10px;left:10px;z-index:2;">
+                  🛡️ Verified
+                </span>
+              ` : `
+                <span class="pet-card-badge badge badge-approved">Approved</span>
+              `}
               <button onclick="toggleFavourite(${l.id}, this)" class="fav-btn" title="Save to Favourites" id="fav-btn-${l.id}">
                 ♡
               </button>

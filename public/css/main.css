@@ -4,28 +4,36 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
-  /* Color Palette */
-  --primary-50: #f0fdfa;
-  --primary-100: #ccfbf1;
-  --primary-200: #99f6e4;
-  --primary-300: #5eead4;
-  --primary-400: #2dd4bf;
-  --primary-500: #14b8a6;
-  --primary-600: #0d9488;
-  --primary-700: #0f766e;
-  --primary-800: #115e59;
-  --primary-900: #134e4a;
+  /* Golden Fur & Honey Amber Palette */
+  --primary-50: #fffdf7;
+  --primary-100: #fef8e7;
+  --primary-200: #faeac0;
+  --primary-300: #f5da95;
+  --primary-400: #eebf5b;  /* Soft golden retriever coat */
+  --primary-500: #d99b26;  /* Warm golden fur */
+  --primary-600: #b87b14;  /* Rich honey caramel fur */
+  --primary-700: #935d0e;  /* Deep chestnut amber */
+  --primary-800: #764910;  /* Roasted golden amber */
+  --primary-900: #4a2d08;  /* Warm dark fur bark */
 
-  --accent-50: #eff6ff;
-  --accent-500: #3b82f6;
-  --accent-600: #2563eb;
-  --accent-700: #1d4ed8;
+  /* Natural Cream Tones (Cozy, Warm, Organic) */
+  --cream-50: #fffefb;     /* Pure warm milk cream */
+  --cream-100: #faf6ee;    /* Natural ivory cream (Primary Page Background) */
+  --cream-200: #f4ecdc;    /* Soft oatmeal cream */
+  --cream-300: #ebe0ca;    /* Linen cream borders */
+  --cream-400: #dcceb3;    /* Warm beige cream border */
+  --cream-500: #c5b394;    /* Subtle warm stone */
 
-  --success-50: #f0fdf4;
-  --success-500: #22c55e;
-  --success-600: #16a34a;
+  --accent-50: #fffdf5;
+  --accent-500: #d99b26;
+  --accent-600: #b87b14;
+  --accent-700: #935d0e;
 
-  --warning-50: #fffbeb;
+  --success-50: #f4fbf7;
+  --success-500: #10b981;
+  --success-600: #059669;
+
+  --warning-50: #fef9eb;
   --warning-500: #f59e0b;
   --warning-600: #d97706;
 
@@ -36,28 +44,28 @@
   --purple-500: #8b5cf6;
   --purple-600: #7c3aed;
 
-  /* Neutrals */
-  --slate-50: #f8fafc;
-  --slate-100: #f1f5f9;
-  --slate-200: #e2e8f0;
-  --slate-300: #cbd5e1;
-  --slate-400: #94a3b8;
-  --slate-500: #64748b;
-  --slate-600: #475569;
-  --slate-700: #334155;
-  --slate-800: #1e293b;
-  --slate-900: #0f172a;
+  /* Warm Organic Slate / Charcoal Stone */
+  --slate-50: #faf6ee;
+  --slate-100: #f4ecdc;
+  --slate-200: #ebe0ca;
+  --slate-300: #dcceb3;
+  --slate-400: #a3937d;
+  --slate-500: #756754;
+  --slate-600: #574b3d;
+  --slate-700: #3f362c;
+  --slate-800: #2b251e;
+  --slate-900: #1c1712;
 
   /* Typography */
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-heading: 'Outfit', 'Plus Jakarta Sans', sans-serif;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.04);
-  --shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
-  --shadow-glow: 0 0 20px rgba(13, 148, 136, 0.25);
+  /* Shadows with Warm Golden Glow */
+  --shadow-sm: 0 1px 3px 0 rgba(74, 45, 8, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(74, 45, 8, 0.07), 0 2px 4px -2px rgba(74, 45, 8, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(74, 45, 8, 0.08), 0 4px 6px -4px rgba(74, 45, 8, 0.04);
+  --shadow-xl: 0 20px 25px -5px rgba(74, 45, 8, 0.1), 0 8px 10px -6px rgba(74, 45, 8, 0.05);
+  --shadow-glow: 0 0 20px rgba(217, 155, 38, 0.28);
 
   /* Borders & Radius */
   --radius-sm: 6px;
@@ -82,7 +90,7 @@
 body {
   font-family: var(--font-sans);
   color: var(--slate-800);
-  background-color: var(--slate-50);
+  background-color: var(--cream-100);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;

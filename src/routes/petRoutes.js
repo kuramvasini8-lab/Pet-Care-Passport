@@ -300,4 +300,119 @@ router.get('/:id/timeline', requireAuth, async (req, res) => {
   }
 });
 
+// 7. Report Pet Missing (Generates Community Alert & Publishes to Lost & Found)
+router.post('/:id/report-missing', requireAuth, async (req, res) => {
+  try {
+    const petId = req.params.id;
+    const userId = req.session.user.id;
+    const { date_lost, general_location, description, contact_phone, contact_name } = req.body;
+
+    // Verify ownership
+    const [pets] = await query('SELECT * FROM pets WHERE id = ? AND user_id = ?', [petId, userId]);
+    if (pets.length === 0) {
+      return res.status(404).json({ success: false, error: 'Pet not found or unauthorized.' });
+    }
+
+    const pet = pets[0];
+    const lostDate = date_lost || new Date().toISOString().split('T')[0];
+    const loc = general_location ? general_location.trim() : 'Location not specified';
+    const desc = description ? description.trim() : `Companion ${pet.name} is missing. Please contact owner if spotted.`;
+    const phone = contact_phone ? contact_phone.trim() : (req.session.user.phone || 'Contact via message');
+    const name = contact_name ? contact_name.trim() : req.session.user.full_name;
+
+    const email = req.session.user.email || 'owner@example.com';
+    const colorMarks = pet.color_marks || 'Distinctive markings';
+
+    // 1. Mark pet as missing
+    await query(
+      'UPDATE pets SET is_missing = true, missing_since = ?, missing_notes = ? WHERE id = ?',
+      [lostDate, desc, petId]
+    );
+
+    // 2. Automatically publish to lost_found_reports
+    const [result] = await query(
+      `INSERT INTO lost_found_reports (
+        user_id, report_type, pet_name, species, breed, color_markings,
+        date_lost_or_found, general_location, description, contact_name, contact_phone, contact_email, photo_url, status
+      ) VALUES (?, 'lost', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published')`,
+      [
+        userId,
+        pet.name,
+        pet.species,
+        pet.breed || null,
+        colorMarks,
+        lostDate,
+        loc,
+        desc,
+        name,
+        phone,
+        email,
+        pet.photo_url || null
+      ]
+    );
+
+    // 3. In-app notification
+    await query(
+      `INSERT INTO notifications (user_id, title, message, type, link)
+       VALUES (?, ?, ?, 'system', '/lost-found.html')`,
+      [
+        userId,
+        `🚨 Active Missing Pet Alert: ${pet.name}`,
+        `Your missing pet alert for ${pet.name} has been published to the community Lost & Found registry.`
+      ]
+    );
+
+    res.json({
+      success: true,
+      message: `🚨 ${pet.name} has been reported as missing. A community alert has been published to Lost & Found!`,
+      report_id: result.insertId
+    });
+  } catch (error) {
+    console.error('[PetRoutes] Report missing error:', error);
+    res.status(500).json({ success: false, error: 'Failed to report pet as missing.' });
+  }
+});
+
+// 8. Mark Pet Found / Reunited
+router.post('/:id/mark-found', requireAuth, async (req, res) => {
+  try {
+    const petId = req.params.id;
+    const userId = req.session.user.id;
+
+    const [pets] = await query('SELECT * FROM pets WHERE id = ? AND user_id = ?', [petId, userId]);
+    if (pets.length === 0) {
+      return res.status(404).json({ success: false, error: 'Pet not found or unauthorized.' });
+    }
+
+    const pet = pets[0];
+
+    // Mark pet as not missing
+    await query('UPDATE pets SET is_missing = false, missing_since = NULL, missing_notes = NULL WHERE id = ?', [petId]);
+
+    // Update any published lost report for this pet to reunited
+    await query(
+      `UPDATE lost_found_reports SET status = 'reunited' WHERE user_id = ? AND pet_name = ? AND report_type = 'lost' AND status = 'published'`,
+      [userId, pet.name]
+    );
+
+    await query(
+      `INSERT INTO notifications (user_id, title, message, type, link)
+       VALUES (?, ?, ?, 'system', '/owner/pets.html')`,
+      [
+        userId,
+        `🎉 ${pet.name} Marked as Reunited!`,
+        `Wonderful news! ${pet.name} has been marked as found and reunited safely.`
+      ]
+    );
+
+    res.json({
+      success: true,
+      message: `🎉 Great news! ${pet.name} has been marked as safely reunited.`
+    });
+  } catch (error) {
+    console.error('[PetRoutes] Mark found error:', error);
+    res.status(500).json({ success: false, error: 'Failed to mark pet as found.' });
+  }
+});
+
 module.exports = router;

@@ -75,7 +75,11 @@
         </div>
         <ul class="owner-menu">
           <li class="owner-menu-item">
-            <a href="/owner/notifications.html" id="side-notifications"><span class="owner-menu-icon">🔔</span> Notifications</a>
+            <a href="/owner/notifications.html" id="side-notifications" style="display:flex;align-items:center;">
+              <span class="owner-menu-icon">🔔</span> 
+              <span>Notifications</span>
+              <span id="sidebar-notif-count" class="notif-badge-pill" style="display:none;margin-left:auto;">0</span>
+            </a>
           </li>
           <li class="owner-menu-item">
             <a href="/owner/profile.html" id="side-profile"><span class="owner-menu-icon">⚙️</span> Profile & Settings</a>
@@ -99,6 +103,9 @@
         <div class="quick-actions-bar">
           <a href="/owner/pets.html?action=add" class="btn btn-primary" id="btn-quick-add-pet">
             ➕ Add Pet
+          </a>
+          <a href="/owner/pets.html" class="btn btn-danger-missing" id="btn-quick-missing" title="Report a missing companion">
+            🚨 Report Missing Pet
           </a>
           <a href="/owner/vaccinations.html?action=add" class="btn btn-outline" id="btn-quick-vaccine">
             💉 Record Vaccination

@@ -329,6 +329,207 @@ router.put('/moderation/listings/:id', async (req, res) => {
   }
 });
 
+// Official Pet Adoption Health & Identity Verification (Admin Portal)
+router.put('/moderation/listings/:id/verify', async (req, res) => {
+  try {
+    const listingId = req.params.id;
+    const { verification_notes, checklist } = req.body;
+    const adminUser = req.session.user;
+
+    const [existing] = await query(
+      `SELECT l.*, p.name as pet_name, p.microchip_number, u.id as owner_id, u.email as owner_email
+       FROM adoption_listings l
+       JOIN pets p ON l.pet_id = p.id
+       JOIN users u ON l.user_id = u.id
+       WHERE l.id = ?`,
+      [listingId]
+    );
+
+    if (existing.length === 0) {
+      return res.status(404).json({ success: false, error: 'Adoption listing not found.' });
+    }
+
+    const listing = existing[0];
+    const notes = verification_notes ? verification_notes.trim() : 'Official identity, health records, and owner verification completed.';
+
+    await query(
+      `UPDATE adoption_listings SET
+        is_verified = true,
+        verified_by = ?,
+        verified_at = NOW(),
+        verification_notes = ?
+       WHERE id = ?`,
+      [adminUser.id, notes, listingId]
+    );
+
+    // Audit log
+    await logAdminAction({
+      adminId: adminUser.id,
+      adminName: adminUser.full_name,
+      actionType: 'VERIFY_PET_ADOPTION',
+      targetEntity: 'adoption_listings',
+      targetId: listingId,
+      reason: notes,
+      details: {
+        petName: listing.pet_name,
+        checklist: checklist || ['identity_verified', 'vaccinations_verified', 'sterilization_verified'],
+        verifiedAt: new Date().toISOString()
+      },
+      ipAddress: req.ip
+    });
+
+    // Notify pet owner in-app
+    await query(
+      `INSERT INTO notifications (user_id, title, message, type, link)
+       VALUES (?, ?, ?, 'moderation', '/owner/rehoming.html')`,
+      [
+        listing.owner_id,
+        `Adoption Verified: ${listing.pet_name}`,
+        `Congratulations! Your adoption listing for ${listing.pet_name} has received the official Platform Verified badge.`
+      ]
+    );
+
+    res.json({
+      success: true,
+      message: `Pet adoption listing for ${listing.pet_name} is now officially verified by Platform Administration.`,
+      is_verified: true
+    });
+  } catch (error) {
+    console.error('[AdminRoutes] Adoption verification error:', error);
+    res.status(500).json({ success: false, error: 'Failed to verify pet adoption listing.' });
+  }
+});
+
+// Revoke Adoption Verification
+router.put('/moderation/listings/:id/unverify', async (req, res) => {
+  try {
+    const listingId = req.params.id;
+    const { reason } = req.body;
+    const adminUser = req.session.user;
+
+    await query(
+      `UPDATE adoption_listings SET
+        is_verified = false,
+        verification_notes = ?
+       WHERE id = ?`,
+      [reason || 'Verification revoked by administrator.', listingId]
+    );
+
+    await logAdminAction({
+      adminId: adminUser.id,
+      adminName: adminUser.full_name,
+      actionType: 'UNVERIFY_PET_ADOPTION',
+      targetEntity: 'adoption_listings',
+      targetId: listingId,
+      reason: reason || 'Verification status revoked',
+      details: null,
+      ipAddress: req.ip
+    });
+
+    res.json({ success: true, message: 'Verification status revoked.' });
+  } catch (error) {
+    console.error('[AdminRoutes] Unverify error:', error);
+    res.status(500).json({ success: false, error: 'Failed to revoke verification.' });
+  }
+});
+
+// Adoption Applications Oversight (Platform-Wide)
+router.get('/moderation/applications', async (req, res) => {
+  try {
+    const { status } = req.query;
+
+    let sql = `
+      SELECT app.*, l.title as listing_title, p.name as pet_name, p.photo_url as pet_photo,
+             owner.full_name as owner_name, owner.email as owner_email,
+             applicant.full_name as applicant_name, applicant.email as applicant_email, applicant.phone as applicant_phone
+      FROM adoption_applications app
+      JOIN adoption_listings l ON app.listing_id = l.id
+      JOIN pets p ON l.pet_id = p.id
+      JOIN users owner ON l.user_id = owner.id
+      JOIN users applicant ON app.applicant_id = applicant.id
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (status && status.trim() !== '') {
+      sql += ' AND app.status = ?';
+      params.push(status.trim());
+    }
+
+    sql += ' ORDER BY app.created_at DESC';
+
+    const [applications] = await query(sql, params);
+
+    res.json({ success: true, applications });
+  } catch (error) {
+    console.error('[AdminRoutes] List applications error:', error);
+    res.status(500).json({ success: false, error: 'Failed to retrieve adoption applications.' });
+  }
+});
+
+// Adjudicate / Update Adoption Application Status (Admin)
+router.put('/moderation/applications/:id', async (req, res) => {
+  try {
+    const appId = req.params.id;
+    const { status, status_reason } = req.body;
+    const adminUser = req.session.user;
+
+    const validStatuses = ['submitted', 'under_review', 'more_info_requested', 'accepted', 'declined'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ success: false, error: 'Invalid application status.' });
+    }
+
+    const [existing] = await query(
+      `SELECT app.*, p.name as pet_name, app.applicant_id, applicant.email as applicant_email
+       FROM adoption_applications app
+       JOIN adoption_listings l ON app.listing_id = l.id
+       JOIN pets p ON l.pet_id = p.id
+       JOIN users applicant ON app.applicant_id = applicant.id
+       WHERE app.id = ?`,
+      [appId]
+    );
+
+    if (existing.length === 0) {
+      return res.status(404).json({ success: false, error: 'Application not found.' });
+    }
+
+    const application = existing[0];
+
+    await query(
+      `UPDATE adoption_applications SET status = ?, status_reason = ? WHERE id = ?`,
+      [status, status_reason ? status_reason.trim() : null, appId]
+    );
+
+    // Notify applicant
+    await query(
+      `INSERT INTO notifications (user_id, title, message, type, link)
+       VALUES (?, ?, ?, 'application', '/adopter/applications.html')`,
+      [
+        application.applicant_id,
+        `Adoption Application Update: ${application.pet_name}`,
+        `Your application for ${application.pet_name} status is now: ${status.replace('_', ' ').toUpperCase()}.${status_reason ? ' Notes: ' + status_reason.trim() : ''}`
+      ]
+    );
+
+    // Audit log
+    await logAdminAction({
+      adminId: adminUser.id,
+      adminName: adminUser.full_name,
+      actionType: 'MODERATE_ADOPTION_APPLICATION',
+      targetEntity: 'adoption_applications',
+      targetId: appId,
+      reason: status_reason ? status_reason.trim() : `Status set to ${status}`,
+      details: { previousStatus: application.status, newStatus: status, petName: application.pet_name },
+      ipAddress: req.ip
+    });
+
+    res.json({ success: true, message: `Application status updated to ${status}.` });
+  } catch (error) {
+    console.error('[AdminRoutes] Update application error:', error);
+    res.status(500).json({ success: false, error: 'Failed to update application.' });
+  }
+});
+
 // ============================================================================
 // 4. LOST & FOUND MODERATION
 // ============================================================================

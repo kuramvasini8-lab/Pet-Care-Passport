@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Adoption Moderation Queue - PetCare Passport Admin</title>
+  <title>Adoption Moderation & Verification - PetCare Passport Admin</title>
   <link rel="stylesheet" href="/css/main.css">
   <link rel="stylesheet" href="/css/components.css">
   <link rel="stylesheet" href="/css/admin.css">
@@ -11,16 +11,17 @@
 <body>
 
   <!-- Admin Top Navbar -->
-  <nav class="navbar" style="border-bottom: 2px solid #991b1b;">
+  <nav class="navbar" style="border-bottom: 2px solid #b87b14;">
     <div class="container nav-inner">
       <a href="/admin/dashboard.html" class="brand-logo">
-        <span class="logo-icon" style="background:#991b1b;">🛡️</span>
-        <span>PetCare<span style="color:#991b1b;">Admin</span></span>
-        <span class="brand-badge badge-admin-theme">Platform Oversight</span>
+        <span class="logo-icon" style="background:linear-gradient(135deg, #d99b26, #b87b14);">🛡️</span>
+        <span>PetCare<span style="color:#b87b14;">Admin</span></span>
+        <span class="brand-badge badge-admin-theme" style="background:#fef8e7;color:#764910;border:1px solid #d99b26;">Platform Oversight</span>
       </a>
 
       <div style="display:flex;align-items:center;gap:16px;">
         <a href="/owner/dashboard.html" class="btn btn-outline btn-sm">🐾 Owner View</a>
+        <a href="/index.html" class="btn btn-outline btn-sm">🌐 Public Site</a>
         <div class="nav-auth-group" id="nav-auth-container"></div>
       </div>
     </div>
@@ -39,7 +40,7 @@
         <ul class="admin-menu">
           <li class="admin-menu-item"><a href="/admin/dashboard.html"><span class="admin-menu-icon">📊</span> Overview</a></li>
           <li class="admin-menu-item"><a href="/admin/users.html"><span class="admin-menu-icon">👥</span> User Management</a></li>
-          <li class="admin-menu-item active"><a href="/admin/moderation.html"><span class="admin-menu-icon">🏡</span> Adoption Moderation</a></li>
+          <li class="admin-menu-item active"><a href="/admin/moderation.html"><span class="admin-menu-icon">🏡</span> Adoption & Verification</a></li>
           <li class="admin-menu-item"><a href="/admin/lost-found.html"><span class="admin-menu-icon">🔍</span> Lost & Found Queue</a></li>
           <li class="admin-menu-item"><a href="/admin/reports.html"><span class="admin-menu-icon">🚨</span> Reports & Complaints</a></li>
           <li class="admin-menu-item"><a href="/admin/appointments.html"><span class="admin-menu-icon">📅</span> Appointment Oversight</a></li>
@@ -49,7 +50,7 @@
           <li class="admin-menu-item"><a href="/admin/system-health.html"><span class="admin-menu-icon">⚡</span> System Health</a></li>
         </ul>
       </div>
-      <div style="border-top:1px solid var(--slate-800);padding-top:16px;">
+      <div style="border-top:1px solid var(--cream-300);padding-top:16px;">
         <ul class="admin-menu">
           <li class="admin-menu-item"><a href="javascript:void(0)" onclick="Auth.logout()"><span class="admin-menu-icon">🚪</span> Sign Out</a></li>
         </ul>
@@ -59,31 +60,110 @@
     <main class="admin-main">
       <div class="admin-header">
         <div>
-          <h1 style="font-size:2rem;margin-bottom:4px;">Adoption Listing Moderation Queue</h1>
-          <p class="text-muted">Review submitted adoption listings, enforce safety standards, request revisions, and approve or reject profiles.</p>
+          <h1 style="font-size:2rem;margin-bottom:4px;">Adoption Moderation & Pet Verification Portal</h1>
+          <p class="text-muted">Review rehoming listings, grant official platform verification seals, and oversee adopter applications.</p>
         </div>
       </div>
 
-      <!-- Filter Tabs -->
-      <div class="card" style="margin-bottom:28px;">
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <button onclick="setFilter('')" class="btn btn-outline btn-sm filter-btn" id="btn-tab-all">All Listings</button>
-          <button onclick="setFilter('pending_approval')" class="btn btn-primary btn-sm filter-btn" id="btn-tab-pending">⏳ Pending Review</button>
-          <button onclick="setFilter('approved')" class="btn btn-outline btn-sm filter-btn" id="btn-tab-approved">✅ Approved</button>
-          <button onclick="setFilter('changes_requested')" class="btn btn-outline btn-sm filter-btn" id="btn-tab-changes">🔄 Changes Requested</button>
-          <button onclick="setFilter('rejected')" class="btn btn-outline btn-sm filter-btn" id="btn-tab-rejected">❌ Rejected</button>
-          <button onclick="setFilter('suspended')" class="btn btn-outline btn-sm filter-btn" id="btn-tab-suspended">⛔ Suspended</button>
+      <!-- Top Primary View Switcher -->
+      <div style="display:flex;gap:12px;margin-bottom:24px;border-bottom:2px solid var(--cream-300);padding-bottom:12px;">
+        <button onclick="switchView('listings')" class="btn btn-primary" id="view-tab-listings">
+          🏡 Adoption Listings Queue
+        </button>
+        <button onclick="switchView('verification')" class="btn btn-outline" id="view-tab-verification">
+          🛡️ Pet Adoption Verification Roster
+        </button>
+        <button onclick="switchView('applications')" class="btn btn-outline" id="view-tab-applications">
+          📋 Adopter Applications Oversight
+        </button>
+      </div>
+
+      <!-- VIEW 1: Adoption Listings Moderation Queue -->
+      <div id="view-section-listings">
+        <!-- Filter Tabs -->
+        <div class="card" style="margin-bottom:24px;">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button onclick="setFilter('')" class="btn btn-outline btn-sm filter-btn" id="btn-tab-all">All Listings</button>
+            <button onclick="setFilter('pending_approval')" class="btn btn-primary btn-sm filter-btn" id="btn-tab-pending">⏳ Pending Review</button>
+            <button onclick="setFilter('approved')" class="btn btn-outline btn-sm filter-btn" id="btn-tab-approved">✅ Approved</button>
+            <button onclick="setFilter('changes_requested')" class="btn btn-outline btn-sm filter-btn" id="btn-tab-changes">🔄 Changes Requested</button>
+            <button onclick="setFilter('rejected')" class="btn btn-outline btn-sm filter-btn" id="btn-tab-rejected">❌ Rejected</button>
+            <button onclick="setFilter('suspended')" class="btn btn-outline btn-sm filter-btn" id="btn-tab-suspended">⛔ Suspended</button>
+          </div>
+        </div>
+
+        <div id="moderation-queue-container">
+          <div class="text-muted" style="text-align:center;padding:40px;">Loading moderation queue...</div>
         </div>
       </div>
 
-      <!-- Moderation Listings Area -->
-      <div id="moderation-queue-container">
-        <div class="text-muted" style="text-align:center;padding:40px;">Loading moderation queue...</div>
+      <!-- VIEW 2: Pet Adoption Verification Roster -->
+      <div id="view-section-verification" style="display:none;">
+        <div class="card mb-4" style="background:#fffdf7;border-left:4px solid #d99b26;">
+          <div style="display:flex;gap:14px;align-items:flex-start;">
+            <span style="font-size:1.8rem;">🛡️</span>
+            <div>
+              <h3 style="font-size:1.15rem;margin-bottom:4px;color:#764910;">Official Pet Adoption Verification Protocol</h3>
+              <p class="text-sm" style="color:#574b3d;line-height:1.5;">
+                Approval for public browsing does not automatically verify health documents. The <strong>Official Platform Verification</strong> badge requires an administrator to independently validate microchip numbers, vaccination timelines (rabies/core), and sterilization documentation.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div id="verification-roster-container">
+          <div class="text-muted" style="text-align:center;padding:40px;">Loading verification records...</div>
+        </div>
       </div>
+
+      <!-- VIEW 3: Adopter Applications Oversight -->
+      <div id="view-section-applications" style="display:none;">
+        <div class="card mb-4">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
+            <div>
+              <h3 style="font-size:1.2rem;margin-bottom:4px;">Platform Adoption Applications</h3>
+              <p class="text-xs text-muted">Review formal adopter questionnaires, veterinary references, and applicant housing conditions.</p>
+            </div>
+            <div>
+              <select id="filter-app-status" class="form-control text-sm" onchange="loadApplications()" style="min-width:180px;">
+                <option value="">All Applications</option>
+                <option value="submitted">Submitted</option>
+                <option value="under_review">Under Review</option>
+                <option value="more_info_requested">More Info Requested</option>
+                <option value="accepted">Accepted</option>
+                <option value="declined">Declined</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Pet</th>
+                  <th>Applicant</th>
+                  <th>Contact</th>
+                  <th>Housing & Yard</th>
+                  <th>Other Pets</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="applications-table-body">
+                <tr><td colspan="8" class="text-center py-4 text-muted">Loading applications...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
     </main>
   </div>
 
-  <!-- Modal: Moderation Decision Dialog -->
+  <!-- Modal: Moderation Decision Dialog (Approve, Reject, Changes, Suspend) -->
   <div class="modal-backdrop" id="modal-decision">
     <div class="modal-dialog">
       <div class="modal-header">
@@ -109,20 +189,123 @@
     </div>
   </div>
 
+  <!-- Modal: Official Pet Adoption Verification Procedure -->
+  <div class="modal-backdrop" id="modal-verify">
+    <div class="modal-dialog">
+      <div class="modal-header" style="background:#fef8e7;border-bottom:1px solid #faeac0;">
+        <h3 style="color:#764910;display:flex;align-items:center;gap:8px;">
+          🛡️ Pet Adoption Verification Procedure
+        </h3>
+        <button class="modal-close" onclick="closeModal('modal-verify')">&times;</button>
+      </div>
+      <form id="verify-form" onsubmit="executeAdoptionVerification(event)">
+        <input type="hidden" id="ver-listing-id">
+        <div class="modal-body">
+          <div style="font-weight:700;font-size:1.1rem;margin-bottom:6px;" id="ver-pet-name">Verifying Pet: -</div>
+          <p class="text-xs text-muted mb-3">Confirm compliance with platform healthcare standards before stamping with the official verified badge.</p>
+
+          <div style="background:#fffdf7;border:1px solid #faeac0;border-radius:8px;padding:14px;margin-bottom:16px;display:flex;flex-direction:column;gap:10px;">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.9rem;">
+              <input type="checkbox" id="ver-chk-microchip" checked style="width:18px;height:18px;">
+              <span><strong>ISO Microchip Number Verified:</strong> Microchip confirmed against registry or documentation.</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.9rem;">
+              <input type="checkbox" id="ver-chk-vaccines" checked style="width:18px;height:18px;">
+              <span><strong>Core Vaccinations Inspected:</strong> Rabies and core shots are up to date with valid vet records.</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.9rem;">
+              <input type="checkbox" id="ver-chk-sterilized" checked style="width:18px;height:18px;">
+              <span><strong>Sterilization Confirmed:</strong> Spay/neuter verified by veterinary certificate or physical records.</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:0.9rem;">
+              <input type="checkbox" id="ver-chk-identity" checked style="width:18px;height:18px;">
+              <span><strong>Owner Identity & Placement Terms:</strong> Ownership confirmed; rehoming terms adhere to welfare rules.</span>
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="ver-notes">Official Verification Summary & Document References *</label>
+            <textarea id="ver-notes" class="form-control" required placeholder="e.g. Validated against City Vet Clinic records dated 2026-08. Microchip ISO 98514 confirmed. Full rabies and DHPP immunizations up to date."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-verify')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-verify">
+            🛡️ Confirm Platform Verification
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Application Review & Adjudication -->
+  <div class="modal-backdrop" id="modal-app-review">
+    <div class="modal-dialog" style="max-width:650px;">
+      <div class="modal-header">
+        <h3 id="app-modal-title">Adoption Application Review</h3>
+        <button class="modal-close" onclick="closeModal('modal-app-review')">&times;</button>
+      </div>
+      <form id="app-decision-form" onsubmit="executeApplicationDecision(event)">
+        <input type="hidden" id="app-dec-id">
+        <div class="modal-body">
+          <div id="app-details-summary" style="background:var(--cream-100);border-radius:8px;padding:16px;margin-bottom:16px;font-size:0.9rem;line-height:1.6;">
+            Loading application summary...
+          </div>
+
+          <div class="form-group mb-3">
+            <label class="form-label">Update Status *</label>
+            <select id="app-target-status" class="form-control" required>
+              <option value="under_review">Under Review</option>
+              <option value="more_info_requested">Request More Information</option>
+              <option value="accepted">Accept Application (Ready for Placement)</option>
+              <option value="declined">Decline Application</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Review Notes & Communication to Applicant</label>
+            <textarea id="app-status-reason" class="form-control" placeholder="Provide explanation or next steps for the applicant..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modal-app-review')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-app-dec">Save Application Decision</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="/js/api.js"></script>
   <script src="/js/auth.js"></script>
   <script>
+    let currentView = 'listings';
     let activeFilter = 'pending_approval';
     let listings = [];
+    let applications = [];
 
     async function init() {
       await Auth.requireAdmin('/login.html');
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('status')) {
-        activeFilter = urlParams.get('status');
+      if (urlParams.get('tab')) {
+        switchView(urlParams.get('tab'));
+      } else {
+        loadQueue();
       }
-      updateActiveTab();
-      loadQueue();
+    }
+
+    function switchView(viewName) {
+      currentView = viewName;
+      document.getElementById('view-section-listings').style.display = viewName === 'listings' ? 'block' : 'none';
+      document.getElementById('view-section-verification').style.display = viewName === 'verification' ? 'block' : 'none';
+      document.getElementById('view-section-applications').style.display = viewName === 'applications' ? 'block' : 'none';
+
+      document.getElementById('view-tab-listings').className = viewName === 'listings' ? 'btn btn-primary' : 'btn btn-outline';
+      document.getElementById('view-tab-verification').className = viewName === 'verification' ? 'btn btn-primary' : 'btn btn-outline';
+      document.getElementById('view-tab-applications').className = viewName === 'applications' ? 'btn btn-primary' : 'btn btn-outline';
+
+      if (viewName === 'listings') loadQueue();
+      else if (viewName === 'verification') loadVerificationRoster();
+      else if (viewName === 'applications') loadApplications();
     }
 
     function setFilter(status) {
@@ -173,10 +356,19 @@
             <div class="moderation-card" id="mod-card-${l.id}">
               <div class="moderation-header">
                 <div>
-                  <span class="badge ${badgeClass}" style="margin-bottom:6px;">${l.status.toUpperCase()}</span>
-                  <h3 style="font-size:1.35rem;">${l.title}</h3>
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+                    <span class="badge ${badgeClass}">${l.status.toUpperCase()}</span>
+                    ${l.is_verified ? `
+                      <span class="badge-verified-adoption" title="Verified by Administrator">
+                        🛡️ Platform Verified
+                      </span>
+                    ` : `
+                      <span class="badge" style="background:#f1f5f9;color:#64748b;">Unverified Medical Records</span>
+                    `}
+                  </div>
+                  <h3 style="font-size:1.35rem;">${escapeHtml(l.title)}</h3>
                   <div class="text-muted text-xs">
-                    Submitted by: <strong>${l.owner_name}</strong> (${l.owner_email}) &bull; Location: 📍 ${l.general_location}
+                    Submitted by: <strong>${escapeHtml(l.owner_name)}</strong> (${escapeHtml(l.owner_email)}) &bull; Location: 📍 ${escapeHtml(l.general_location)}
                   </div>
                 </div>
                 <div class="text-xs text-muted">
@@ -185,53 +377,62 @@
               </div>
 
               <div class="moderation-pet-profile">
-                <img src="${l.photo_url || '/assets/images/default-pet.jpg'}" alt="${l.pet_name}" class="moderation-pet-img">
+                <img src="${l.photo_url || '/assets/images/default-pet.jpg'}" alt="${escapeHtml(l.pet_name)}" class="moderation-pet-img">
                 <div class="moderation-details">
                   <div style="font-size:1.15rem;font-weight:700;margin-bottom:4px;">
-                    🐾 ${l.pet_name} (${l.species} &bull; ${l.breed || 'Mixed'})
+                    🐾 ${escapeHtml(l.pet_name)} (${escapeHtml(l.species)} &bull; ${escapeHtml(l.breed || 'Mixed')})
                   </div>
                   <div style="font-size:0.875rem;color:var(--slate-600);margin-bottom:12px;">
-                    Age: ${l.dob_or_age || 'N/A'} &bull; Sex: ${l.sex} &bull; Spayed: ${l.is_sterilized ? 'Yes' : 'No'} &bull; Markings: ${l.color_marks || 'Standard'}
+                    Age: ${escapeHtml(l.dob_or_age || 'N/A')} &bull; Sex: ${l.sex} &bull; Spayed: ${l.is_sterilized ? 'Yes' : 'No'} &bull; Markings: ${escapeHtml(l.color_marks || 'Standard')}
                   </div>
 
                   <div style="margin-bottom:10px;font-size:0.925rem;line-height:1.5;">
-                    <strong>Description:</strong> ${l.description}
+                    <strong>Description:</strong> ${escapeHtml(l.description)}
                   </div>
-                  ${l.temperament ? `<div style="margin-bottom:6px;font-size:0.875rem;"><strong>Temperament:</strong> ${l.temperament}</div>` : ''}
-                  ${l.health_summary ? `<div style="margin-bottom:6px;font-size:0.875rem;"><strong>Health Summary:</strong> ${l.health_summary}</div>` : ''}
-                  ${l.adoption_requirements ? `<div style="margin-bottom:6px;font-size:0.875rem;"><strong>Adoption Requirements:</strong> ${l.adoption_requirements}</div>` : ''}
-                  ${l.moderation_notes ? `
-                    <div style="margin-top:10px;background:#fef3c7;padding:8px 12px;border-radius:4px;font-size:0.85rem;color:#78350f;">
-                      <strong>Past Moderator Note:</strong> ${l.moderation_notes} (${l.moderator_name || 'Admin'})
+                  ${l.temperament ? `<div style="margin-bottom:6px;font-size:0.875rem;"><strong>Temperament:</strong> ${escapeHtml(l.temperament)}</div>` : ''}
+                  ${l.health_summary ? `<div style="margin-bottom:6px;font-size:0.875rem;"><strong>Health Summary:</strong> ${escapeHtml(l.health_summary)}</div>` : ''}
+                  ${l.adoption_requirements ? `<div style="margin-bottom:6px;font-size:0.875rem;"><strong>Adoption Requirements:</strong> ${escapeHtml(l.adoption_requirements)}</div>` : ''}
+                  ${l.verification_notes ? `
+                    <div style="margin-top:10px;background:#fef8e7;border-left:3px solid #d99b26;padding:8px 12px;border-radius:4px;font-size:0.85rem;color:#764910;">
+                      <strong>🛡️ Platform Verification Notes:</strong> ${escapeHtml(l.verification_notes)}
                     </div>
                   ` : ''}
                 </div>
               </div>
 
-              <div class="moderation-actions">
+              <div class="moderation-actions" style="flex-wrap:wrap;gap:8px;">
                 ${isSelf ? `
                   <div class="text-xs" style="color:#b91c1c;font-weight:700;align-self:center;margin-right:auto;">
-                    ⚠️ Platform Integrity Rule: You cannot approve your own listing. Another admin must review.
+                    ⚠️ Anti-Self-Approval Rule: You cannot approve your own listing. Another admin must review.
                   </div>
                 ` : `
-                  <button onclick="approveListing(${l.id}, '${l.pet_name}')" class="btn btn-primary btn-sm" id="btn-approve-${l.id}">
-                    ✓ Approve & Publish
+                  ${l.status !== 'approved' ? `
+                    <button onclick="approveListing(${l.id}, '${escapeHtml(l.pet_name)}')" class="btn btn-primary btn-sm" id="btn-approve-${l.id}">
+                      ✓ Approve & Publish
+                    </button>
+                  ` : ''}
+                `}
+
+                <!-- PET ADOPTION VERIFICATION ACTION -->
+                ${!l.is_verified ? `
+                  <button onclick="openVerificationModal(${l.id}, '${escapeHtml(l.pet_name)}')" class="btn btn-outline btn-sm" style="color:#b87b14;border-color:#faeac0;background:#fffdf7;font-weight:700;" title="Verify Health & Identity">
+                    🛡️ Verify Pet Health & Adoption
+                  </button>
+                ` : `
+                  <button onclick="revokeVerification(${l.id}, '${escapeHtml(l.pet_name)}')" class="btn btn-outline btn-sm" style="color:#756754;" title="Revoke Platform Verification">
+                    ↺ Revoke Verification
                   </button>
                 `}
-                <button onclick="openDecisionModal(${l.id}, 'request_changes', '${l.pet_name}')" class="btn btn-outline btn-sm" style="color:var(--warning-600);border-color:#fde68a;" id="btn-changes-${l.id}">
+
+                <button onclick="openDecisionModal(${l.id}, 'request_changes', '${escapeHtml(l.pet_name)}')" class="btn btn-outline btn-sm" style="color:var(--warning-600);border-color:#fde68a;" id="btn-changes-${l.id}">
                   🔄 Request Changes
                 </button>
-                <button onclick="openDecisionModal(${l.id}, 'reject', '${l.pet_name}')" class="btn btn-outline btn-sm" style="color:var(--danger-600);border-color:#fca5a5;" id="btn-reject-${l.id}">
+                <button onclick="openDecisionModal(${l.id}, 'reject', '${escapeHtml(l.pet_name)}')" class="btn btn-outline btn-sm" style="color:var(--danger-600);border-color:#fca5a5;" id="btn-reject-${l.id}">
                   ✗ Reject
                 </button>
                 ${l.status === 'approved' ? `
-                  <button onclick="openDecisionModal(${l.id}, 'suspend', '${l.pet_name}')" class="btn btn-outline btn-sm" style="color:var(--slate-700);">
+                  <button onclick="openDecisionModal(${l.id}, 'suspend', '${escapeHtml(l.pet_name)}')" class="btn btn-outline btn-sm" style="color:var(--slate-700);">
                     ⛔ Suspend
-                  </button>
-                ` : ''}
-                ${l.status === 'suspended' ? `
-                  <button onclick="executeRestore(${l.id}, '${l.pet_name}')" class="btn btn-outline btn-sm">
-                    ✓ Restore Listing
                   </button>
                 ` : ''}
               </div>
@@ -241,6 +442,196 @@
 
       } catch (err) {
         container.innerHTML = `<div class="alert-banner alert-danger">${err.message}</div>`;
+      }
+    }
+
+    async function loadVerificationRoster() {
+      const container = document.getElementById('verification-roster-container');
+      container.innerHTML = `<div class="text-muted" style="text-align:center;padding:40px;">Loading verification records...</div>`;
+
+      try {
+        const res = await API.get('/api/admin/moderation/listings');
+        const allListings = res.listings || [];
+
+        container.innerHTML = `
+          <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(360px, 1fr));gap:20px;">
+            ${allListings.map(l => `
+              <div class="card" style="border-top: 4px solid ${l.is_verified ? '#d99b26' : '#dcceb3'};display:flex;flex-direction:column;justify-content:space-between;">
+                <div>
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+                    <div>
+                      <h3 style="font-size:1.15rem;margin:0;">🐾 ${escapeHtml(l.pet_name)}</h3>
+                      <div class="text-xs text-muted">${escapeHtml(l.species)} &bull; ${escapeHtml(l.breed || 'Mixed')}</div>
+                    </div>
+                    ${l.is_verified ? `
+                      <span class="badge-verified-adoption">🛡️ Verified</span>
+                    ` : `
+                      <span class="badge" style="background:#f1f5f9;color:#64748b;">Pending Verification</span>
+                    `}
+                  </div>
+
+                  <div style="font-size:0.875rem;margin-bottom:12px;color:var(--slate-700);">
+                    <div><strong>Owner:</strong> ${escapeHtml(l.owner_name)} (${escapeHtml(l.owner_email)})</div>
+                    <div><strong>Listing Status:</strong> <span class="badge badge-sm badge-neutral">${l.status}</span></div>
+                    <div><strong>Microchip:</strong> <code>${l.microchip_number || 'None'}</code></div>
+                  </div>
+
+                  ${l.verification_notes ? `
+                    <div style="background:#fef8e7;padding:10px;border-radius:6px;font-size:0.825rem;color:#764910;margin-bottom:12px;">
+                      <strong>Verification Summary:</strong><br>${escapeHtml(l.verification_notes)}
+                    </div>
+                  ` : ''}
+                </div>
+
+                <div style="padding-top:12px;border-top:1px solid var(--cream-300);display:flex;justify-content:space-between;align-items:center;">
+                  <span class="text-xs text-muted">ID #${l.id}</span>
+                  ${!l.is_verified ? `
+                    <button onclick="openVerificationModal(${l.id}, '${escapeHtml(l.pet_name)}')" class="btn btn-primary btn-sm">
+                      🛡️ Complete Verification
+                    </button>
+                  ` : `
+                    <button onclick="revokeVerification(${l.id}, '${escapeHtml(l.pet_name)}')" class="btn btn-outline btn-sm" style="color:#756754;">
+                      Revoke
+                    </button>
+                  `}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } catch (err) {
+        container.innerHTML = `<div class="alert-banner alert-danger">${err.message}</div>`;
+      }
+    }
+
+    async function loadApplications() {
+      const container = document.getElementById('applications-table-body');
+      const status = document.getElementById('filter-app-status').value;
+      container.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-muted">Loading applications...</td></tr>`;
+
+      try {
+        const res = await API.get(`/api/admin/moderation/applications${status ? '?status=' + status : ''}`);
+        applications = res.applications || [];
+
+        if (applications.length === 0) {
+          container.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-muted">No adoption applications found.</td></tr>`;
+          return;
+        }
+
+        container.innerHTML = applications.map(app => `
+          <tr>
+            <td><code>#${app.id}</code></td>
+            <td><strong>${escapeHtml(app.pet_name)}</strong><br><span class="text-xs text-muted">${escapeHtml(app.listing_title)}</span></td>
+            <td><strong>${escapeHtml(app.applicant_name)}</strong></td>
+            <td><a href="mailto:${escapeHtml(app.applicant_email)}">${escapeHtml(app.applicant_email)}</a><br><span class="text-xs">${escapeHtml(app.applicant_phone || 'N/A')}</span></td>
+            <td>${escapeHtml(app.household_type)}${app.has_yard ? ' (Has Yard)' : ''}</td>
+            <td>${app.owns_other_pets ? 'Yes' : 'No'}</td>
+            <td><span class="badge ${getAppBadgeClass(app.status)}">${app.status.replace('_', ' ').toUpperCase()}</span></td>
+            <td>
+              <button onclick="openApplicationReview(${app.id})" class="btn btn-outline btn-sm">
+                🔍 Review
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        container.innerHTML = `<tr><td colspan="8" class="text-center text-danger py-4">${err.message}</td></tr>`;
+      }
+    }
+
+    function getAppBadgeClass(status) {
+      switch (status) {
+        case 'accepted': return 'badge-approved';
+        case 'under_review': return 'badge-info';
+        case 'more_info_requested': return 'badge-warning';
+        case 'declined': return 'badge-rejected';
+        default: return 'badge-pending_approval';
+      }
+    }
+
+    function openVerificationModal(id, petName) {
+      document.getElementById('ver-listing-id').value = id;
+      document.getElementById('ver-pet-name').textContent = `Verifying Pet: ${petName}`;
+      document.getElementById('ver-notes').value = `Verified veterinary health records, core immunizations, and microchip ID for ${petName}. Approved for Verified Adoption status.`;
+      openModal('modal-verify');
+    }
+
+    async function executeAdoptionVerification(e) {
+      e.preventDefault();
+      const listingId = document.getElementById('ver-listing-id').value;
+      const btn = document.getElementById('btn-submit-verify');
+      btn.disabled = true;
+
+      const checklist = [];
+      if (document.getElementById('ver-chk-microchip').checked) checklist.push('microchip_verified');
+      if (document.getElementById('ver-chk-vaccines').checked) checklist.push('vaccines_verified');
+      if (document.getElementById('ver-chk-sterilized').checked) checklist.push('sterilization_verified');
+      if (document.getElementById('ver-chk-identity').checked) checklist.push('terms_verified');
+
+      try {
+        const res = await API.put(`/api/admin/moderation/listings/${listingId}/verify`, {
+          verification_notes: document.getElementById('ver-notes').value,
+          checklist
+        });
+        closeModal('modal-verify');
+        showToast(res.message, 'success');
+        if (currentView === 'listings') loadQueue();
+        else loadVerificationRoster();
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function revokeVerification(id, petName) {
+      const reason = prompt(`Reason for revoking verification for ${petName}:`);
+      if (reason === null) return;
+
+      try {
+        const res = await API.put(`/api/admin/moderation/listings/${id}/unverify`, { reason });
+        showToast(res.message, 'info');
+        if (currentView === 'listings') loadQueue();
+        else loadVerificationRoster();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    function openApplicationReview(id) {
+      const app = applications.find(a => a.id === id);
+      if (!app) return;
+
+      document.getElementById('app-dec-id').value = app.id;
+      document.getElementById('app-modal-title').textContent = `Application Review: ${app.pet_name} (#${app.id})`;
+      document.getElementById('app-target-status').value = app.status;
+      document.getElementById('app-status-reason').value = app.status_reason || '';
+
+      document.getElementById('app-details-summary').innerHTML = `
+        <div><strong>Applicant:</strong> ${escapeHtml(app.applicant_name)} (${escapeHtml(app.applicant_email)} &bull; ${escapeHtml(app.applicant_phone || 'No phone')})</div>
+        <div><strong>Pet & Listing:</strong> ${escapeHtml(app.pet_name)} &bull; Listed by ${escapeHtml(app.owner_name)}</div>
+        <div><strong>Housing:</strong> ${escapeHtml(app.household_type)} &bull; Yard: ${app.has_yard ? 'Yes' : 'No'} &bull; Other pets: ${app.owns_other_pets ? 'Yes' : 'None'}</div>
+        <div style="margin-top:6px;"><strong>Pet Care Experience:</strong><br><em>${escapeHtml(app.experience_description || 'None supplied')}</em></div>
+        <div style="margin-top:6px;"><strong>Vet Reference / Contact:</strong><br><code>${escapeHtml(app.reference_contact || 'None provided')}</code></div>
+        ${app.notes ? `<div style="margin-top:6px;"><strong>Applicant Message:</strong><br>${escapeHtml(app.notes)}</div>` : ''}
+      `;
+
+      openModal('modal-app-review');
+    }
+
+    async function executeApplicationDecision(e) {
+      e.preventDefault();
+      const id = document.getElementById('app-dec-id').value;
+      const status = document.getElementById('app-target-status').value;
+      const status_reason = document.getElementById('app-status-reason').value;
+
+      try {
+        const res = await API.put(`/api/admin/moderation/applications/${id}`, { status, status_reason });
+        closeModal('modal-app-review');
+        showToast(res.message, 'success');
+        loadApplications();
+      } catch (err) {
+        showToast(err.message, 'error');
       }
     }
 
@@ -255,38 +646,24 @@
       }
     }
 
-    async function executeRestore(id, name) {
-      try {
-        const res = await API.put(`/api/admin/moderation/listings/${id}`, { action: 'restore' });
-        showToast(res.message, 'success');
-        loadQueue();
-      } catch (err) {
-        showToast(err.message, 'error');
-      }
-    }
-
-    function openDecisionModal(listingId, action, petName) {
-      document.getElementById('dec-listing-id').value = listingId;
+    function openDecisionModal(id, action, name) {
+      document.getElementById('dec-listing-id').value = id;
       document.getElementById('dec-action').value = action;
       document.getElementById('dec-reason').value = '';
 
-      if (action === 'request_changes') {
-        document.getElementById('decision-modal-title').textContent = `Request Revisions: ${petName}`;
-        document.getElementById('decision-prompt-desc').textContent = 'Explain what information the owner must correct or clarify before this listing can be approved.';
-        document.getElementById('btn-confirm-decision').className = 'btn btn-warning';
-        document.getElementById('btn-confirm-decision').textContent = 'Send Revision Request 🔄';
-      } else if (action === 'reject') {
-        document.getElementById('decision-modal-title').textContent = `Reject Listing: ${petName}`;
-        document.getElementById('decision-prompt-desc').textContent = 'Document the reason for rejection. The listing will remain unpublished.';
-        document.getElementById('btn-confirm-decision').className = 'btn btn-danger';
-        document.getElementById('btn-confirm-decision').textContent = 'Confirm Rejection ❌';
-      } else if (action === 'suspend') {
-        document.getElementById('decision-modal-title').textContent = `Suspend Listing: ${petName}`;
-        document.getElementById('decision-prompt-desc').textContent = 'Document the reason for suspension (e.g. active complaint investigation).';
-        document.getElementById('btn-confirm-decision').className = 'btn btn-secondary';
-        document.getElementById('btn-confirm-decision').textContent = 'Suspend Listing ⛔';
-      }
+      const titles = {
+        request_changes: `Request Revisions: ${name}`,
+        reject: `Reject Adoption Listing: ${name}`,
+        suspend: `Suspend Active Listing: ${name}`
+      };
+      const prompts = {
+        request_changes: `Explain the modifications required from the owner before this listing can be approved.`,
+        reject: `State the administrative reason for permanently rejecting this adoption listing.`,
+        suspend: `Document the reason for temporarily removing this listing from public display.`
+      };
 
+      document.getElementById('decision-modal-title').textContent = titles[action] || 'Decision';
+      document.getElementById('decision-prompt-desc').textContent = prompts[action] || '';
       openModal('modal-decision');
     }
 
@@ -304,6 +681,20 @@
       } catch (err) {
         showToast(err.message, 'error');
       }
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text).replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    }
+
+    function formatDateTime(dateStr) {
+      if (!dateStr) return '';
+      return new Date(dateStr).toLocaleDateString(undefined, {
+        month: 'short', day: 'numeric', year: 'numeric'
+      });
     }
 
     document.addEventListener('DOMContentLoaded', init);

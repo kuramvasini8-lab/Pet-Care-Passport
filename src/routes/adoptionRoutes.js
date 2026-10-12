@@ -69,7 +69,7 @@ router.get('/public/listings', async (req, res) => {
     // Fetch paginated listings
     const fetchParams = [...params, parseInt(limit, 10), offset];
     const [listings] = await query(
-      `SELECT l.id, l.title, l.description, l.general_location, l.status, l.created_at,
+      `SELECT l.id, l.title, l.description, l.general_location, l.status, l.is_verified, l.verification_notes, l.created_at,
               p.id as pet_id, p.name as pet_name, p.species, p.breed, p.dob_or_age,
               p.sex, p.photo_url, p.is_sterilized
        FROM adoption_listings l
@@ -103,7 +103,7 @@ router.get('/public/listings/:id', async (req, res) => {
 
     const [rows] = await query(
       `SELECT l.id, l.title, l.description, l.temperament, l.health_summary,
-              l.adoption_requirements, l.general_location, l.status, l.created_at,
+              l.adoption_requirements, l.general_location, l.status, l.is_verified, l.verification_notes, l.created_at,
               p.name as pet_name, p.species, p.breed, p.dob_or_age, p.sex,
               p.color_marks, p.photo_url, p.is_sterilized, p.allergies,
               u.full_name as owner_display_name

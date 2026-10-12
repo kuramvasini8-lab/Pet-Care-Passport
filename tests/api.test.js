@@ -172,4 +172,84 @@ describe('PetCare Passport Test Suite', () => {
     assert.ok(typeof aiRes.body.response === 'string');
     assert.ok(aiRes.body.disclaimer.toLowerCase().includes('veterinar'), 'Response must contain veterinary disclaimer');
   });
+
+  // 7. NOTIFICATIONS NUMBER OF NOTIFICATIONS ENDPOINT
+  test('11. Unread notification count endpoint returns exact integer count', async () => {
+    const userAgent = request.agent(BASE_URL);
+    await userAgent.post('/api/auth/login').send({ email: 'sarah@example.com', password: 'Owner123!' });
+
+    const notifRes = await userAgent.get('/api/notifications/unread-count');
+    assert.strictEqual(notifRes.status, 200);
+    assert.strictEqual(notifRes.body.success, true);
+    assert.strictEqual(typeof notifRes.body.count, 'number');
+  });
+
+  // 8. PET OWNER "REPORT AS MISSING" FLOW
+  test('12. Pet owner can report pet as missing and automatically publish lost pet alert', async () => {
+    const userAgent = request.agent(BASE_URL);
+    await userAgent.post('/api/auth/login').send({ email: 'sarah@example.com', password: 'Owner123!' });
+
+    // Get Sarah's pets
+    const petsRes = await userAgent.get('/api/pets');
+    const luna = petsRes.body.pets.find(p => p.name === 'Luna');
+    assert.ok(luna, 'Luna should exist in Sarah records');
+
+    // Report Luna as missing
+    const missingRes = await userAgent
+      .post(`/api/pets/${luna.id}/report-missing`)
+      .send({
+        date_lost: '2026-10-12',
+        general_location: 'Green Lake Park, Seattle',
+        contact_phone: '(555) 234-5678',
+        description: 'Luna slipped her leash near the playground. Wearing green collar.'
+      });
+
+    assert.strictEqual(missingRes.status, 200);
+    assert.strictEqual(missingRes.body.success, true);
+    assert.ok(missingRes.body.report_id > 0);
+
+    // Verify pet is marked as missing in pet list
+    const updatedPetsRes = await userAgent.get('/api/pets');
+    const updatedLuna = updatedPetsRes.body.pets.find(p => p.id === luna.id);
+    assert.strictEqual(Boolean(updatedLuna.is_missing), true);
+
+    // Mark Luna as found
+    const foundRes = await userAgent.post(`/api/pets/${luna.id}/mark-found`);
+    assert.strictEqual(foundRes.status, 200);
+    assert.strictEqual(foundRes.body.success, true);
+  });
+
+  // 9. ADMINISTRATOR ADOPTION VERIFICATION WORKFLOW
+  test('13. Administrator can officially verify pet adoption listing', async () => {
+    const adminAgent = request.agent(BASE_URL);
+    await adminAgent.post('/api/auth/login').send({ email: 'admin@petcarepassport.com', password: 'AdminPass123!' });
+
+    // Fetch listings
+    const listRes = await adminAgent.get('/api/admin/moderation/listings');
+    assert.ok(listRes.body.listings.length > 0);
+    const targetListing = listRes.body.listings[0];
+
+    // Verify listing
+    const verifyRes = await adminAgent
+      .put(`/api/admin/moderation/listings/${targetListing.id}/verify`)
+      .send({
+        verification_notes: 'Veterinary health records and ISO microchip verified by Platform Administrator.',
+        checklist: ['microchip_verified', 'vaccines_verified', 'sterilization_verified']
+      });
+
+    assert.strictEqual(verifyRes.status, 200);
+    assert.strictEqual(verifyRes.body.success, true);
+    assert.strictEqual(verifyRes.body.is_verified, true);
+  });
+
+  // 10. ADMINISTRATOR ADOPTION APPLICATIONS OVERSIGHT
+  test('14. Administrator can inspect platform-wide adoption applications', async () => {
+    const adminAgent = request.agent(BASE_URL);
+    await adminAgent.post('/api/auth/login').send({ email: 'admin@petcarepassport.com', password: 'AdminPass123!' });
+
+    const appsRes = await adminAgent.get('/api/admin/moderation/applications');
+    assert.strictEqual(appsRes.status, 200);
+    assert.strictEqual(appsRes.body.success, true);
+    assert.ok(Array.isArray(appsRes.body.applications));
+  });
 });
