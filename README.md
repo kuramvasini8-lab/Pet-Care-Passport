@@ -1,6 +1,6 @@
 # 🐾 PetCare Passport
 
-PetCare Passport is a full-stack digital pet healthcare and emergency identification platform. It features **two dedicated portals**—the **Pet Owner Dashboard** and the **Administrator Console**—complemented by a public **Lost & Found Community Hub** and **Smart Emergency QR Passports**.
+PetCare Passport is a full-stack digital pet healthcare and emergency identification platform. It features **two dedicated portals**—the **Pet Owner Dashboard** and —complemented by a public **Lost & Found Community Hub** and **Smart Emergency QR Passports**.
 
 Built with MySQL 8.0, Node.js Express 5.3 backend, and Vanilla HTML5/CSS3/ES6+ JavaScript with zero frontend build dependencies.
 
@@ -34,19 +34,12 @@ Built with MySQL 8.0, Node.js Express 5.3 backend, and Vanilla HTML5/CSS3/ES6+ J
 * **Lost & Found Hub (`/lost-found.html`)**: Missing/found pet alert feeds with city filters, report submission with photos, and community sighting reports with geolocation.
 * **Care Guides (`/care-guides.html`)**: Evidence-based preventative wellness information and emergency advice.
 
-### 🛡️ Administrator Console (`/admin/*`)
-* **Operations Dashboard (`/admin/dashboard.html`)**: Platform counts for users, pets, clinics, reports, and reminder engine telemetry.
-* **User Governance (`/admin/users.html`)**: Inspect, suspend, or reactivate user accounts with mandatory documented reasons. Admins cannot suspend themselves.
-* **Moderation & Reports (`/admin/lost-found.html`, `/admin/reports.html`)**: Moderate lost & found notices and triage community complaints with internal notes.
-* **Clinic Directory (`/admin/clinics.html`)**: Manage vetted veterinary clinics and licensing badges.
-* **Reminders & Audit Trail (`/admin/reminders.html`, `/admin/audit-logs.html`, `/admin/system-health.html`)**: Telemetry logs with manual retry, append-only admin audit logs, and live latency diagnostics.
-
 ---
 
 ## 🏗️ Architecture & Tech Stack
 
 ```text
-Clients (Owner / Public / Admin) ──> Express 5 REST API (Node.js 18+) ──> MySQL 8.0 Database
+Clients (Owner / Public / ) ──> Express 5 REST API (Node.js 18+) ──> MySQL 8.0 Database
   [Helmet, CORS, Rate-Limit, Sessions]     [AI / Resend Email Fallbacks]    [15 Relational Tables, Pools]
 ```
 
@@ -93,13 +86,6 @@ npm run migrate
 ```
 Applies schema DDL non-destructively (`CREATE TABLE IF NOT EXISTS`) and seeds verified clinics if empty. **Never inserts demo accounts.**
 
-### 4. Bootstrap Initial Administrator
-Public registration (`/register.html`) hardcodes `role: 'user'`, preventing privilege escalation. Create your admin account via CLI:
-```bash
-npm run bootstrap-admin -- --email "admin@yourdomain.com" --password "<STRONG_PASSWORD>" --name "Platform Administrator"
-```
-*Enforces 8+ chars, upper, lower, digit, and symbol. Idempotent: never overwrites existing passwords or duplicates accounts on re-run.*
-
 ### 5. Start Application
 ```bash
 npm start
@@ -122,7 +108,6 @@ Accessible at `http://localhost:3000` (Login: `/login.html`, Health: `/api/healt
 | `AI_PROVIDER` | Optional | `gemini` | `gemini` or `openrouter` (uses clinical fallback engine if unset). | `gemini` |
 | `GEMINI_API_KEY` / `OPENROUTER_API_KEY` | Optional | `""` | API keys for third-party AI assistants. | `<YOUR_AI_API_KEY>` |
 | `EMAIL_PROVIDER` / `RESEND_API_KEY` | Optional | `resend` / `""` | Transactional email provider (simulated in console if unset). | `<YOUR_RESEND_KEY>` |
-| `ADMIN_BOOTSTRAP_EMAIL` / `_PASSWORD` | Optional | `""` | Default credentials for `npm run bootstrap-admin`. | `admin@domain.com` / `<PWD>` |
 
 ---
 
@@ -149,7 +134,7 @@ QR codes containing `localhost` URLs will fail when scanned by mobile phones in 
 ## 🛡️ Production Deployment & Demo Cleanup
 
 ### 1. Safe Demo Data Cleanup
-If deploying or migrating from staging, remove legacy demo accounts (`admin@petcarepassport.com`, `sarah@example.com`, `mark@example.com`):
+If deploying or migrating from staging, remove legacy demo accounts ( `sarah@example.com`, `mark@example.com`):
 ```bash
 mysqldump -h <HOST> -P <PORT> -u <USER> -p <DB> > backup_before_cleanup.sql # Step 1: Backup
 npm run cleanup-demo -- --dry-run                                           # Step 2: Preview
